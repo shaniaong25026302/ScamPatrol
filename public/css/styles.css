@@ -1,0 +1,246 @@
+/* =========================================================
+   scamlah — Global Styles
+   Light theme · red / green / white · clean card layout
+   All colors live in the tokens below — edit to retheme.
+   ========================================================= */
+
+/* ---------- Design tokens ---------- */
+:root {
+  --bg:            #f7f8fa;   /* page background          */
+  --surface:       #ffffff;   /* cards / nav / panels     */
+  --border:        #e4e7ec;
+  --text:          #1c2430;
+  --text-muted:    #67707e;
+
+  --red:           #e23b3b;   /* danger / scam / brand    */
+  --red-dark:      #c22d2d;
+  --red-soft:      #fdecec;   /* red tint backgrounds     */
+  --green:         #1ea566;   /* safe / success           */
+  --green-dark:    #178a55;
+  --green-soft:    #e8f7ef;   /* green tint backgrounds   */
+
+  --radius:        16px;
+  --radius-sm:     10px;
+  --shadow:        0 4px 18px rgba(28, 36, 48, 0.06);
+  --shadow-hover:  0 8px 28px rgba(28, 36, 48, 0.12);
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: var(--red); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+/* =========================================================
+   Navbar — sticky top bar with brand on the left
+   ========================================================= */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.navbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+/* split-color wordmark: scam (red) + lah (green) */
+.navbar .brand .scam { color: var(--red); }
+.navbar .brand .lah  { color: var(--green); }
+
+.navbar .links {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.navbar .links a {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.navbar .links a:hover {
+  background: var(--bg);
+  color: var(--text);
+  text-decoration: none;
+}
+.navbar .links a.active {
+  background: var(--red-soft);
+  color: var(--red-dark);
+}
+
+/* =========================================================
+   Alerts
+   ========================================================= */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 1080px;
+  margin: 1rem auto 0;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.alert-warning { background: var(--red-soft);   color: var(--red-dark);   border: 1px solid #f6cccc; }
+.alert-success { background: var(--green-soft); color: var(--green-dark); border: 1px solid #c4ecd6; }
+
+/* =========================================================
+   Hero
+   ========================================================= */
+.hero {
+  max-width: 1080px;
+  margin: 2.5rem auto 1.5rem;
+  padding: 3.5rem 2rem;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--red);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+.hero h1 .scam { color: var(--red); }
+.hero h1 .lah  { color: var(--green); }
+.hero p {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+/* =========================================================
+   Cards
+   ========================================================= */
+.card {
+  max-width: 1080px;
+  margin: 1.25rem auto;
+  padding: 2rem 2.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.card:hover { box-shadow: var(--shadow-hover); }
+.card h2 { margin-bottom: 0.75rem; font-weight: 700; }
+.card p  { color: var(--text-muted); }
+
+/* card grid for feature tiles */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  max-width: 1080px;
+  margin: 1.25rem auto;
+}
+.grid .card { margin: 0; }
+
+/* status accents you can drop on any card */
+.card.is-danger { border-left: 4px solid var(--red); }
+.card.is-safe   { border-left: 4px solid var(--green); }
+
+/* =========================================================
+   Buttons & inputs
+   ========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn:hover  { filter: brightness(1.07); text-decoration: none; }
+
+.btn-primary { background: var(--red);   color: #fff; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-ghost   {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+input[type="text"],
+input[type="file"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 1rem;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-soft);
+}
+
+/* =========================================================
+   Footer
+   ========================================================= */
+.site-footer {
+  max-width: 1080px;
+  margin: 2rem auto 0;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+@media (max-width: 640px) {
+  .navbar { flex-wrap: wrap; gap: 0.75rem; }
+  .navbar .links { margin-left: 0; width: 100%; }
+  .hero h1 { font-size: 2.1rem; }
+  .hero p  { font-size: 1rem; }
+  .card { padding: 1.5rem; }
+}
