@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+"scripts": {
+  "start": "node app.js",
+  "dev": "node app.js",
+  "test": "echo \"No tests specified\" && exit 0"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -13,5 +15,14 @@
   "dependencies": {
     "ejs": "^6.0.1",
     "express": "^5.2.1"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shaniaong25026302/scamlah-devops-.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shaniaong25026302/scamlah-devops-/issues"
+  },
+  "homepage": "https://github.com/shaniaong25026302/scamlah-devops-#readme"
 }
