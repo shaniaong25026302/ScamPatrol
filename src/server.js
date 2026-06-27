@@ -26,12 +26,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 // attachUser: sets req.user + res.locals.user when a valid token is present; never blocks.
-// (Lives in src/middleware/auth.middleware.js — added with the auth feature.)
-// app.use(require("./middleware/auth.middleware").attachUser);
+app.use(require("./middleware/auth.middleware").attachUser);
 
-// Default locals so partials (navbar) can render before features land.
+// Default locals so partials (navbar) always have something to read.
 app.use((req, res, next) => {
-  res.locals.user = res.locals.user || null;
+  if (typeof res.locals.user === "undefined") res.locals.user = null;
   res.locals.activePage = "";
   next();
 });
@@ -55,9 +54,9 @@ app.get("/", (req, res) => {
 //  MOUNT POINTS — teammates add their routers + views here.
 //  Keep API routers under /api/*, page routers under their path.
 // ─────────────────────────────────────────────────────────────────
-// M1 (me) — Auth + AI Checker:
-//   app.use("/api/auth", require("./routes/auth.routes"));
-//   app.use("/auth",     require("./routes/auth.pages.routes"));
+// M1 (me) — Auth (live) + AI Checker (next batch):
+app.use("/api/auth", require("./routes/auth.routes"));
+app.use("/auth", require("./routes/auth.pages.routes"));
 //   app.use("/api/ai",   require("./routes/ai.routes"));
 //   app.use("/ai-checker", require("./routes/ai.pages.routes"));
 // M2 Rebecca — case write:   app.use("/api/cases", require("./routes/cases.routes"));

@@ -1,0 +1,26 @@
+<div class="card auth-card">
+  <h1>Log in</h1>
+  <p class="sub">Welcome back to scamlah.</p>
+
+  <div class="alert alert-danger" id="form-error" style="display:none"></div>
+  <div class="alert alert-success" id="form-success" style="display:none"></div>
+
+  <form id="login-form" data-next="<%= typeof next !== 'undefined' ? next : '' %>" novalidate>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" autocomplete="email" required />
+      <div class="field-error" data-for="email"></div>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required />
+      <div class="field-error" data-for="password"></div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%">Log in</button>
+  </form>
+
+  <p class="form-foot"><a href="/auth/forgot-password">Forgot your password?</a></p>
+  <p class="form-foot">New here? <a href="/auth/register">Create an account</a></p>
+</div>
+
+<script src="/js/auth.js" defer></script>

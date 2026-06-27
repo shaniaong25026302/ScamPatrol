@@ -1,0 +1,34 @@
+<div class="card auth-card">
+  <h1>Create your account</h1>
+  <p class="sub">Join scamlah to report scams and use the full AI checker.</p>
+
+  <div class="alert alert-danger" id="form-error" style="display:none"></div>
+
+  <form id="register-form" novalidate>
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required />
+      <div class="field-error" data-for="username"></div>
+    </div>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" autocomplete="email" required />
+      <div class="field-error" data-for="email"></div>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="new-password" required />
+      <div class="field-error" data-for="password"></div>
+    </div>
+    <div class="form-group">
+      <label for="confirmPassword">Confirm password</label>
+      <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required />
+      <div class="field-error" data-for="confirmPassword"></div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%">Create account</button>
+  </form>
+
+  <p class="form-foot">Already have an account? <a href="/auth/login">Log in</a></p>
+</div>
+
+<script src="/js/auth.js" defer></script>
