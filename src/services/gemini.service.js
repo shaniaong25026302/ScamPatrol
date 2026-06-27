@@ -61,7 +61,29 @@ function safeParse(raw) {
   }
 }
 
+// Deterministic offline analysis for tests/CI (set AI_FAKE=1). Avoids real API
+// calls + cost while exercising the full request path. Never used in normal runs.
+function fakeAnalyze(text) {
+  const t = String(text).toLowerCase();
+  const askingCreds = /\b(otp|password|pin|cvv|bank details)\b/.test(t);
+  const link = /(https?:\/\/|www\.|\.xyz|bit\.ly|tinyurl)/.test(t);
+  const urgency = /\b(urgent|immediately|suspend|locked|verify now|act now)\b/.test(t);
+  const bait = /\b(won|winner|prize|reward|gift card|claim|free|congratulations)\b/.test(t);
+
+  const score = [askingCreds, link, urgency, bait].filter(Boolean).length;
+  const risk = score >= 2 ? "high" : score === 1 ? "medium" : "low";
+
+  const signals = [];
+  if (askingCreds) signals.push("Requests sensitive credentials");
+  if (link) signals.push("Contains a suspicious link");
+  if (urgency) signals.push("Creates false urgency");
+  if (bait) signals.push("Too-good-to-be-true reward");
+
+  return { risk_level: risk, explanation: "[test mode] Heuristic assessment from keywords.", signals };
+}
+
 async function analyzeText(text) {
+  if (process.env.AI_FAKE === "1") return fakeAnalyze(text);
   const ai = getClient();
   const res = await ai.models.generateContent({
     model: MODEL,

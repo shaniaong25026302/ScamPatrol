@@ -83,6 +83,10 @@ app.use((err, req, res, next) => {
   res.status(500).send("Internal server error");
 });
 
-app.listen(PORT, () => console.log(`scamlah running on http://localhost:${PORT}`));
+// Only listen when started directly (node src/server.js). When required by tests,
+// the app is exported un-started so they can listen on an ephemeral port.
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`scamlah running on http://localhost:${PORT}`));
+}
 
 module.exports = app;
