@@ -1,23 +1,30 @@
 /* =========================================================
-   scamlah — Global Styles
-   Light theme · red / green / white · clean card layout
+   scamlah — Global Styles (shared base theme · M1 owns this)
+   Government-service look · navy primary · white surfaces.
+   Red is reserved for HIGH risk; green = safe; amber = medium.
    All colors live in the tokens below — edit to retheme.
    ========================================================= */
 
 /* ---------- Design tokens ---------- */
 :root {
-  --bg:            #f7f8fa;   /* page background          */
+  --bg:            #f4f6f9;   /* page background          */
   --surface:       #ffffff;   /* cards / nav / panels     */
-  --border:        #e4e7ec;
+  --border:        #d9e0e8;
   --text:          #1c2430;
-  --text-muted:    #67707e;
+  --text-muted:    #5b6776;
 
-  --red:           #e23b3b;   /* danger / scam / brand    */
-  --red-dark:      #c22d2d;
-  --red-soft:      #fdecec;   /* red tint backgrounds     */
-  --green:         #1ea566;   /* safe / success           */
+  --navy:          #1E3A5F;   /* PRIMARY brand / actions  */
+  --navy-dark:     #15293f;
+  --navy-soft:     #e8eef5;   /* navy tint backgrounds    */
+
+  --red:           #d12d2d;   /* HIGH risk / danger       */
+  --red-dark:      #b02525;
+  --red-soft:      #fdecec;
+  --amber:         #b8770a;   /* MEDIUM risk / caution    */
+  --amber-soft:    #fbf1dc;
+  --green:         #1ea566;   /* LOW risk / safe / success*/
   --green-dark:    #178a55;
-  --green-soft:    #e8f7ef;   /* green tint backgrounds   */
+  --green-soft:    #e8f7ef;
 
   --radius:        16px;
   --radius-sm:     10px;
@@ -40,7 +47,7 @@ body {
   min-height: 100vh;
 }
 
-a { color: var(--red); text-decoration: none; }
+a { color: var(--navy); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 .container {
@@ -62,6 +69,7 @@ a:hover { text-decoration: underline; }
   padding: 0.9rem 1.5rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(30, 58, 95, 0.04);
 }
 
 .navbar .brand {
@@ -73,12 +81,13 @@ a:hover { text-decoration: underline; }
   letter-spacing: -0.02em;
   color: var(--text);
 }
-/* split-color wordmark: scam (red) + lah (green) */
-.navbar .brand .scam { color: var(--red); }
+/* split-color wordmark: scam (navy) + lah (green) */
+.navbar .brand .scam { color: var(--navy); }
 .navbar .brand .lah  { color: var(--green); }
 
 .navbar .links {
   display: flex;
+  align-items: center;
   gap: 0.4rem;
   margin-left: auto;
 }
@@ -96,9 +105,11 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
 }
 .navbar .links a.active {
-  background: var(--red-soft);
-  color: var(--red-dark);
+  background: var(--navy-soft);
+  color: var(--navy);
 }
+/* keep button-styled nav links (Register) readable on hover */
+.navbar .links a.btn:hover { color: #fff; background: var(--navy-dark); }
 
 /* =========================================================
    Alerts
@@ -114,8 +125,9 @@ a:hover { text-decoration: underline; }
   font-size: 0.95rem;
   font-weight: 500;
 }
-.alert-warning { background: var(--red-soft);   color: var(--red-dark);   border: 1px solid #f6cccc; }
-.alert-success { background: var(--green-soft); color: var(--green-dark); border: 1px solid #c4ecd6; }
+.alert-warning { background: var(--amber-soft); color: var(--amber);     border: 1px solid #ecd9ad; }
+.alert-danger  { background: var(--red-soft);   color: var(--red-dark);  border: 1px solid #f6cccc; }
+.alert-success { background: var(--green-soft); color: var(--green-dark);border: 1px solid #c4ecd6; }
 
 /* =========================================================
    Hero
@@ -127,7 +139,7 @@ a:hover { text-decoration: underline; }
   text-align: center;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-top: 5px solid var(--red);
+  border-top: 5px solid var(--navy);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
@@ -137,11 +149,18 @@ a:hover { text-decoration: underline; }
   letter-spacing: -0.03em;
   margin-bottom: 0.5rem;
 }
-.hero h1 .scam { color: var(--red); }
+.hero h1 .scam { color: var(--navy); }
 .hero h1 .lah  { color: var(--green); }
 .hero p {
   font-size: 1.2rem;
   color: var(--text-muted);
+}
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
 }
 
 /* =========================================================
@@ -173,6 +192,7 @@ a:hover { text-decoration: underline; }
 
 /* status accents you can drop on any card */
 .card.is-danger { border-left: 4px solid var(--red); }
+.card.is-warn   { border-left: 4px solid var(--amber); }
 .card.is-safe   { border-left: 4px solid var(--green); }
 
 /* =========================================================
@@ -181,6 +201,7 @@ a:hover { text-decoration: underline; }
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.7rem 1.5rem;
   border: none;
@@ -192,16 +213,22 @@ a:hover { text-decoration: underline; }
 }
 .btn:active { transform: translateY(1px); }
 .btn:hover  { filter: brightness(1.07); text-decoration: none; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn-primary { background: var(--red);   color: #fff; }
+.btn-primary { background: var(--navy);  color: #fff; }
 .btn-success { background: var(--green); color: #fff; }
+.btn-danger  { background: var(--red);   color: #fff; }
 .btn-ghost   {
   background: var(--surface);
-  color: var(--text);
+  color: var(--navy);
   border: 1px solid var(--border);
 }
 
+label { display: block; font-weight: 600; margin-bottom: 0.35rem; font-size: 0.95rem; }
+
 input[type="text"],
+input[type="email"],
+input[type="password"],
 input[type="file"],
 textarea,
 select {
@@ -212,14 +239,48 @@ select {
   border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 1rem;
+  font-family: inherit;
 }
 input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px var(--red-soft);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px var(--navy-soft);
 }
+
+/* =========================================================
+   Forms (auth + AI checker reuse these)
+   ========================================================= */
+.form-group { margin-bottom: 1.1rem; }
+.field-error { color: var(--red-dark); font-size: 0.85rem; margin-top: 0.3rem; min-height: 1rem; }
+input.invalid, textarea.invalid { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-soft); }
+
+.auth-card {
+  max-width: 440px;
+  margin: 3rem auto;
+}
+.auth-card h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+.auth-card .sub { color: var(--text-muted); margin-bottom: 1.5rem; }
+.auth-card .form-foot { margin-top: 1.25rem; text-align: center; color: var(--text-muted); font-size: 0.95rem; }
+
+/* =========================================================
+   Risk badges (AI Scam Checker results)
+   ========================================================= */
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.risk-high   { background: var(--red-soft);   color: var(--red-dark); }
+.risk-medium { background: var(--amber-soft); color: var(--amber); }
+.risk-low    { background: var(--green-soft); color: var(--green-dark); }
 
 /* =========================================================
    Footer
@@ -239,7 +300,7 @@ select:focus {
    ========================================================= */
 @media (max-width: 640px) {
   .navbar { flex-wrap: wrap; gap: 0.75rem; }
-  .navbar .links { margin-left: 0; width: 100%; }
+  .navbar .links { margin-left: 0; width: 100%; flex-wrap: wrap; }
   .hero h1 { font-size: 2.1rem; }
   .hero p  { font-size: 1rem; }
   .card { padding: 1.5rem; }

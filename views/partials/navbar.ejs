@@ -1,7 +1,19 @@
 <!-- ===== Navbar ===== -->
+<% const page = typeof activePage !== 'undefined' ? activePage : ''; %>
+<% const navUser = typeof user !== 'undefined' ? user : null; %>
 <nav class="navbar">
   <a href="/" class="brand"><span class="scam">scam</span><span class="lah">lah</span></a>
   <div class="links">
-    <a href="/"       class="<%= activePage === 'home'   ? 'active' : '' %>">Home</a>
+    <a href="/" class="<%= page === 'home' ? 'active' : '' %>">Home</a>
+    <a href="/ai-checker" class="<%= page === 'ai-checker' ? 'active' : '' %>">AI Checker</a>
+    <!-- Teammates add their nav links here, additively -->
+
+    <% if (navUser) { %>
+      <a href="/profile" class="<%= page === 'profile' ? 'active' : '' %>"><%= navUser.username %></a>
+      <a href="#" data-action="logout">Logout</a>
+    <% } else { %>
+      <a href="/auth/login" class="<%= page === 'login' ? 'active' : '' %>">Login</a>
+      <a href="/auth/register" class="btn btn-primary">Register</a>
+    <% } %>
   </div>
 </nav>

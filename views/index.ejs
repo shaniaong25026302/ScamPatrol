@@ -1,13 +1,25 @@
-<%- include('partials/header', { title: 'scamlah', activePage: 'home' }) %>
-
-  <!-- Hero banner -->
-  <header class="hero">
-    <h1><span class="scam">scam</span><span class="lah">lah</span></h1>
-    <p>Stay safe.</p>
-  </header>
-
-  <!-- Add scamlah's real features here -->
-  <div class="grid">
+<!-- Hero banner -->
+<header class="hero">
+  <h1><span class="scam">scam</span><span class="lah">lah</span></h1>
+  <p>Spot scams. Report them. Keep Singapore safe.</p>
+  <div class="hero-actions">
+    <a href="/ai-checker" class="btn btn-primary">Check a message</a>
+    <a href="/auth/register" class="btn btn-ghost">Join scamlah</a>
   </div>
+</header>
 
-<%- include('partials/footer') %>
+<!-- Feature tiles — teammates wire these to their pages -->
+<div class="grid">
+  <div class="card">
+    <h2>AI Scam Checker</h2>
+    <p>Paste a suspicious message and get an instant risk read with reasons.</p>
+  </div>
+  <div class="card">
+    <h2>Report a scam</h2>
+    <p>Log what happened so others can recognise it before they get caught.</p>
+  </div>
+  <div class="card">
+    <h2>Community watch</h2>
+    <p>Browse, vote and flag reported scams from people across Singapore.</p>
+  </div>
+</div>

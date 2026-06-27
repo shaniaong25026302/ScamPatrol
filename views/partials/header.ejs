@@ -1,16 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= typeof title !== 'undefined' ? title : 'TruthLoop' %></title>
+  <title><%= typeof title !== 'undefined' ? title : 'scamlah' %></title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
-<body>
-
-  <!-- Flash messages (e.g. Redis/DB warnings) -->
-  <% if (typeof flash !== 'undefined' && flash) { %>
-    <div class="alert alert-<%= flash.category || 'warning' %>">⚠️ <%= flash.message %></div>
-  <% } %>
-
-  <%- include('navbar', { activePage }) %>

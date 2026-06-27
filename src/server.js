@@ -1,0 +1,89 @@
+// src/server.js — scamlah single Express app.
+// Serves the JSON API (/api/*) AND renders the EJS pages (res.render) into views/layout.ejs.
+// This is the M1-owned skeleton: teammates mount their routes + views at the marked points below.
+require("dotenv").config();
+
+const path = require("path");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const expressLayouts = require("express-ejs-layouts");
+
+const { ping } = require("./db");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ── View engine: EJS + a single shared layout (views/layout.ejs) ──
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "..", "views"));
+app.use(expressLayouts);
+app.set("layout", "layout");
+
+// ── Core middleware ──
+app.use(express.static(path.join(__dirname, "..", "public")));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cookieParser());
+
+// attachUser: sets req.user + res.locals.user when a valid token is present; never blocks.
+// (Lives in src/middleware/auth.middleware.js — added with the auth feature.)
+// app.use(require("./middleware/auth.middleware").attachUser);
+
+// Default locals so partials (navbar) can render before features land.
+app.use((req, res, next) => {
+  res.locals.user = res.locals.user || null;
+  res.locals.activePage = "";
+  next();
+});
+
+// ── Health check ──
+app.get("/api/health", async (req, res) => {
+  try {
+    await ping();
+    res.json({ status: "ok", db: "up" });
+  } catch (err) {
+    res.status(503).json({ status: "degraded", db: "down", error: err.code || err.message });
+  }
+});
+
+// ── Pages ──
+app.get("/", (req, res) => {
+  res.render("index", { title: "scamlah", activePage: "home" });
+});
+
+// ─────────────────────────────────────────────────────────────────
+//  MOUNT POINTS — teammates add their routers + views here.
+//  Keep API routers under /api/*, page routers under their path.
+// ─────────────────────────────────────────────────────────────────
+// M1 (me) — Auth + AI Checker:
+//   app.use("/api/auth", require("./routes/auth.routes"));
+//   app.use("/auth",     require("./routes/auth.pages.routes"));
+//   app.use("/api/ai",   require("./routes/ai.routes"));
+//   app.use("/ai-checker", require("./routes/ai.pages.routes"));
+// M2 Rebecca — case write:   app.use("/api/cases", require("./routes/cases.routes"));
+// M3 Nivi — case browse/vote/flag
+// M4 CG — comments + profile
+// M5 Liam — points/leaderboard
+// M6 Shawn — landing/glossary/admin
+
+// ── 404 (HTML page vs JSON API) ──
+app.use((req, res) => {
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  res.status(404).render("index", { title: "Not found · scamlah", activePage: "" });
+});
+
+// ── Error handler ──
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  if (req.path.startsWith("/api/")) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+  res.status(500).send("Internal server error");
+});
+
+app.listen(PORT, () => console.log(`scamlah running on http://localhost:${PORT}`));
+
+module.exports = app;

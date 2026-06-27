@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/header') %>
+<body>
+
+  <!-- Flash messages (e.g. DB warnings) -->
+  <% if (typeof flash !== 'undefined' && flash) { %>
+    <div class="alert alert-<%= flash.category || 'warning' %>">⚠️ <%= flash.message %></div>
+  <% } %>
+
+  <%- include('partials/navbar') %>
+
+  <main class="container">
+    <%- body %>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="/js/main.js" defer></script>
+</body>
+</html>
