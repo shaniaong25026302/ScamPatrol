@@ -1,0 +1,46 @@
+<% const authed = typeof user !== 'undefined' && user; %>
+
+<section class="card" id="ai-checker" data-authed="<%= authed ? '1' : '0' %>">
+  <h1>AI Scam Checker</h1>
+  <p class="sub">Paste a suspicious message — email, SMS, WhatsApp, listing — and get an instant risk read.</p>
+
+  <% if (!authed) { %>
+    <div class="alert alert-warning" style="margin: 0 0 1rem">
+      You're using the checker as a guest (limited). <a href="/auth/register">Create an account</a> for unlimited checks and saved history.
+    </div>
+  <% } %>
+
+  <div class="alert alert-danger" id="ai-error" style="display:none"></div>
+
+  <form id="ai-form" novalidate>
+    <div class="form-group">
+      <label for="text">Message to check</label>
+      <textarea id="text" name="text" rows="7" maxlength="10000"
+        placeholder="e.g. Congratulations! You've won $5,000. Click this link and verify your bank details to claim..."></textarea>
+      <div class="field-error" data-for="text"></div>
+      <div class="char-count"><span id="char-now">0</span> / 10000</div>
+    </div>
+    <button type="submit" class="btn btn-primary" id="ai-submit">Check message</button>
+  </form>
+
+  <!-- Result -->
+  <div id="ai-result" class="result-panel" style="display:none">
+    <div class="result-head">
+      <span class="risk-badge" id="risk-badge"></span>
+      <span class="result-saved" id="result-saved"></span>
+    </div>
+    <p id="result-explanation"></p>
+    <ul id="result-signals" class="signal-list"></ul>
+  </div>
+</section>
+
+<!-- History (users only) -->
+<% if (authed) { %>
+  <section class="card" id="history-card">
+    <h2>Your recent checks</h2>
+    <div id="history-empty" class="sub" style="display:none">No checks yet — try the checker above.</div>
+    <ul id="history-list" class="history-list"></ul>
+  </section>
+<% } %>
+
+<script src="/js/ai-checker.js" defer></script>

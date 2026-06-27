@@ -54,11 +54,11 @@ app.get("/", (req, res) => {
 //  MOUNT POINTS — teammates add their routers + views here.
 //  Keep API routers under /api/*, page routers under their path.
 // ─────────────────────────────────────────────────────────────────
-// M1 (me) — Auth (live) + AI Checker (next batch):
+// M1 (me) — Auth + AI Checker (live):
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/auth", require("./routes/auth.pages.routes"));
-//   app.use("/api/ai",   require("./routes/ai.routes"));
-//   app.use("/ai-checker", require("./routes/ai.pages.routes"));
+app.use("/api/ai", require("./routes/ai.routes"));
+app.use("/ai-checker", require("./routes/ai.pages.routes"));
 // M2 Rebecca — case write:   app.use("/api/cases", require("./routes/cases.routes"));
 // M3 Nivi — case browse/vote/flag
 // M4 CG — comments + profile
