@@ -1,5 +1,10 @@
+require("dotenv").config();
+
 const express = require("express");
 const path = require("path");
+const caseRoutes = require("./routes/cases");
+
+require("./configs/db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,5 +21,14 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
   res.render("index", { activePage: "home" });
 });
+
+app.get("/report", (req, res) => {
+    res.render("reportScam", {
+        activePage: "report",
+        title: "Report a Scam"
+    });
+});
+
+app.use("/cases", caseRoutes);
 
 app.listen(PORT, () => console.log(`Running on http://localhost:${PORT}`));

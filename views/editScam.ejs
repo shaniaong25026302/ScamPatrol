@@ -1,0 +1,84 @@
+<%- include("partials/header", {
+    title: "Report a Scam",
+    activePage: "report"
+}) %>
+
+<div class="container">
+
+    <h1>Report a Scam</h1>
+
+    <form
+    action="/cases/edit/<%= scam.id %>"
+    method="POST"
+    enctype="multipart/form-data">
+
+
+        <label>Scam Title</label>
+        <input
+            type="text"
+            name="title"
+            required
+        >
+
+        <label>Description</label>
+        <textarea
+            name="description"
+            rows="6"
+            required
+        ></textarea>
+
+        <label>Category</label>
+        <select name="category_id" required>
+            <option value="">Select Category</option>
+
+            <option value="1">Phishing</option>
+            <option value="2">Investment Scam</option>
+            <option value="3">Job Scam</option>
+            <option value="4">Love Scam</option>
+            <option value="5">Loan Scam</option>
+            <option value="6">Online Shopping Scam</option>
+            <option value="7">Social Media Scam</option>
+            <option value="8">Fake Buyer</option>
+            <option value="9">Others</option>
+        </select>
+
+        <label>Platform</label>
+        <input
+            type="text"
+            name="platform"
+            placeholder="WhatsApp, Telegram, Facebook..."
+        >
+
+        <label>Date of Scam</label>
+        <input
+            type="date"
+            name="scam_date"
+        >
+
+        <label>Upload Image</label>
+        <input
+            type="file"
+            name="image"
+            accept="image/*"
+        >
+
+        <br><br>
+
+        <button type="submit">
+            Submit Report
+        </button>
+
+    </form>
+    
+    <form
+    action="/cases/delete/<%= scam.id %>"
+    method="POST">
+
+    <button type="submit">
+    Delete
+    </button>
+
+    </form>
+</div>
+
+<%- include("partials/footer") %>
