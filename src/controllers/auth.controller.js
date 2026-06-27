@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 
 const User = require("../models/user.model");
+const mail = require("../services/mail.service");
 const { validateEmail, validateUsername, validatePassword } = require("../utils/validate");
 const {
   signAccess,
@@ -98,7 +99,20 @@ async function forgotPassword(req, res) {
     const expiresAt = new Date(Date.now() + RESET_TTL_MS);
     await User.deleteResetsForUser(user.id);
     await User.createReset(user.id, token, expiresAt);
-    // No email service in scope: in dev we return the token so the flow is testable.
+
+    // Absolute link for the email; APP_BASE_URL wins (correct behind Render's proxy).
+    const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
+
+    if (mail.isConfigured()) {
+      try {
+        await mail.sendPasswordReset(user.email, resetUrl);
+        response.emailed = true;
+      } catch (e) {
+        console.error("Password reset email failed:", e.message);
+      }
+    }
+    // Dev convenience: also return the link on-screen so the flow stays testable.
     if (!isProd()) {
       response.resetToken = token;
       response.resetUrl = `/auth/reset-password?token=${token}`;
