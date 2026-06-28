@@ -1,0 +1,13 @@
+<h1>Community Watch</h1>
+
+<% cases.forEach(c => { %>
+  <div>
+    <h2><%= c.title %></h2>
+
+    <p><%= c.description %></p>
+
+    <a href="/cases/<%= c.id %>">
+      View Details
+    </a>
+  </div>
+<% }) %>

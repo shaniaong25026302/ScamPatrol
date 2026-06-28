@@ -61,6 +61,7 @@ app.use("/api/ai", require("./routes/ai.routes"));
 app.use("/ai-checker", require("./routes/ai.pages.routes"));
 // M2 Rebecca — case write:   app.use("/api/cases", require("./routes/cases.routes"));
 // M3 Nivi — case browse/vote/flag
+app.use("/cases", require("./routes/cases.pages.routes"));
 // M4 CG — comments + profile
 // M5 Liam — points/leaderboard
 // M6 Shawn — landing/glossary/admin
