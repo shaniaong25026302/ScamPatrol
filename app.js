@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const pointsService = require("./services/pointsService");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,7 +15,23 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.get("/", (req, res) => {
-  res.render("index", { activePage: "home" });
+  const leaderboard = pointsService.getLeaderboard();
+  const topLeaderboard = Array.isArray(leaderboard) ? leaderboard.slice(0, 3) : [];
+
+  res.render("index", {
+    activePage: "home",
+    leaderboard: topLeaderboard
+  });
+});
+
+app.get("/leaderboard", (req, res) => {
+  const leaderboard = pointsService.getLeaderboard();
+  const safeLeaderboard = Array.isArray(leaderboard) ? leaderboard : [];
+
+  res.render("leaderboard", {
+    activePage: "leaderboard",
+    leaderboard: safeLeaderboard
+  });
 });
 
 app.listen(PORT, () => console.log(`Running on http://localhost:${PORT}`));

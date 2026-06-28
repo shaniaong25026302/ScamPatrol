@@ -1,0 +1,33 @@
+<%- include('partials/header', { title: 'Leaderboard', activePage: 'leaderboard' }) %>
+
+<main class="container leaderboard-page">
+  <section class="leaderboard-hero">
+    <h1>🏆 ScamLah Leaderboard</h1>
+    <p>Top contributors earn recognition by reporting cases, posting comments, and keeping the community safe.</p>
+  </section>
+
+  <section class="leaderboard-card card">
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>User</th>
+          <th>Points</th>
+          <th>Badges</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% leaderboard.forEach((user, index) => { %>
+          <tr>
+            <td>#<%= index + 1 %></td>
+            <td><%= user.username %></td>
+            <td><%= user.points %></td>
+            <td><%= user.badges.length ? user.badges.join(', ') : 'No badges yet' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<%- include('partials/footer') %>
