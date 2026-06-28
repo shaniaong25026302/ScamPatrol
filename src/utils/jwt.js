@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/utils/jwt.js — JWT signing/verification + httpOnly cookie options.
 const jwt = require("jsonwebtoken");
 
@@ -42,3 +43,4 @@ module.exports = {
   refreshCookieOpts,
   clearCookieOpts,
 };
+// <Shania End>

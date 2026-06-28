@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/controllers/auth.controller.js — register, login, me, logout, password reset, refresh.
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
@@ -162,3 +163,4 @@ async function refresh(req, res) {
 }
 
 module.exports = { register, login, me, logout, forgotPassword, resetPassword, refresh };
+// <Shania End>

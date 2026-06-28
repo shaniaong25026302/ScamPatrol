@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/models/user.model.js — users + password_resets data access.
 const { pool } = require("../db");
 
@@ -63,3 +64,4 @@ module.exports = {
   findReset,
   deleteResetsForUser,
 };
+// <Shania End>

@@ -1,3 +1,4 @@
+// <Shania Start>
 // tests/helpers.js — shared HTTP client with a cookie jar (not a test file).
 // fetch() doesn't persist cookies, so we capture Set-Cookie and replay them.
 
@@ -49,3 +50,4 @@ function makeClient(base) {
 }
 
 module.exports = { makeClient };
+// <Shania End>

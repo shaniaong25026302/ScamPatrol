@@ -1,3 +1,4 @@
+// <Shania Start>
 // public/js/auth.js — inline validation + fetch() to /api/auth/*.
 // Validation mirrors src/utils/validate.js (server re-checks everything).
 (function () {
@@ -201,3 +202,4 @@
     });
   }
 })();
+// <Shania End>

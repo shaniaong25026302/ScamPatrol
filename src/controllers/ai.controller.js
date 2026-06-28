@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/controllers/ai.controller.js — AI Scam Checker endpoints.
 //   analyze  → open to guests (limited) + users (full + saved history)
 //   history  → users only
@@ -74,3 +75,4 @@ async function history(req, res) {
 }
 
 module.exports = { analyze, history };
+// <Shania End>

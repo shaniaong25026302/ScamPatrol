@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/server.js — scamlah single Express app.
 // Serves the JSON API (/api/*) AND renders the EJS pages (res.render) into views/layout.ejs.
 // This is the M1-owned skeleton: teammates mount their routes + views at the marked points below.
@@ -90,3 +91,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+// <Shania End>

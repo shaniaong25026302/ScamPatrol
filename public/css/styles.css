@@ -1,3 +1,4 @@
+/* <Shania Start> */
 /* =========================================================
    scamlah — Global Styles (shared base theme · M1 owns this)
    Government-service look · navy primary · white surfaces.
@@ -350,3 +351,4 @@ input.invalid, textarea.invalid { border-color: var(--red); box-shadow: 0 0 0 3p
   .hero p  { font-size: 1rem; }
   .card { padding: 1.5rem; }
 }
+/* <Shania End> */

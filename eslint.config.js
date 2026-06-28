@@ -1,3 +1,4 @@
+// <Shania Start>
 // eslint.config.js — flat config (ESLint 9). Node + CommonJS.
 const js = require("@eslint/js");
 
@@ -44,3 +45,4 @@ module.exports = [
     ignores: ["node_modules/**", "public/css/**"],
   },
 ];
+// <Shania End>

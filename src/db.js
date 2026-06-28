@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/db.js — shared MySQL connection pool (mysql2/promise).
 // Every model/controller imports `pool` from here. One pool per process.
 const mysql = require("mysql2/promise");
@@ -27,3 +28,4 @@ async function ping() {
 }
 
 module.exports = { pool, ping };
+// <Shania End>

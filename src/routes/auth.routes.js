@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/routes/auth.routes.js — JSON API, mounted at /api/auth.
 const express = require("express");
 const c = require("../controllers/auth.controller");
@@ -17,3 +18,4 @@ router.post("/refresh", h(c.refresh));
 router.get("/me", requireAuth, h(c.me));
 
 module.exports = router;
+// <Shania End>

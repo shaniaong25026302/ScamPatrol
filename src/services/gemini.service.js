@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/services/gemini.service.js — Google Gemini scam analysis via @google/genai.
 // Returns { risk_level: 'low'|'medium'|'high', explanation, signals[] }.
 const { GoogleGenAI, Type } = require("@google/genai");
@@ -110,3 +111,4 @@ async function analyzeText(text) {
 }
 
 module.exports = { analyzeText, MODEL, RISK_LEVELS };
+// <Shania End>

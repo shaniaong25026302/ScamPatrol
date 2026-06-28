@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/services/mail.service.js — outgoing email via SMTP (Nodemailer).
 // Used for password-reset links. If SMTP isn't configured, isConfigured() is false
 // and callers fall back to the on-screen dev link instead of throwing.
@@ -55,3 +56,4 @@ async function verifyConnection() {
 }
 
 module.exports = { isConfigured, sendPasswordReset, verifyConnection };
+// <Shania End>

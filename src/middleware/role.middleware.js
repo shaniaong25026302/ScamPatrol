@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/middleware/role.middleware.js — role gate. Use AFTER requireAuth.
 //   requireRole("admin")          → admin only
 //   requireRole("user", "admin")  → any authenticated role
@@ -10,3 +11,4 @@ function requireRole(...roles) {
 }
 
 module.exports = { requireRole };
+// <Shania End>

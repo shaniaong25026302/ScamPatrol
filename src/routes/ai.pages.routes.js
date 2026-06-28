@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/routes/ai.pages.routes.js — AI Scam Checker page, mounted at /ai-checker.
 const express = require("express");
 
@@ -8,3 +9,4 @@ router.get("/", (req, res) => {
 });
 
 module.exports = router;
+// <Shania End>

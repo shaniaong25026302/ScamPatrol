@@ -1,3 +1,4 @@
+-- <Shania Start>
 -- ============================================================
 -- scamlah — database schema
 -- Owner: M1 (auth + AI tables, below). M2 (Rebecca) EXTENDS this
@@ -51,3 +52,4 @@ CREATE TABLE IF NOT EXISTS ai_analyses (
 -- ============================================================
 -- M2+ case tables go BELOW this line (additive only).
 -- ============================================================
+-- <Shania End>

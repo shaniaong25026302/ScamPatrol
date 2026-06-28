@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/middleware/auth.middleware.js — shared auth guards. Teammates import these.
 //   attachUser       → never blocks; sets req.user + res.locals.user when a valid token is present.
 //   requireAuth      → API guard; 401 JSON for guests.
@@ -40,3 +41,4 @@ function requireAuthPage(req, res, next) {
 }
 
 module.exports = { attachUser, requireAuth, requireAuthPage, extractToken };
+// <Shania End>
