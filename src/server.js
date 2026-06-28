@@ -65,7 +65,9 @@ app.use("/ai-checker", require("./routes/ai.pages.routes"));
 // M4 CG — comments + profile
 // M5 Liam — points/leaderboard
 // M6 Shawn — landing/glossary/admin
-app.use("/glossary", require("./routes/glossary.pages.routes"));
+// <Shania End>
+app.use("/glossary", require("./routes/glossary.pages.routes")); // added by M6 (Shawn)
+// <Shania Start>
 
 // ── 404 (HTML page vs JSON API) ──
 app.use((req, res) => {
