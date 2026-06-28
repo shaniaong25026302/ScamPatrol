@@ -64,6 +64,7 @@ app.use("/ai-checker", require("./routes/ai.pages.routes"));
 // M4 CG — comments + profile
 // M5 Liam — points/leaderboard
 // M6 Shawn — landing/glossary/admin
+app.use("/glossary", require("./routes/glossary.pages.routes"));
 
 // ── 404 (HTML page vs JSON API) ──
 app.use((req, res) => {
