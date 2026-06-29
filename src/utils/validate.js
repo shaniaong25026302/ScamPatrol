@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/utils/validate.js — server-side validation (mirrored client-side in public/js/auth.js).
 // Each function returns an error string, or null when valid.
 
@@ -28,3 +29,4 @@ function validatePassword(password) {
 }
 
 module.exports = { validateEmail, validateUsername, validatePassword, EMAIL_RE, USERNAME_RE };
+// <Shania End>

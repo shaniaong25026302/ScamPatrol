@@ -1,3 +1,4 @@
+// <Shania Start>
 // public/js/ai-checker.js — AI Scam Checker page: validate, analyze, render result + history.
 (function () {
   "use strict";
@@ -146,3 +147,4 @@
 
   if (authed) loadHistory();
 })();
+// <Shania End>

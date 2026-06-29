@@ -1,3 +1,4 @@
+// <Shania Start>
 // tests/jwt.test.js — unit tests for JWT helpers (no DB/network).
 // Set a fixed secret BEFORE requiring the module (it caches the secret at load).
 process.env.JWT_SECRET = "unit-test-secret-please-ignore";
@@ -47,3 +48,4 @@ test("cookie options are httpOnly and not secure outside production", () => {
   assert.strictEqual(r.httpOnly, true);
   assert.ok(r.maxAge > a.maxAge); // refresh lives longer than access
 });
+// <Shania End>

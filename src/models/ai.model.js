@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/models/ai.model.js — ai_analyses data access.
 const { pool } = require("../db");
 
@@ -24,3 +25,4 @@ async function historyForUser(userId, limit = 20) {
 }
 
 module.exports = { createAnalysis, historyForUser };
+// <Shania End>

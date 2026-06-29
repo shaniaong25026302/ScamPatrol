@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/server.js — scamlah single Express app.
 // Serves the JSON API (/api/*) AND renders the EJS pages (res.render) into views/layout.ejs.
 // This is the M1-owned skeleton: teammates mount their routes + views at the marked points below.
@@ -65,6 +66,9 @@ app.use("/cases", require("./routes/cases.pages.routes"));
 // M4 CG — comments + profile
 // M5 Liam — points/leaderboard
 // M6 Shawn — landing/glossary/admin
+// <Shania End>
+app.use("/glossary", require("./routes/glossary.pages.routes")); // added by M6 (Shawn)
+// <Shania Start>
 
 // ── 404 (HTML page vs JSON API) ──
 app.use((req, res) => {
@@ -91,3 +95,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+// <Shania End>

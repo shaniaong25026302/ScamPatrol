@@ -1,3 +1,4 @@
+// <Shania Start>
 // public/js/main.js — tiny shared client script loaded on every page.
 // Handles the navbar logout link; feature pages add their own scripts.
 document.addEventListener("click", async (e) => {
@@ -11,3 +12,4 @@ document.addEventListener("click", async (e) => {
   }
   window.location.href = "/";
 });
+// <Shania End>

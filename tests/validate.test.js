@@ -1,3 +1,4 @@
+// <Shania Start>
 // tests/validate.test.js — unit tests for server-side validators (no DB/network).
 const test = require("node:test");
 const assert = require("node:assert");
@@ -52,3 +53,4 @@ test("validatePassword", async (t) => {
     assert.ok(validatePassword("Passw0rd"));
   });
 });
+// <Shania End>

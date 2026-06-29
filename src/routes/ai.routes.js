@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/routes/ai.routes.js — AI Scam Checker JSON API, mounted at /api/ai.
 const express = require("express");
 const c = require("../controllers/ai.controller");
@@ -11,3 +12,4 @@ router.post("/analyze", h(c.analyze)); // guests (limited) + users
 router.get("/history", requireAuth, h(c.history)); // users only
 
 module.exports = router;
+// <Shania End>

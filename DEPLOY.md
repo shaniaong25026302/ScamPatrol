@@ -1,3 +1,4 @@
+<!-- <Shania Start> -->
 # Deploying scamlah to Render
 
 A guide to publish the app at a permanent public URL (e.g. `https://scamlah.onrender.com`)
@@ -81,3 +82,4 @@ link like **`https://scamlah.onrender.com`** — paste that to your teammates. V
   committed and pushed.
 - **App won't bind / "no open ports detected"** → make sure you did **not** hardcode `PORT`;
   the app must read `process.env.PORT` (it already does in `src/server.js`).
+<!-- <Shania End> -->

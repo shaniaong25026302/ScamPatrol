@@ -1,3 +1,4 @@
+<!-- <Shania Start> -->
 # scamlah — M1 Feature Summary (Presentation Guide)
 
 **My module (M1):** Authentication + AI Scam Checker + Team Lead (project skeleton, shared
@@ -159,3 +160,4 @@ npm run format         # auto-format with Prettier
 > "I built the authentication system and the AI Scam Checker, and as team lead I set up the app
 > skeleton, the shared navy UI theme, the database schema, and the test suite that the whole team
 > builds on."
+<!-- <Shania End> -->

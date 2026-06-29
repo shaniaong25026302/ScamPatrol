@@ -1,3 +1,4 @@
+// <Shania Start>
 // src/routes/auth.pages.routes.js — server-rendered auth pages, mounted at /auth.
 // Logged-in users are bounced away from the auth forms.
 const express = require("express");
@@ -30,3 +31,4 @@ router.get("/reset-password", guestOnly, (req, res) => {
 });
 
 module.exports = router;
+// <Shania End>

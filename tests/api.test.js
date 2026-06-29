@@ -1,3 +1,4 @@
+// <Shania Start>
 // tests/api.test.js — integration tests for the auth + AI API.
 // Imports the Express app (it won't self-listen), starts it on an ephemeral port,
 // and drives it over HTTP. Gemini is stubbed via AI_FAKE so this is offline + free.
@@ -168,3 +169,4 @@ test("ai: user analyze is saved and shows up in history", async (t) => {
   assert.strictEqual(h.status, 200);
   assert.ok(h.data.history.some((row) => row.input_text.includes(MARKER)), "saved check in history");
 });
+// <Shania End>

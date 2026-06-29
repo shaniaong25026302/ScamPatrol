@@ -1,3 +1,4 @@
+# <Shania Start>
 node_modules/
 npm-debug.log*
 .env
@@ -5,3 +6,4 @@ npm-debug.log*
 
 # Local-only response mirror (kept out of version control)
 RESPONSE.md
+# <Shania End>
