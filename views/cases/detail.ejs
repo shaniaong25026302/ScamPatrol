@@ -1,6 +1,43 @@
-<h1><%= scam.title %></h1>
+<a href="/cases" class="back-link">
+  ← Back to Community Watch
+</a>
 
-<p><%= scam.description %></p>
+<div class="card">
 
-<button>👍 Helpful</button>
-<button>🚩 Report</button>
+  <h1><%= scam.title %></h1>
+
+  <p><%= scam.description %></p>
+
+  <p class="case-meta">
+  Category: Investment Scam • Platform: <%= scam.platform %>
+  </p>
+
+<% if (typeof success !== "undefined" && success === "vote") { %>
+  <div class="success-message">
+    ✅ Thanks for marking this report as helpful.
+  </div>
+<% } %>
+
+<% if (typeof success !== "undefined" && success === "flag") { %>
+  <div class="success-message">
+    🚩 Report submitted successfully.
+  </div>
+<% } %>
+
+  <div class="case-buttons">
+
+    <form action="/cases/<%= scam.id %>/vote" method="POST">
+      <button class="vote-btn" type="submit">
+        👍 Helpful
+      </button>
+    </form>
+
+    <form action="/cases/<%= scam.id %>/flag" method="POST">
+      <button class="flag-btn" type="submit">
+        🚩 Report
+      </button>
+    </form>
+
+  </div>
+
+</div>

@@ -1,13 +1,33 @@
 const express = require("express");
-const { getAllCases } = require("../models/case.model");
+const {
+  getAllCases,
+  searchCases,
+  getCasesByCategory,
+  getSortedCases,
+  getCaseById,
+  addVote,
+  addFlag
+} = require("../models/case.model");
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const cases = await getAllCases();
+  const search = req.query.search;
+  const category = req.query.category;
+  const sort = req.query.sort;
 
-  console.log(cases);
-  
+  let cases;
+
+  if (search) {
+    cases = await searchCases(search);
+  } else if (category) {
+    cases = await getCasesByCategory(category);
+  } else if (sort) {
+    cases = await getSortedCases(sort);
+  } else {
+    cases = await getAllCases();
+  }
+
   res.render("cases/list", {
     title: "Community Watch",
     activePage: "cases",
@@ -15,17 +35,28 @@ router.get("/", async (req, res) => {
   });
 });
 
-router.get("/:id", (req, res) => {
-  const scam = {
-    id: req.params.id,
-    title: "Fake Job Scam",
-    description: "Recruiter asked me for money through Telegram"
-  };
+router.get("/:id", async (req, res) => {
+
+  const scam = await getCaseById(req.params.id);
 
   res.render("cases/detail", {
     title: scam.title,
-    scam
+    scam,
+    success: req.query.success
   });
+
+});
+
+router.post("/:id/vote", async (req, res) => {
+  await addVote(req.params.id);
+
+  res.redirect(`/cases/${req.params.id}?success=vote`);
+});
+
+router.post("/:id/flag", async (req, res) => {
+  await addFlag(req.params.id);
+
+  res.redirect(`/cases/${req.params.id}?success=flag`);
 });
 
 module.exports = router;
