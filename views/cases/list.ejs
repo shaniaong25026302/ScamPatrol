@@ -1,0 +1,72 @@
+<h1>🛡️ Community Watch</h1>
+
+<p class="community-subtitle">
+  Browse, search and report scam cases shared by the community.
+</p>
+
+<p class="case-count">
+  <%= cases.length %> scam report(s) found
+</p>
+
+<form class="community-form" action="/cases" method="GET">
+
+  <input
+    type="text"
+    name="search"
+    placeholder="Search scam reports..."
+  >
+
+  <select name="category">
+    <option value="">All Categories</option>
+    <option value="1">Phishing</option>
+    <option value="2">Investment Scam</option>
+    <option value="3">Job Scam</option>
+    <option value="4">Love Scam</option>
+    <option value="5">Loan Scam</option>
+  </select>
+
+  <select name="sort">
+    <option value="">Sort By</option>
+    <option value="newest">Newest</option>
+    <option value="oldest">Oldest</option>
+  </select>
+
+  <button type="submit">
+    Search
+  </button>
+
+</form>
+
+<% if (cases.length === 0) { %>
+
+<div class="card">
+  <p>🔍 No scam reports found.</p>
+</div>
+
+<% } %>
+
+<% cases.forEach(c => { %>
+
+<div class="case-card">
+
+  <h2><%= c.title %></h2>
+
+  <p><%= c.description %></p>
+
+  <div class="case-meta">
+    <span>Category ID: <%= c.category_id %></span>
+
+    <% if (c.platform) { %>
+      <span> • Platform: <%= c.platform %></span>
+    <% } %>
+  </div>
+
+  <div class="case-actions">
+    <a href="/cases/<%= c.id %>">
+      View Details →
+    </a>
+  </div>
+
+</div>
+
+<% }) %>
