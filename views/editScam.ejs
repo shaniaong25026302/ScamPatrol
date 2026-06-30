@@ -1,0 +1,103 @@
+<%- include("partials/header", {
+    title: "Report a Scam",
+    activePage: "report"
+}) %>
+
+<div class="container">
+
+    <h1>Report a Scam</h1>
+
+    <form
+    action="/cases/edit/<%= caseData.id %>"
+    method="POST"
+    enctype="multipart/form-data">
+
+
+        <label>Scam Title</label>
+        <input
+        type="text"
+        name="title"
+        value="<%= caseData.title %>"
+        required
+        >
+
+        <label>Description</label>
+        <textarea
+        name="description"
+        rows="6"
+        required
+        ><%= caseData.description %></textarea>
+
+        <label>Category</label>
+        <select name="category_id" required>
+            <option value="">Select Category</option>
+            <option value="1" <%= caseData.category_id == 1 ? "selected" : "" %>>
+                Phishing
+            </option>
+            <option value="2" <%= caseData.category_id == 2 ? "selected" : "" %>>
+                Investment Scam
+            </option>
+            <option value="3" <%= caseData.category_id == 3 ? "selected" : "" %>>
+                Job Scam
+            </option>
+            <option value="4" <%= caseData.category_id == 4 ? "selected" : "" %>>
+                Love Scam
+            </option>
+            <option value="5" <%= caseData.category_id == 5 ? "selected" : "" %>>
+                Loan Scam
+            </option>
+            <option value="6" <%= caseData.category_id == 6 ? "selected" : "" %>>
+                Online Shopping Scam
+            </option>
+            <option value="7" <%= caseData.category_id == 7 ? "selected" : "" %>>
+                Social Media Scam
+            </option>
+            <option value="8" <%= caseData.category_id == 8 ? "selected" : "" %>>
+                Fake Buyer
+            </option>
+            <option value="9" <%= caseData.category_id == 9 ? "selected" : "" %>>
+                Others
+            </option>
+        </select>
+
+        <label>Platform</label>
+        <input
+        type="text"
+        name="platform"
+        value="<%= caseData.platform %>"
+        >
+
+        <label>Date of Scam</label>
+        <input
+        type="date"
+        name="scam_date"
+        value="<%= caseData.scam_date ? caseData.scam_date.toISOString().split('T')[0] : '' %>"
+        >
+
+        <label>Upload Image</label>
+        <input
+            type="file"
+            name="image"
+            accept="image/*"
+        >
+
+        <br><br>
+
+        <button type="submit">
+            Update Scam Report
+        </button>
+
+    </form>
+    
+    <form
+    action="/cases/delete/<%= caseData.id %>"
+    method="POST">
+
+    <button type="submit">
+    Delete
+    </button>
+
+    </form>
+</div>
+
+<%- include("partials/footer") %>
