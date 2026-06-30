@@ -1,0 +1,109 @@
+<%# <Rebecca Member 2 Start> %>
+<% const data = typeof caseData !== 'undefined' ? caseData : {}; %>
+<% const action = typeof formAction !== 'undefined' ? formAction : '/cases'; %>
+<% const buttonText = typeof submitLabel !== 'undefined' ? submitLabel : 'Submit'; %>
+
+<% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+  <div class="alert alert-danger case-form-errors">
+    <div>
+      <strong>Please fix these:</strong>
+      <ul>
+        <% errors.forEach(error => { %>
+          <li><%= error %></li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+<% } %>
+
+<form class="case-form" action="<%= action %>" method="POST" enctype="multipart/form-data">
+  <div class="form-group">
+    <label for="title">Scam Title</label>
+    <input
+      id="title"
+      type="text"
+      name="title"
+      value="<%= data.title || '' %>"
+      placeholder="Example: Fake Shopee delivery SMS"
+      required
+    >
+  </div>
+
+  <div class="form-group">
+    <label for="category_id">Category</label>
+    <select id="category_id" name="category_id" required>
+      <option value="">Choose category</option>
+      <% categories.forEach(category => { %>
+        <option value="<%= category.id %>" <%= String(data.category_id || '') === String(category.id) ? 'selected' : '' %>>
+          <%= category.name %>
+        </option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="platform">Platform / Website / App</label>
+    <input
+      id="platform"
+      type="text"
+      name="platform"
+      value="<%= data.platform || '' %>"
+      placeholder="Example: Telegram, WhatsApp, Instagram, SMS"
+    >
+  </div>
+
+  <div class="form-group">
+    <label for="scam_date">Date of Scam</label>
+    <input
+      id="scam_date"
+      type="date"
+      name="scam_date"
+      value="<%= data.scam_date ? new Date(data.scam_date).toISOString().split('T')[0] : '' %>"
+    >
+  </div>
+
+  <div class="form-group">
+    <label for="description">Description</label>
+    <textarea
+      id="description"
+      name="description"
+      rows="7"
+      placeholder="Explain what happened, what the scammer asked for, and any red flags."
+      required
+    ><%= data.description || '' %></textarea>
+    <p class="field-hint">Minimum 20 characters. Do not include NRIC, passwords, or full bank details.</p>
+  </div>
+
+  <% if (data.images && data.images.length > 0) { %>
+    <div class="form-group">
+      <label>Current Image(s)</label>
+      <div class="image-preview-grid">
+        <% data.images.forEach(image => { %>
+          <img src="<%= image.image_path %>" alt="Current scam evidence image">
+        <% }) %>
+      </div>
+      <p class="field-hint">Uploading new images will replace the current image(s).</p>
+    </div>
+  <% } %>
+
+  <div class="form-group">
+    <label for="images">Evidence Image(s)</label>
+    <input
+      id="images"
+      type="file"
+      name="images"
+      accept="image/png,image/jpeg,image/webp,image/gif"
+      multiple
+    >
+    <p class="field-hint">Upload up to 3 images. JPG, PNG, WEBP, or GIF. Max 3MB each.</p>
+    <div id="image-preview" class="image-preview-grid"></div>
+  </div>
+
+  <div class="case-form-actions">
+    <button class="btn btn-primary" type="submit"><%= buttonText %></button>
+    <a class="btn btn-ghost" href="/cases">Cancel</a>
+  </div>
+</form>
+
+<script src="/js/case-form.js" defer></script>
+<%# <Rebecca Member 2 End> %>

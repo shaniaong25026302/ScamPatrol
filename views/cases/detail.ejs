@@ -1,43 +1,60 @@
-<a href="/cases" class="back-link">
-  ← Back to Community Watch
-</a>
+<a href="/cases" class="back-link">← Back to Community Watch</a>
 
-<div class="card">
+<div class="card case-detail-card">
+  <div class="case-title-row">
+    <h1><%= scam.title %></h1>
+    <%- include('../partials/category-badge', { categoryName: scam.category_name }) %>
+  </div>
 
-  <h1><%= scam.title %></h1>
+  <% if (typeof success !== "undefined" && success === "created") { %>
+    <div class="success-message">✅ Scam report submitted successfully.</div>
+  <% } %>
 
-  <p><%= scam.description %></p>
+  <% if (typeof success !== "undefined" && success === "updated") { %>
+    <div class="success-message">✅ Scam report updated successfully.</div>
+  <% } %>
+
+  <% if (typeof success !== "undefined" && success === "vote") { %>
+    <div class="success-message">✅ Thanks for marking this report as helpful.</div>
+  <% } %>
+
+  <% if (typeof success !== "undefined" && success === "flag") { %>
+    <div class="success-message">🚩 Report submitted successfully.</div>
+  <% } %>
+
+  <% if (scam.images && scam.images.length > 0) { %>
+    <div class="case-image-gallery">
+      <% scam.images.forEach(image => { %>
+        <img src="<%= image.image_path %>" alt="Scam evidence image">
+      <% }) %>
+    </div>
+  <% } %>
+
+  <p class="case-description"><%= scam.description %></p>
 
   <p class="case-meta">
-  Category: Investment Scam • Platform: <%= scam.platform %>
+    <% if (scam.platform) { %>
+      Platform: <%= scam.platform %>
+    <% } %>
+    <% if (scam.scam_date) { %>
+      • Date: <%= new Date(scam.scam_date).toLocaleDateString('en-SG') %>
+    <% } %>
+    • Status: <%= scam.status %>
   </p>
 
-<% if (typeof success !== "undefined" && success === "vote") { %>
-  <div class="success-message">
-    ✅ Thanks for marking this report as helpful.
-  </div>
-<% } %>
-
-<% if (typeof success !== "undefined" && success === "flag") { %>
-  <div class="success-message">
-    🚩 Report submitted successfully.
-  </div>
-<% } %>
-
   <div class="case-buttons">
-
     <form action="/cases/<%= scam.id %>/vote" method="POST">
-      <button class="vote-btn" type="submit">
-        👍 Helpful
-      </button>
+      <button class="vote-btn" type="submit">👍 Helpful</button>
     </form>
 
     <form action="/cases/<%= scam.id %>/flag" method="POST">
-      <button class="flag-btn" type="submit">
-        🚩 Report
-      </button>
+      <button class="flag-btn" type="submit">🚩 Report</button>
     </form>
 
-  </div>
+    <a class="btn btn-ghost" href="/cases/<%= scam.id %>/edit">Edit</a>
 
+    <form action="/cases/<%= scam.id %>/delete" method="POST" onsubmit="return confirm('Delete this scam report? This cannot be undone.');">
+      <button class="btn btn-danger" type="submit">Delete</button>
+    </form>
+  </div>
 </div>

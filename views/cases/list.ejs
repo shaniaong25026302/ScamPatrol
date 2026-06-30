@@ -4,69 +4,77 @@
   Browse, search and report scam cases shared by the community.
 </p>
 
-<p class="case-count">
-  <%= cases.length %> scam report(s) found
-</p>
+<div class="case-top-actions">
+  <p class="case-count">
+    <%= cases.length %> scam report(s) found
+  </p>
+  <a class="btn btn-primary" href="/cases/new">+ Report a Scam</a>
+</div>
+
+<% if (typeof success !== "undefined" && success === "deleted") { %>
+  <div class="alert alert-success">✅ Scam report deleted successfully.</div>
+<% } %>
 
 <form class="community-form" action="/cases" method="GET">
-
   <input
     type="text"
     name="search"
+    value="<%= typeof search !== 'undefined' ? search : '' %>"
     placeholder="Search scam reports..."
   >
 
   <select name="category">
     <option value="">All Categories</option>
-    <option value="1">Phishing</option>
-    <option value="2">Investment Scam</option>
-    <option value="3">Job Scam</option>
-    <option value="4">Love Scam</option>
-    <option value="5">Loan Scam</option>
+    <% categories.forEach(category => { %>
+      <option value="<%= category.id %>" <%= String(selectedCategory || '') === String(category.id) ? 'selected' : '' %>>
+        <%= category.name %>
+      </option>
+    <% }) %>
   </select>
 
   <select name="sort">
     <option value="">Sort By</option>
-    <option value="newest">Newest</option>
-    <option value="oldest">Oldest</option>
+    <option value="newest" <%= selectedSort === 'newest' ? 'selected' : '' %>>Newest</option>
+    <option value="oldest" <%= selectedSort === 'oldest' ? 'selected' : '' %>>Oldest</option>
   </select>
 
-  <button type="submit">
-    Search
-  </button>
-
+  <button type="submit">Search</button>
 </form>
 
 <% if (cases.length === 0) { %>
-
-<div class="card">
-  <p>🔍 No scam reports found.</p>
-</div>
-
+  <div class="card empty-state">
+    <p>🔍 No scam reports found.</p>
+    <a class="btn btn-primary" href="/cases/new">Submit the first report</a>
+  </div>
 <% } %>
 
 <% cases.forEach(c => { %>
-
-<div class="case-card">
-
-  <h2><%= c.title %></h2>
-
-  <p><%= c.description %></p>
-
-  <div class="case-meta">
-    <span>Category ID: <%= c.category_id %></span>
-
-    <% if (c.platform) { %>
-      <span> • Platform: <%= c.platform %></span>
+  <div class="case-card">
+    <% if (c.image_path) { %>
+      <img class="case-card-image" src="<%= c.image_path %>" alt="Scam case evidence image">
     <% } %>
+
+    <div class="case-card-body">
+      <div class="case-title-row">
+        <h2><%= c.title %></h2>
+        <%- include('../partials/category-badge', { categoryName: c.category_name }) %>
+      </div>
+
+      <p><%= c.description.length > 180 ? c.description.slice(0, 180) + '...' : c.description %></p>
+
+      <div class="case-meta">
+        <% if (c.platform) { %>
+          <span>Platform: <%= c.platform %></span>
+        <% } %>
+        <% if (c.helpful_count !== undefined) { %>
+          <span>Helpful: <%= c.helpful_count %></span>
+        <% } %>
+      </div>
+
+      <div class="case-actions">
+        <a href="/cases/<%= c.id %>">View Details →</a>
+        <a class="secondary-link" href="/cases/<%= c.id %>/edit">Edit</a>
+      </div>
+    </div>
   </div>
-
-  <div class="case-actions">
-    <a href="/cases/<%= c.id %>">
-      View Details →
-    </a>
-  </div>
-
-</div>
-
 <% }) %>

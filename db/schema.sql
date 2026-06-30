@@ -1,9 +1,9 @@
 -- <Shania Start>
 -- ============================================================
 -- scamlah — database schema
--- Owner: M1 (auth + AI tables, below). M2 (Rebecca) EXTENDS this
--- file ADDITIVELY with case tables — do not rewrite existing tables.
--- Engine: InnoDB, utf8mb4. Target: MySQL 8 (filess.io).
+-- Owner: M1 (auth + AI tables). M2 (Rebecca) adds scam case tables
+-- additively below without rewriting existing auth/AI tables.
+-- Engine: InnoDB, utf8mb4. Target: MySQL 8 / shared MySQL host.
 -- ============================================================
 
 -- ---------- users ----------
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- ---------- ai_analyses ----------
 CREATE TABLE IF NOT EXISTS ai_analyses (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id     INT UNSIGNED DEFAULT NULL,            -- NULL = guest (limited) check
+  user_id     INT UNSIGNED DEFAULT NULL,
   input_text  TEXT NOT NULL,
   risk_level  ENUM('low', 'medium', 'high') NOT NULL,
   explanation TEXT NOT NULL,
@@ -48,8 +48,100 @@ CREATE TABLE IF NOT EXISTS ai_analyses (
   CONSTRAINT fk_ai_analyses_user
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ============================================================
--- M2+ case tables go BELOW this line (additive only).
--- ============================================================
 -- <Shania End>
+
+-- <Rebecca Member 2 Start>
+-- ============================================================
+-- Member 2 — Scam Cases Core CRUD + Image Upload
+-- Owns: categories, scam_cases, case_images
+-- Supports: POST /api/cases, PUT /api/cases/:id,
+--           DELETE /api/cases/:id, GET /api/categories
+-- ============================================================
+
+-- ---------- categories ----------
+CREATE TABLE IF NOT EXISTS categories (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name       VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_categories_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT IGNORE INTO categories (name) VALUES
+  ('Phishing'),
+  ('Investment Scam'),
+  ('Job Scam'),
+  ('Love Scam'),
+  ('Loan Scam'),
+  ('Online Shopping Scam'),
+  ('Social Media Scam'),
+  ('Fake Buyer'),
+  ('Impersonation Scam'),
+  ('Others');
+
+-- ---------- scam_cases ----------
+CREATE TABLE IF NOT EXISTS scam_cases (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  title       VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  category_id INT UNSIGNED DEFAULT NULL,
+  platform    VARCHAR(100) DEFAULT NULL,
+  scam_date   DATE DEFAULT NULL,
+  user_id     INT UNSIGNED DEFAULT NULL,
+  status      ENUM('pending', 'verified', 'rejected') NOT NULL DEFAULT 'pending',
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_scam_cases_category (category_id),
+  KEY idx_scam_cases_user (user_id),
+  KEY idx_scam_cases_created (created_at),
+  CONSTRAINT fk_scam_cases_category
+    FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL,
+  CONSTRAINT fk_scam_cases_user
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ---------- case_images ----------
+CREATE TABLE IF NOT EXISTS case_images (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  case_id    INT UNSIGNED NOT NULL,
+  image_path VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_case_images_case (case_id),
+  CONSTRAINT fk_case_images_case
+    FOREIGN KEY (case_id) REFERENCES scam_cases (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- <Rebecca Member 2 End>
+
+-- <Nivi Member 3 Support Start>
+-- These two tables are kept here so Community Watch vote/flag buttons do not break.
+-- They support Member 3's pages and are not the main Member 2 feature.
+CREATE TABLE IF NOT EXISTS votes (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  case_id    INT UNSIGNED NOT NULL,
+  user_id    INT UNSIGNED DEFAULT NULL,
+  vote_type  ENUM('upvote', 'downvote') NOT NULL DEFAULT 'upvote',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_votes_case (case_id),
+  CONSTRAINT fk_votes_case
+    FOREIGN KEY (case_id) REFERENCES scam_cases (id) ON DELETE CASCADE,
+  CONSTRAINT fk_votes_user
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS flags (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  case_id    INT UNSIGNED NOT NULL,
+  user_id    INT UNSIGNED DEFAULT NULL,
+  reason     VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_flags_case (case_id),
+  CONSTRAINT fk_flags_case
+    FOREIGN KEY (case_id) REFERENCES scam_cases (id) ON DELETE CASCADE,
+  CONSTRAINT fk_flags_user
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- <Nivi Member 3 Support End>
