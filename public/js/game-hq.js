@@ -67,6 +67,24 @@
       step.classList.toggle("on", p.level >= need);
     });
 
+    const ql = $("quest-list");
+    if (ql && p.quest) {
+      ql.innerHTML = p.quest
+        .map((q) => '<li style="padding:.2rem 0">' + (q.done ? "✅" : "⬜") + " " + esc(q.label) + "</li>")
+        .join("");
+    }
+
+    const cb = $("challenge-box");
+    if (cb && p.challenge) {
+      if (p.challenge.done) {
+        cb.innerHTML = "<p>" + p.challenge.icon + " <b>" + esc(p.challenge.label) +
+          '</b></p><span class="gw-risk low">Completed ✅</span>';
+      } else {
+        cb.innerHTML = "<p>" + p.challenge.icon + " <b>" + esc(p.challenge.label) +
+          '</b></p><button class="gw-btn gold" id="claim-challenge">Claim +50 XP 🪙</button>';
+      }
+    }
+
     const grid = $("badge-grid");
     if (grid && p.badges) {
       grid.innerHTML = "";
@@ -99,5 +117,22 @@
     }
   }
   document.addEventListener("DOMContentLoaded", loadLeaderboard);
+
+  // Claim today's daily challenge
+  document.addEventListener("click", async (e) => {
+    if (!e.target.closest("#claim-challenge")) return;
+    try {
+      const r = await fetch("/api/game/challenge/complete", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+      });
+      const d = await r.json();
+      if (window.HQ) {
+        if (d.reward) window.HQ.showReward(d.reward);
+        else window.HQ.refresh();
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  });
 })();
 // <Shania End>
