@@ -11,5 +11,7 @@ const router = express.Router();
 router.post("/analyze", h(c.analyze)); // guests (limited) + users
 router.get("/history", requireAuth, h(c.history)); // users only
 
+router.post("/relationship", h(c.relationship)); // long-con / romance detector
+
 module.exports = router;
 // <Shania End>

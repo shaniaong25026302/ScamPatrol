@@ -1,0 +1,110 @@
+<%# <Shania Start> %>
+<section class="gw-hero">
+  <%- include('../partials/owl-mascot', { owlClass: '', size: 130 }) %>
+  <div>
+    <h1>Scam Patrol HQ</h1>
+    <p>You're a recruit at the anti-scam agency. Investigate scams, clear missions, rank up.</p>
+  </div>
+</section>
+
+<div class="gw-grid">
+  <!-- The Analyzer -->
+  <section class="panel col-7" id="analyzer-panel">
+    <h2>🔎 The Analyzer</h2>
+    <p class="muted" style="margin-top:-0.4rem">Bring a suspicious message as evidence — Inspector Hoot investigates.</p>
+    <textarea id="ev-text" rows="5" placeholder="Paste an SMS, email or message here..."></textarea>
+    <div class="center" style="color:var(--gw-red);font-size:.85rem;min-height:1rem" id="ev-error"></div>
+    <button class="gw-btn" id="ev-submit">🔍 Submit Evidence</button>
+
+    <div class="gw-result" id="ev-result" style="display:none">
+      <div style="display:flex;align-items:flex-start;gap:1rem">
+        <div id="owl-react" style="flex:0 0 110px"><%- include('../partials/owl-mascot', { owlClass: '', size: 110 }) %></div>
+        <div style="flex:1">
+          <span class="gw-risk" id="ev-badge"></span>
+          <p id="ev-explanation" style="margin:.6rem 0 0"></p>
+          <ul class="gw-signals" id="ev-signals"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rank + streak + risk legend -->
+  <aside class="col-5" style="display:flex;flex-direction:column;gap:1rem">
+    <section class="panel">
+      <h2>⭐ Rank Up — Your Journey</h2>
+      <div class="rank-journey">
+        <div class="rank-step" data-rank="Recruit"><div class="ring">🧑‍🎓</div><div>Recruit</div></div>
+        <span class="rank-arrow">›</span>
+        <div class="rank-step" data-rank="Detective"><div class="ring">🕵️</div><div>Detective</div></div>
+        <span class="rank-arrow">›</span>
+        <div class="rank-step" data-rank="Chief"><div class="ring">⭐</div><div>Chief</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin:.9rem 0 .3rem;font-size:.85rem">
+        <span class="muted">RANK PROGRESS</span>
+        <span class="muted"><b id="xp-into">0</b> / <b id="xp-span">100</b> XP</span>
+      </div>
+      <div class="xp-bar"><span id="xp-fill"></span></div>
+      <div class="center" style="margin-top:.6rem" id="rank-label"></div>
+    </section>
+
+    <section class="panel center">
+      <h2>🔥 Streak</h2>
+      <div class="streak-flame">🔥</div>
+      <div class="streak-big" id="streak-num">0</div>
+      <div class="muted">day streak — keep it going!</div>
+    </section>
+
+    <section class="panel">
+      <h2>🚦 Risk Levels</h2>
+      <p><span class="gw-risk low">Low</span> <span class="muted">All clear. Stay alert.</span></p>
+      <p><span class="gw-risk medium">Medium</span> <span class="muted">Be cautious. Verify.</span></p>
+      <p><span class="gw-risk high">High</span> <span class="muted">Danger! Likely a scam.</span></p>
+    </section>
+  </aside>
+
+  <!-- Missions preview -->
+  <section class="panel col-7">
+    <h2>🎯 Field Missions <a href="/missions" class="gw-muted-link" style="float:right">Open →</a></h2>
+    <div class="mission-track">
+      <div class="mission-node easy"><div class="dot">✉️</div><small>Email<br>Easy</small></div>
+      <span class="mission-link"></span>
+      <div class="mission-node easy"><div class="dot">💬</div><small>SMS<br>Easy</small></div>
+      <span class="mission-link"></span>
+      <div class="mission-node medium"><div class="dot">🌐</div><small>Website<br>Medium</small></div>
+      <span class="mission-link"></span>
+      <div class="mission-node hard"><div class="dot">📞</div><small>Call<br>Hard</small></div>
+      <span class="mission-link"></span>
+      <div class="mission-node expert"><div class="dot">💀</div><small>Boss<br>Expert</small></div>
+    </div>
+    <div style="margin-top:1rem"><a href="/missions" class="gw-btn gold">Start a mission →</a>
+      <a href="/relationship" class="gw-btn ghost">💔 Long-Con Detector</a></div>
+  </section>
+
+  <!-- Leaderboard snapshot -->
+  <section class="panel col-5">
+    <h2>🏆 World Leaderboard <a href="/leaderboard" class="gw-muted-link" style="float:right">Full →</a></h2>
+    <table class="lb"><tbody id="lb-mini"><tr><td class="muted">Loading…</td></tr></tbody></table>
+  </section>
+
+  <!-- Badges -->
+  <section class="panel col-7">
+    <h2>🎖️ Badges</h2>
+    <div class="badge-grid" id="badge-grid"><span class="muted">Log in to start earning badges.</span></div>
+  </section>
+
+  <!-- Villains -->
+  <section class="panel col-5">
+    <h2>👾 Scammer Villains <a href="/dojo" class="gw-muted-link" style="float:right">Dojo →</a></h2>
+    <div class="villains">
+      <div class="villain"><div class="face">🏦</div><div class="nm">Mr. FakeBank</div><div class="lvl">Phishing</div></div>
+      <div class="villain"><div class="face">📦</div><div class="nm">Parcel Trickster</div><div class="lvl">Delivery</div></div>
+      <div class="villain"><div class="face">💘</div><div class="nm">Love Liar</div><div class="lvl">Romance</div></div>
+      <div class="villain"><div class="face">🪙</div><div class="nm">Crypto Conman</div><div class="lvl">Investment</div></div>
+    </div>
+  </section>
+</div>
+
+<p class="center muted" style="margin:1.5rem 0 .5rem;letter-spacing:.08em">LEARN. DETECT. PROTECT. — TOGETHER WE STOP SCAMS. 🛡️</p>
+
+<script src="/js/game-hq.js" defer></script>
+<%# <Shania End> %>

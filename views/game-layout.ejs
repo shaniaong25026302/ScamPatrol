@@ -1,0 +1,23 @@
+<%# <Shania Start> %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof title !== 'undefined' ? title : 'Scam Patrol HQ' %></title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/game.css" />
+</head>
+<body class="game-world">
+  <%- include('partials/game-nav', { activePage: typeof activePage !== 'undefined' ? activePage : '' }) %>
+
+  <main class="game-main">
+    <%- body %>
+  </main>
+
+  <div id="xp-toast" class="xp-toast" aria-live="polite"></div>
+  <script src="/js/game-hud.js" defer></script>
+  <%- typeof pageScript !== 'undefined' ? '<script src="/js/' + pageScript + '" defer></script>' : '' %>
+</body>
+</html>
+<%# <Shania End> %>

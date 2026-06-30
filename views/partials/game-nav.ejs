@@ -1,0 +1,27 @@
+<%# <Shania Start> %>
+<% const gp = typeof activePage !== 'undefined' ? activePage : ''; %>
+<% const gu = typeof user !== 'undefined' ? user : null; %>
+<header class="gw-topbar">
+  <a href="/hq" class="gw-brand">
+    <span class="badge">🦉</span>
+    <b>SCAM&nbsp;PATROL&nbsp;<span class="scam">H</span><span class="lah">Q</span></b>
+  </a>
+  <nav class="gw-nav">
+    <a href="/hq" class="<%= gp === 'hq' ? 'active' : '' %>">HQ</a>
+    <a href="/missions" class="<%= gp === 'missions' ? 'active' : '' %>">Missions</a>
+    <a href="/relationship" class="<%= gp === 'relationship' ? 'active' : '' %>">Long-Con</a>
+    <a href="/dojo" class="<%= gp === 'dojo' ? 'active' : '' %>">Dojo</a>
+    <a href="/leaderboard" class="<%= gp === 'leaderboard' ? 'active' : '' %>">Leaderboard</a>
+    <a href="/">← Main site</a>
+  </nav>
+  <div class="gw-mini-hud" id="mini-hud">
+    <% if (gu) { %>
+      <span class="gw-chip"><span class="lvl">Lv <b id="hud-level">–</b></span></span>
+      <span class="gw-chip"><span class="coin">🪙</span> <b id="hud-coins">–</b></span>
+      <span class="gw-chip"><span class="fire">🔥</span> <b id="hud-streak">–</b></span>
+    <% } else { %>
+      <a href="/auth/login" class="gw-btn ghost" style="padding:.4rem .9rem">Log in to play</a>
+    <% } %>
+  </div>
+</header>
+<%# <Shania End> %>
