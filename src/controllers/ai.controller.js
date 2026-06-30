@@ -3,8 +3,7 @@
 //   analyze  → open to guests (limited) + users (full + saved history)
 //   history  → users only
 const Ai = require("../models/ai.model");
-const { analyzeText, analyzeRelationship } = require("../services/gemini.service");
-const gamify = require("../services/gamification.service");
+const { analyzeText } = require("../services/gemini.service");
 
 const MIN_LEN = 10;
 const MAX_LEN = 10000;
@@ -66,10 +65,7 @@ async function analyze(req, res) {
     return res.json({ ...result, saved: false, guest: true, remaining: Math.max(0, GUEST_LIMIT - used) });
   }
 
-  // Gamification: reward the check (+ bonus for catching a high-risk scam).
-  const reward = await gamify.award(req.user.id, "ai_check");
-  if (result.risk_level === "high") await gamify.award(req.user.id, "high_risk_caught");
-  return res.json({ ...result, saved: true, reward });
+  return res.json({ ...result, saved: true });
 }
 
 // GET /api/ai/history  (requireAuth)
@@ -78,37 +74,5 @@ async function history(req, res) {
   return res.json({ history: rows });
 }
 
-// POST /api/ai/relationship — long-con / romance scam timeline mapper.
-async function relationship(req, res) {
-  const { text } = req.body || {};
-  if (typeof text !== "string" || text.trim().length < 20)
-    return res.status(400).json({ error: "Paste the conversation (at least 20 characters)." });
-  if (text.length > 20000)
-    return res.status(400).json({ error: "Conversation is too long (max 20,000 characters)." });
-
-  let result;
-  try {
-    result = await analyzeRelationship(text);
-  } catch (e) {
-    console.error("relationship analyze failed:", e.message);
-    return res.status(502).json({ error: "The detector is unavailable right now. Try again shortly." });
-  }
-
-  try {
-    await Ai.createAnalysis({
-      userId: req.user ? req.user.id : null,
-      inputText: text.slice(0, 5000),
-      riskLevel: result.risk_level,
-      explanation: result.summary || "Long-con analysis",
-    });
-  } catch (e) {
-    console.error("save relationship analysis failed:", e.message);
-  }
-
-  let reward = null;
-  if (req.user) reward = await gamify.award(req.user.id, "relationship_check");
-  return res.json({ ...result, reward });
-}
-
-module.exports = { analyze, history, relationship };
+module.exports = { analyze, history };
 // <Shania End>

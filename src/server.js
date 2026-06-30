@@ -29,9 +29,6 @@ app.use(cookieParser());
 // attachUser: sets req.user + res.locals.user when a valid token is present; never blocks.
 app.use(require("./middleware/auth.middleware").attachUser);
 
-// App-wide gamification: passively award XP for successful actions (incl. teammates' routes).
-app.use(require("./middleware/gamification.middleware").gamificationObserver);
-
 // Default locals so partials (navbar) always have something to read.
 app.use((req, res, next) => {
   if (typeof res.locals.user === "undefined") res.locals.user = null;
@@ -50,13 +47,8 @@ app.get("/api/health", async (req, res) => {
 });
 
 // ── Pages ──
-// Homepage IS the game now — the origin story (renders in the retro game layout).
 app.get("/", (req, res) => {
-  res.render("game/story", {
-    title: "Scam Patrol HQ — Second Chance",
-    activePage: "story",
-    layout: "game-layout",
-  });
+  res.render("index", { title: "scamlah", activePage: "home" });
 });
 
 // ─────────────────────────────────────────────────────────────────
@@ -68,9 +60,6 @@ app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/auth", require("./routes/auth.pages.routes"));
 app.use("/api/ai", require("./routes/ai.routes"));
 app.use("/ai-checker", require("./routes/ai.pages.routes"));
-// Scam Patrol HQ — gamification API + game pages (Leaderboard taken over from M5):
-app.use("/api/game", require("./routes/game.routes"));
-app.use("/", require("./routes/game.pages.routes"));
 // <Rebecca Member 2 Start>
 // M2 Rebecca — scam case CRUD + image upload + categories API
 app.use("/api/cases", require("./routes/cases.api.routes"));
