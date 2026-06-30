@@ -1,7 +1,7 @@
 {
   "name": "scamlah",
   "version": "1.0.0",
-  "description": "scamlah (ScamGuard SG) \u2014 Express + EJS + MySQL scam-reporting & AI checker app",
+  "description": "scamlah (ScamGuard SG) — Express + EJS + MySQL scam-reporting & AI checker app",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
@@ -24,9 +24,9 @@
     "express": "^5.2.1",
     "express-ejs-layouts": "^2.5.1",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
     "mysql2": "^3.11.0",
-    "nodemailer": "^9.0.1",
-    "multer": "^2.0.2"
+    "nodemailer": "^9.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
