@@ -174,4 +174,76 @@
 .gw-muted-link { color: var(--gw-muted); font-size: 0.85rem; }
 .center { text-align: center; }
 .spin { display: inline-block; animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+
+/* =========================================================
+   RETRO / PIXEL LAYER — overrides above for an arcade feel
+   ========================================================= */
+.game-world { font-family: "VT323", monospace; font-size: 19px; letter-spacing: .4px; image-rendering: pixelated; }
+.game-world h1, .game-world h2, .game-world h3,
+.panel h2, .panel h3, .gw-brand, .gw-btn, .gw-nav a, .gw-chip, .lb-tab,
+.gw-risk, .badge-card .nm, .story-speaker {
+  font-family: "Press Start 2P", "VT323", monospace; letter-spacing: 0;
+}
+.gw-hero h1 { font-size: 1.5rem; line-height: 1.5; text-shadow: 3px 3px 0 #000, 0 0 16px var(--gw-purple); }
+.panel h2, .panel h3 { font-size: .72rem; line-height: 1.6; border-bottom: 2px solid var(--gw-border); padding-bottom: .55rem; }
+.game-world p, .muted, .gw-timeline .tactic, .villain .lvl, .mission-node small { font-size: 1.05rem; letter-spacing: .3px; }
+.gw-btn { font-size: .7rem; line-height: 1.5; border-radius: 4px; border: 2px solid rgba(0,0,0,.45); box-shadow: 0 4px 0 rgba(0,0,0,.5); }
+.gw-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.5); }
+.panel { border-radius: 6px; border-width: 2px; box-shadow: 0 0 0 2px rgba(0,0,0,.3), 0 6px 0 rgba(0,0,0,.25); }
+.gw-chip, .lb-tab, .gw-risk, .badge-card, .villain, .mission-node .dot { border-radius: 4px; }
+.gw-nav a, .gw-chip { font-size: .58rem; }
+.game-world textarea, .game-world input[type="text"] { font-family: "VT323", monospace; font-size: 1.15rem; border-radius: 4px; }
+.owl, .gw-brand img, img.pixel { image-rendering: pixelated; }
+.gw-brand .logo { height: 42px; width: auto; border-radius: 4px; box-shadow: 0 0 14px rgba(139,123,255,.5); }
+
+/* CRT scanlines overlay */
+.game-world::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.13) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply; opacity: .55;
+}
+
+/* =========================================================
+   STORY MODE
+   ========================================================= */
+.story-stage { max-width: 740px; margin: 1rem auto; }
+.cutscene {
+  background: #05070f; border: 3px solid var(--gw-border); border-radius: 6px; padding: 2.2rem 1.5rem;
+  text-align: center; min-height: 380px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 1.2rem; box-shadow: 0 0 0 3px #000, 0 0 44px rgba(139,123,255,.25);
+}
+.cutscene .char { font-size: 4.6rem; line-height: 1; filter: drop-shadow(0 6px 0 rgba(0,0,0,.5)); }
+.cutscene .char.shake { animation: owl-shake .4s ease-in-out 4; }
+.cutscene .logo-big { width: 150px; filter: drop-shadow(0 0 26px rgba(139,123,255,.7)); border-radius: 8px; }
+.story-speaker { font-size: .65rem; color: var(--gw-gold); }
+.story-text { font-size: 1.5rem; line-height: 1.5; min-height: 4.5rem; color: #fff; text-shadow: 2px 2px 0 #000; }
+.story-actions { display: flex; flex-direction: column; gap: .6rem; width: 100%; max-width: 470px; margin: 0 auto; }
+
+.portal {
+  width: 180px; height: 180px; border-radius: 50%; margin: .5rem auto; position: relative;
+  background: conic-gradient(from 0deg, var(--gw-purple), var(--gw-cyan), #4b5cff, var(--gw-purple));
+  animation: portal-spin 2.6s linear infinite; box-shadow: 0 0 50px rgba(139,123,255,.8), inset 0 0 40px #000;
+}
+.portal::after { content: "🌀"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 3rem; }
+@keyframes portal-spin { to { transform: rotate(360deg); } }
+
+/* phone chat */
+.phone { max-width: 430px; margin: 0 auto; background: #0a0f1d; border: 4px solid #2c3a5e; border-radius: 20px;
+  padding: .8rem; box-shadow: 0 0 0 3px #000, 0 10px 0 rgba(0,0,0,.4); }
+.phone-top { text-align: center; font-family: "Press Start 2P", monospace; font-size: .55rem; color: var(--gw-muted);
+  padding: .5rem 0 .8rem; border-bottom: 2px solid var(--gw-border); }
+.chat { display: flex; flex-direction: column; gap: .6rem; padding: .9rem .2rem; min-height: 180px; }
+.bubble { max-width: 82%; padding: .6rem .8rem; border-radius: 10px; font-size: 1.2rem; line-height: 1.3; animation: pop-in .25s ease; }
+@keyframes pop-in { from { transform: scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+.bubble.them { align-self: flex-start; background: #1f2a48; border: 2px solid #2c3a5e; }
+.bubble.me { align-self: flex-end; background: #1f9d57; color: #fff; }
+.bubble.owl { align-self: center; background: rgba(139,123,255,.18); border: 2px solid var(--gw-purple); text-align: center; max-width: 96%; }
+.bubble .who { font-family: "Press Start 2P", monospace; font-size: .5rem; opacity: .75; display: block; margin-bottom: .35rem; }
+.choices { display: flex; flex-direction: column; gap: .5rem; margin-top: .8rem; }
+
+.outcome { text-align: center; padding: 1.3rem; border-radius: 8px; margin-top: 1rem; }
+.outcome.win { background: rgba(46,204,113,.14); border: 2px solid var(--gw-green); }
+.outcome.lose { background: rgba(255,77,77,.14); border: 2px solid var(--gw-red); }
+.hp-row { display: flex; gap: .3rem; justify-content: center; font-size: 1.4rem; margin: .4rem 0; }
+.typing { color: var(--gw-muted); font-style: italic; }
 /* <Shania End> */

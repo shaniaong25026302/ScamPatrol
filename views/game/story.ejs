@@ -1,0 +1,27 @@
+<%# <Shania Start> %>
+<div style="text-align:right;max-width:740px;margin:0 auto">
+  <a href="/hq" class="gw-muted-link">Skip intro → Enter HQ</a>
+</div>
+
+<div class="story-stage" id="story">
+  <!-- Cutscene view -->
+  <div class="cutscene" id="cutscene">
+    <div id="cut-visual"><div class="char" id="cut-char">🧓</div></div>
+    <div class="story-speaker" id="cut-speaker"></div>
+    <div class="story-text" id="cut-text">Loading…</div>
+    <div class="story-actions" id="cut-actions"></div>
+  </div>
+
+  <!-- Interactive phone view (revealed after the portal) -->
+  <div id="phone-view" style="display:none">
+    <div class="phone">
+      <div class="phone-top">📱 Uncle Tan's phone · <span id="phone-time">2:14 PM</span></div>
+      <div class="chat" id="chat"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+    <div id="story-outcome"></div>
+  </div>
+</div>
+
+<script src="/js/game-story.js" defer></script>
+<%# <Shania End> %>

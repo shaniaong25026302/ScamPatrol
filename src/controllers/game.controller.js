@@ -121,5 +121,14 @@ async function completeChallenge(req, res) {
   return res.json({ reward });
 }
 
-module.exports = { profile, leaderboard, mission, missionCheck, roast, completeChallenge };
+// POST /api/game/story/complete — one-time XP for finishing the origin story.
+async function storyComplete(req, res) {
+  if (!req.user) return res.json({ guest: true });
+  const counts = await Game.countByAction(req.user.id);
+  if (counts.story_win) return res.json({ already: true });
+  const reward = await gamify.award(req.user.id, "story_win");
+  return res.json({ reward });
+}
+
+module.exports = { profile, leaderboard, mission, missionCheck, roast, completeChallenge, storyComplete };
 // <Shania End>

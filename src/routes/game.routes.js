@@ -13,6 +13,7 @@ router.get("/mission", h(c.mission));
 router.post("/mission/check", h(c.missionCheck));
 router.post("/roast", h(c.roast));
 router.post("/challenge/complete", requireAuth, h(c.completeChallenge));
+router.post("/story/complete", h(c.storyComplete));
 
 module.exports = router;
 // <Shania End>

@@ -16,6 +16,7 @@ const XP_RULES = {
   case_vote: { xp: 3, coins: 1, label: "Voted on a case" },
   case_flag: { xp: 4, coins: 2, label: "Flagged a case" },
   comment: { xp: 5, coins: 2, label: "Left a comment" },
+  story_win: { xp: 50, coins: 40, label: "Saved Uncle Tan" },
 };
 
 // Ranks shown on the HUD / rank-up panel.
@@ -62,6 +63,7 @@ const BADGES = [
   { key: "detective", name: "Detective", icon: "🕵️", desc: "Reach level 5", check: (s) => (s.profile.level || 1) >= 5 },
   { key: "chief", name: "Chief", icon: "⭐", desc: "Reach level 10", check: (s) => (s.profile.level || 1) >= 10 },
   { key: "guardian", name: "Community Guardian", icon: "🛡️", desc: "Report 5 scams", check: (s) => (s.counts.case_report || 0) >= 5 },
+  { key: "second_chance", name: "Second Chance", icon: "⏳", desc: "Complete the origin story", check: (s) => (s.counts.story_win || 0) >= 1 },
 ];
 
 // Format a date as YYYY-MM-DD using LOCAL components (avoids the UTC day-shift that

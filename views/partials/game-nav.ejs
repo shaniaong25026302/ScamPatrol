@@ -2,17 +2,18 @@
 <% const gp = typeof activePage !== 'undefined' ? activePage : ''; %>
 <% const gu = typeof user !== 'undefined' ? user : null; %>
 <header class="gw-topbar">
-  <a href="/hq" class="gw-brand">
-    <span class="badge">🦉</span>
-    <b>SCAM&nbsp;PATROL&nbsp;<span class="scam">H</span><span class="lah">Q</span></b>
+  <a href="/" class="gw-brand">
+    <img src="/img/scam-patrol-logo.jpg" alt="Scam Patrol HQ" class="logo pixel" />
   </a>
   <nav class="gw-nav">
+    <a href="/" class="<%= gp === 'story' ? 'active' : '' %>">Story</a>
     <a href="/hq" class="<%= gp === 'hq' ? 'active' : '' %>">HQ</a>
     <a href="/missions" class="<%= gp === 'missions' ? 'active' : '' %>">Missions</a>
     <a href="/relationship" class="<%= gp === 'relationship' ? 'active' : '' %>">Long-Con</a>
     <a href="/dojo" class="<%= gp === 'dojo' ? 'active' : '' %>">Dojo</a>
-    <a href="/leaderboard" class="<%= gp === 'leaderboard' ? 'active' : '' %>">Leaderboard</a>
-    <a href="/">← Main site</a>
+    <a href="/leaderboard" class="<%= gp === 'leaderboard' ? 'active' : '' %>">Ranks</a>
+    <a href="/ai-checker">Checker</a>
+    <a href="/cases">Community</a>
   </nav>
   <div class="gw-mini-hud" id="mini-hud">
     <% if (gu) { %>

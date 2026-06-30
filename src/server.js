@@ -50,8 +50,13 @@ app.get("/api/health", async (req, res) => {
 });
 
 // ── Pages ──
+// Homepage IS the game now — the origin story (renders in the retro game layout).
 app.get("/", (req, res) => {
-  res.render("index", { title: "scamlah", activePage: "home" });
+  res.render("game/story", {
+    title: "Scam Patrol HQ — Second Chance",
+    activePage: "story",
+    layout: "game-layout",
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────
