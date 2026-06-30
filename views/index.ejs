@@ -3,8 +3,11 @@
 <main class="container">
   <section class="hero">
     <h1><span class="scam">scam</span><span class="lah">lah</span></h1>
-    <p>Leaderboard and community points are back. Help the community spot scams and climb the rankings.</p>
-    <a href="/leaderboard" class="btn btn-primary">View leaderboard</a>
+    <p>Report. Check. Stay safe.</p>
+    <div class="hero-actions">
+      <a href="/leaderboard" class="btn btn-primary">View leaderboard</a>
+      <a href="/api/points/config" class="btn btn-ghost">View points API config</a>
+    </div>
   </section>
 
   <section class="grid home-preview">
@@ -14,8 +17,12 @@
       <% const previewLeaderboard = Array.isArray(leaderboard) ? leaderboard : []; %>
       <% if (previewLeaderboard.length) { %>
         <ul class="leaderboard-preview-list">
-          <% previewLeaderboard.forEach((user) => { %>
-            <li><strong><%= user.username %></strong> — <%= user.points %> points</li>
+          <% previewLeaderboard.forEach((user, index) => { %>
+            <li>
+              <span>#<%= index + 1 %></span>
+              <strong><%= user.username %></strong>
+              <em><%= user.points %> points</em>
+            </li>
           <% }) %>
         </ul>
       <% } else { %>
@@ -24,9 +31,9 @@
     </div>
 
     <div class="card">
-      <h2>Ready to earn badges?</h2>
-      <p>Your contributions now show up on the leaderboard as points accumulate. Stay visible and keep helping.</p>
-      <a href="/leaderboard" class="btn btn-ghost">Open leaderboard</a>
+      <h2>Badge milestones</h2>
+      <p>Users unlock badges for signing up, submitting reports, posting comments, and earning points.</p>
+      <a href="/leaderboard" class="btn btn-ghost">Open badge path</a>
     </div>
   </section>
 </main>

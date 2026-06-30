@@ -1,6 +1,8 @@
 const express = require("express");
 const path = require("path");
+
 const pointsService = require("./services/pointsService");
+const pointsRoutes = require("./routes/pointsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,7 +13,13 @@ app.set("views", path.join(__dirname, "views"));
 
 // Static files (serves public/css/styles.css at /css/styles.css)
 app.use(express.static(path.join(__dirname, "public")));
+
+// Body parsers
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// API routes owned by Member 5 (Liam)
+app.use("/api/points", pointsRoutes);
 
 // Routes
 app.get("/", (req, res) => {
@@ -26,11 +34,11 @@ app.get("/", (req, res) => {
 
 app.get("/leaderboard", (req, res) => {
   const leaderboard = pointsService.getLeaderboard();
-  const safeLeaderboard = Array.isArray(leaderboard) ? leaderboard : [];
 
   res.render("leaderboard", {
     activePage: "leaderboard",
-    leaderboard: safeLeaderboard
+    leaderboard,
+    pointsConfig: pointsService.getPointsConfig()
   });
 });
 
