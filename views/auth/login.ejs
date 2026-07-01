@@ -14,7 +14,10 @@
     </div>
     <div class="form-group">
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" autocomplete="current-password" required />
+      <div class="pw-wrap">
+        <input type="password" id="password" name="password" autocomplete="current-password" required />
+        <button type="button" class="pw-eye" aria-label="Show password">👁</button>
+      </div>
       <div class="field-error" data-for="password"></div>
     </div>
     <button type="submit" class="btn btn-primary" style="width:100%">Log in</button>

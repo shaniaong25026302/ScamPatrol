@@ -65,14 +65,7 @@
       signals.appendChild(li);
     });
 
-    if (data.saved) {
-      saved.textContent = "Saved to your history";
-    } else if (data.guest) {
-      saved.textContent =
-        typeof data.remaining === "number" ? `${data.remaining} free guest checks left` : "";
-    } else {
-      saved.textContent = "";
-    }
+    saved.textContent = data.saved ? "Saved to your history" : "";
 
     panel.style.display = "block";
   }
@@ -132,8 +125,6 @@
       if (res.ok) {
         renderResult(data);
         if (authed) loadHistory();
-      } else if (res.status === 403 && data.limited) {
-        setBanner(data.error || "Guest limit reached. Please sign up.");
       } else {
         setBanner(data.error || "Something went wrong. Please try again.");
       }

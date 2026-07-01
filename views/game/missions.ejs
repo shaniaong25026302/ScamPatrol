@@ -1,0 +1,34 @@
+<%# <Shania Start> %>
+<section class="gw-hero">
+  <img src="/img/owl-mentor.png" class="owl pixel" alt="Inspector Hoot" />
+  <div>
+    <h1>🎯 Field Missions</h1>
+    <p>Click a location on the map to take that case. Each run costs ⚡1 energy. Clear cases to unlock the Boss.</p>
+  </div>
+</section>
+
+<div class="panel" id="map-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+    <h2>Operations Map</h2>
+    <span class="gw-chip"><span class="energy">⚡</span> <b id="map-energy">–</b></span>
+  </div>
+  <div class="map-board" id="mission-map">
+    <svg class="map-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M12,28 L30,66 L50,20 L70,66 L87,30" />
+    </svg>
+  </div>
+  <div class="map-boss-note" id="boss-note"></div>
+</div>
+
+<div class="panel" id="run-panel" style="display:none">
+  <h2 id="run-title">Mission</h2>
+  <div class="gw-result" id="run-content">…</div>
+  <div id="run-actions" style="margin-top:1rem">
+    <button class="gw-btn safe" data-ans="legit">🛡️ Safe</button>
+    <button class="gw-btn danger" data-ans="scam">🚨 Scam</button>
+  </div>
+  <button class="gw-btn ghost" id="run-back" style="margin-top:1rem">← Back to map</button>
+</div>
+
+<script src="/js/game-missions.js" defer></script>
+<%# <Shania End> %>

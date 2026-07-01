@@ -1,0 +1,48 @@
+<%# <Shania Start> %>
+<% const su = typeof user !== 'undefined' ? user : null; %>
+
+<% if (su) { %>
+  <div style="text-align:right;max-width:740px;margin:0 auto">
+    <a href="/hq" class="gw-muted-link">Skip intro → Enter HQ</a>
+  </div>
+
+  <div class="story-stage" id="story">
+    <!-- Cutscene view -->
+    <div class="cutscene" id="cutscene">
+      <div id="cut-visual"><div class="char" id="cut-char">🧓</div></div>
+      <div class="story-speaker" id="cut-speaker"></div>
+      <div class="story-text" id="cut-text">Loading…</div>
+      <div class="story-actions" id="cut-actions"></div>
+    </div>
+
+    <!-- Interactive phone view (revealed after the portal) -->
+    <div id="phone-view" style="display:none">
+      <div class="phone">
+        <div class="phone-top">📱 Uncle Tan's phone · <span id="phone-time">2:14 PM</span></div>
+        <div class="chat" id="chat"></div>
+      </div>
+      <div class="choices" id="choices"></div>
+      <div id="story-outcome"></div>
+    </div>
+  </div>
+
+  <script src="/js/game-story.js" defer></script>
+<% } else { %>
+  <!-- Guests are prompted to register/login — the game itself requires an account -->
+  <div class="story-stage">
+    <div class="cutscene">
+      <img src="/img/logo-cropped.png?v=3" class="logo-big pixel" alt="Scam Patrol HQ" />
+      <div class="story-speaker">SCAM PATROL HQ</div>
+      <div class="story-text">
+        Your Uncle Tan was scammed out of his savings. Inspector Hoot 🦉 can rewind time —
+        but only trained recruits may guide him. Enlist to play.
+      </div>
+      <div class="story-actions">
+        <a href="/auth/register" class="gw-btn gold">🦉 Sign up to play</a>
+        <a href="/auth/login" class="gw-btn ghost">Log in</a>
+      </div>
+      <p class="muted" style="margin-top:.5rem">Spot scams · clear missions · climb the ranks.</p>
+    </div>
+  </div>
+<% } %>
+<%# <Shania End> %>

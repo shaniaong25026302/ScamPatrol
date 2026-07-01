@@ -5,12 +5,6 @@
   <h1>AI Scam Checker</h1>
   <p class="sub">Paste a suspicious message — email, SMS, WhatsApp, listing — and get an instant risk read.</p>
 
-  <% if (!authed) { %>
-    <div class="alert alert-warning" style="margin: 0 0 1rem">
-      You're using the checker as a guest (limited). <a href="/auth/register">Create an account</a> for unlimited checks and saved history.
-    </div>
-  <% } %>
-
   <div class="alert alert-danger" id="ai-error" style="display:none"></div>
 
   <form id="ai-form" novalidate>

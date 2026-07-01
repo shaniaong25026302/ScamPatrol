@@ -123,10 +123,11 @@ test("auth: logout clears the session", async (t) => {
   assert.strictEqual(me.status, 401);
 });
 
-test("ai: short input is rejected with 400", async () => {
-  const { status, data } = await auth().call("POST", "/api/ai/analyze", { text: "scam" });
-  assert.strictEqual(status, 400);
-  assert.ok(data.error);
+test("ai: guests are blocked from the checker (login required)", async () => {
+  const { status } = await auth().call("POST", "/api/ai/analyze", {
+    text: "URGENT: your bank account is locked, verify your OTP now",
+  });
+  assert.strictEqual(status, 401); // gated — guests only see the gamified homepage
 });
 
 test("ai: history requires authentication", async () => {
@@ -134,26 +135,22 @@ test("ai: history requires authentication", async () => {
   assert.strictEqual(status, 401);
 });
 
-test("ai: guest analyze returns a risk read and guest flag", async (t) => {
+test("ai: short input is rejected with 400 (authed)", async (t) => {
   if (!dbUp) return t.skip("database unavailable");
-  const { status, data } = await auth().call("POST", "/api/ai/analyze", {
+  const { status, data } = await shared.call("POST", "/api/ai/analyze", { text: "scam" });
+  assert.strictEqual(status, 400);
+  assert.ok(data.error);
+});
+
+test("ai: authed analyze returns a risk read + reward", async (t) => {
+  if (!dbUp) return t.skip("database unavailable");
+  const { status, data } = await shared.call("POST", "/api/ai/analyze", {
     text: `URGENT ${MARKER}: your bank account is locked, verify your OTP at http://scam.xyz now`,
   });
   assert.strictEqual(status, 200);
   assert.strictEqual(data.risk_level, "high"); // AI_FAKE heuristic
-  assert.strictEqual(data.guest, true);
-  assert.strictEqual(data.saved, false);
-  assert.strictEqual(typeof data.remaining, "number");
-});
-
-test("ai: guest over the free limit gets 403", async () => {
-  const c = makeClient(base);
-  c.set("ai_guest_used", "5");
-  const { status, data } = await c.call("POST", "/api/ai/analyze", {
-    text: `another suspicious message ${MARKER} to check here`,
-  });
-  assert.strictEqual(status, 403);
-  assert.strictEqual(data.limited, true);
+  assert.strictEqual(data.saved, true);
+  assert.ok(data.reward);
 });
 
 test("ai: user analyze is saved and shows up in history", async (t) => {
@@ -168,5 +165,58 @@ test("ai: user analyze is saved and shows up in history", async (t) => {
   const h = await shared.call("GET", "/api/ai/history");
   assert.strictEqual(h.status, 200);
   assert.ok(h.data.history.some((row) => row.input_text.includes(MARKER)), "saved check in history");
+});
+
+test("game: profile reflects earned XP, badges and quest", async (t) => {
+  if (!dbUp) return t.skip("database unavailable");
+  const { status, data } = await shared.call("GET", "/api/game/profile");
+  assert.strictEqual(status, 200);
+  assert.ok(data.xp > 0, "xp accrued from earlier analyze");
+  assert.ok(Array.isArray(data.badges) && data.badges.length > 0);
+  assert.ok(Array.isArray(data.quest) && data.quest.length === 4);
+  assert.ok(data.challenge && data.challenge.label);
+});
+
+test("game: mission/start costs energy, hides answer; check returns verdict + reward", async (t) => {
+  if (!dbUp) return t.skip("database unavailable");
+  const g = await shared.call("POST", "/api/game/mission/start", { kind: "Email" });
+  assert.strictEqual(g.status, 200);
+  assert.ok(g.data.mission && g.data.mission.id);
+  assert.strictEqual(g.data.mission.answer, undefined, "answer must be hidden");
+  assert.strictEqual(typeof g.data.energy, "number", "energy returned after spending");
+  const c = await shared.call("POST", "/api/game/mission/check", {
+    missionId: g.data.mission.id,
+    answer: "scam",
+  });
+  assert.strictEqual(c.status, 200);
+  assert.strictEqual(typeof c.data.correct, "boolean");
+  assert.ok(c.data.why && c.data.reward);
+});
+
+test("game: roast returns a 1-10 score + reward (AI_FAKE)", async (t) => {
+  if (!dbUp) return t.skip("database unavailable");
+  const { status, data } = await shared.call("POST", "/api/game/roast", {
+    text: "You won a prize, click here now to claim before it expires",
+  });
+  assert.strictEqual(status, 200);
+  assert.ok(data.score >= 1 && data.score <= 10);
+  assert.ok(data.reward);
+});
+
+test("game: leaderboard includes the player", async (t) => {
+  if (!dbUp) return t.skip("database unavailable");
+  const { status, data } = await shared.call("GET", "/api/game/leaderboard");
+  assert.strictEqual(status, 200);
+  assert.ok(data.leaders.some((l) => l.isMe));
+});
+
+test("ai: long-con detector returns an ordered timeline", async (t) => {
+  if (!dbUp) return t.skip("database unavailable");
+  const { status, data } = await shared.call("POST", "/api/ai/relationship", {
+    text: `Day 1 ${MARKER}: you are so special to me. Day 20: don't tell your family about us. Day 40: I have an emergency, please send money.`,
+  });
+  assert.strictEqual(status, 200);
+  assert.ok(Array.isArray(data.timeline) && data.timeline.length > 0);
+  assert.ok(["low", "medium", "high"].includes(data.risk_level));
 });
 // <Shania End>

@@ -1,0 +1,26 @@
+<%# <Shania Start> %>
+<section class="gw-hero">
+  <img src="/img/owl-mentor.png" class="owl pixel" alt="Inspector Hoot" />
+  <div><h1>💔 Long-Con Detector</h1><p>Paste a whole conversation — even weeks of it — and Inspector Hoot maps the manipulation timeline.</p></div>
+</section>
+
+<div class="gw-grid">
+  <section class="panel col-7">
+    <h2>📜 The Conversation</h2>
+    <textarea id="rel-text" rows="11" placeholder="Paste the full chat history here (it can span days or weeks)..."></textarea>
+    <div class="center" style="color:var(--gw-red);font-size:.85rem;min-height:1rem" id="rel-error"></div>
+    <button class="gw-btn" id="rel-submit">🔍 Map the Timeline</button>
+  </section>
+
+  <section class="panel col-5" id="rel-result" style="display:none">
+    <h2>🕵️ Verdict</h2>
+    <span class="gw-risk" id="rel-badge"></span>
+    <p id="rel-summary" style="margin-top:.6rem"></p>
+    <h3 style="margin-top:1rem">Manipulation Timeline</h3>
+    <ul class="gw-timeline" id="rel-timeline"></ul>
+    <div class="owl-speech" id="rel-advice" style="margin-top:1rem"></div>
+  </section>
+</div>
+
+<script src="/js/game-relationship.js" defer></script>
+<%# <Shania End> %>

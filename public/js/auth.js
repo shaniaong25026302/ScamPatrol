@@ -4,6 +4,18 @@
 (function () {
   "use strict";
 
+  // Password show/hide eye toggle (works for any .pw-eye next to a password input).
+  document.addEventListener("click", (e) => {
+    const eye = e.target.closest(".pw-eye");
+    if (!eye) return;
+    const input = eye.parentElement.querySelector("input");
+    if (!input) return;
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    eye.textContent = show ? "🙈" : "👁";
+    eye.setAttribute("aria-label", show ? "Hide password" : "Show password");
+  });
+
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/;
 
