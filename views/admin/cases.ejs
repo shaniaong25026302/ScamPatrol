@@ -2,31 +2,34 @@
 
 <table class="table">
 
-<tr>
-<th>ID</th>
-<th>Title</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Platform</th>
+        <th>Helpful</th>
+        <th>Flags</th>
+        <th>Action</th>
+    </tr>
 
-<tr>
-<td>1</td>
-<td>Fake DBS SMS</td>
-<td>Pending</td>
-<td>
-<button>Approve</button>
-<button>Reject</button>
-</td>
-</tr>
+    <% cases.forEach(scamCase => { %>
 
-<tr>
-<td>2</td>
-<td>Investment Scam</td>
-<td>Pending</td>
-<td>
-<button>Approve</button>
-<button>Reject</button>
-</td>
-</tr>
+        <tr>
+
+            <td><%= scamCase.id %></td>
+            <td><%= scamCase.title %></td>
+            <td><%= scamCase.category_name || "N/A" %></td>
+            <td><%= scamCase.platform || "N/A" %></td>
+            <td><%= scamCase.helpful_count %></td>
+            <td><%= scamCase.flag_count %></td>
+
+            <td>
+                <button>Approve</button>
+                <button>Reject</button>
+            </td>
+
+        </tr>
+
+    <% }) %>
 
 </table>
