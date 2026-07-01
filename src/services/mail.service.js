@@ -18,27 +18,37 @@ function getTransporter() {
       host: process.env.SMTP_HOST || "smtp.gmail.com",
       port,
       secure: port === 465, // 465 = implicit TLS; 587 = STARTTLS
+      // Force IPv4: Render can't route outbound IPv6, so resolving Gmail to an
+      // IPv6 address caused ENETUNREACH / connection timeouts.
+      family: 4,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
       // Keep an authenticated connection warm so each reset email skips the
       // slow DNS + TLS + AUTH handshake (this is what made delivery feel laggy).
       pool: true,
       maxConnections: 3,
       maxMessages: 100,
-      connectionTimeout: 10000,
-      greetingTimeout: 8000,
+      // Longer timeouts: cloud hosts (Render) reach smtp.gmail.com slower than localhost.
+      connectionTimeout: 20000,
+      greetingTimeout: 15000,
+      socketTimeout: 25000,
     });
   }
   return transporter;
 }
 
-// Open + authenticate the pooled connection ahead of time (called at startup).
-// Non-throwing: a failure here just means the first email pays the handshake cost.
+// Open + authenticate the connection ahead of time (called at startup).
+// Non-throwing, but LOGS the outcome so the real SMTP problem is visible in Render logs.
 async function warmUp() {
-  if (!isConfigured()) return false;
+  if (!isConfigured()) {
+    console.error("SMTP not configured (SMTP_USER/SMTP_PASS missing) — reset emails will fail.");
+    return false;
+  }
   try {
     await getTransporter().verify();
+    console.log(`SMTP ready: ${process.env.SMTP_HOST}:${process.env.SMTP_PORT} as ${process.env.SMTP_USER}`);
     return true;
-  } catch (_) {
+  } catch (e) {
+    console.error(`SMTP verify FAILED (${e.code || ""}): ${e.message}`);
     return false;
   }
 }
