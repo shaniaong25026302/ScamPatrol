@@ -115,18 +115,24 @@ async function forgotPassword(req, res) {
     const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
-    // Reset links are delivered ONLY by email — never returned to the browser.
-    if (!mail.isConfigured()) {
+    // Prefer email. If it can't be delivered (e.g. Render free tier blocks outbound
+    // SMTP), fall back to returning the link on-screen so reset is never fully broken.
+    let sent = false;
+    if (mail.isConfigured()) {
+      try {
+        await mail.sendPasswordReset(user.email, resetUrl);
+        sent = true;
+        response.emailed = true;
+      } catch (e) {
+        console.error("Password reset email failed:", e.message);
+      }
+    } else {
       console.error("SMTP not configured — cannot send password reset email.");
-      return res.status(503).json({ error: "Password reset is temporarily unavailable. Please try again later." });
     }
-    try {
-      // Awaited (via the warm SMTP pool) so we can tell the user if it truly failed.
-      await mail.sendPasswordReset(user.email, resetUrl);
-      response.emailed = true;
-    } catch (e) {
-      console.error("Password reset email failed:", e.message);
-      return res.status(502).json({ error: "We couldn't send the reset email right now. Please try again shortly." });
+    if (!sent) {
+      // Email unavailable — hand back the link so the user can still reset.
+      response.resetUrl = `/auth/reset-password?token=${token}`;
+      response.message = "Email delivery is unavailable here — use the reset link below to set a new password.";
     }
   }
   return res.json(response);

@@ -7,8 +7,102 @@ const dns = require("dns").promises;
 
 let transporter;
 
-function isConfigured() {
+function hasMailjet() {
+  return Boolean(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY);
+}
+function hasHttpApi() {
+  return Boolean(process.env.RESEND_API_KEY || process.env.BREVO_API_KEY) || hasMailjet();
+}
+function hasSmtp() {
   return Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+function isConfigured() {
+  return hasHttpApi() || hasSmtp();
+}
+
+// Parse MAIL_FROM ("Name <email>") into { name, email } for the HTTP API sender.
+function senderIdentity() {
+  const raw = process.env.MAIL_FROM || "";
+  const m = raw.match(/^(.*?)<([^>]+)>\s*$/);
+  if (m) return { name: m[1].trim() || "Scam Patrol", email: m[2].trim() };
+  if (raw.includes("@")) return { name: "Scam Patrol", email: raw.trim() };
+  return { name: "Scam Patrol", email: process.env.SMTP_USER || "no-reply@scampatrol.app" };
+}
+
+// Send via Brevo's HTTPS API (port 443) — works on hosts that block SMTP (e.g. Render).
+async function sendViaBrevo({ to, subject, text, html }) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: senderIdentity(),
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Brevo API ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const data = await res.json().catch(() => ({}));
+  return { messageId: data.messageId || "(brevo)" };
+}
+
+// Send via Resend's HTTPS API (port 443). No phone needed to sign up. On the free tier
+// WITHOUT a verified domain you must send FROM onboarding@resend.dev and can only send
+// TO your own Resend account email — fine for a demo/reset of your own account.
+async function sendViaResend({ to, subject, text, html }) {
+  const from = process.env.RESEND_FROM || "Scam Patrol <onboarding@resend.dev>";
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ from, to: [to], subject, html, text }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Resend API ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const data = await res.json().catch(() => ({}));
+  return { messageId: data.id || "(resend)" };
+}
+
+// Send via Mailjet's HTTPS Send API v3.1 (port 443). Auth = Basic base64(apiKey:secretKey).
+// The From email must be a verified sender in Mailjet.
+async function sendViaMailjet({ to, subject, text, html }) {
+  const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString("base64");
+  const sender = senderIdentity();
+  const res = await fetch("https://api.mailjet.com/v3.1/send", {
+    method: "POST",
+    headers: { authorization: `Basic ${auth}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      Messages: [
+        {
+          From: { Email: sender.email, Name: sender.name },
+          To: [{ Email: to }],
+          Subject: subject,
+          TextPart: text,
+          HTMLPart: html,
+        },
+      ],
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Mailjet API ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const data = await res.json().catch(() => ({}));
+  const msg = data && data.Messages && data.Messages[0];
+  const id = msg && msg.To && msg.To[0] && (msg.To[0].MessageID || msg.To[0].MessageUUID);
+  return { messageId: id || "(mailjet)" };
 }
 
 async function getTransporter() {
@@ -46,8 +140,13 @@ async function getTransporter() {
 // Open + authenticate the connection ahead of time (called at startup).
 // Non-throwing, but LOGS the outcome so the real SMTP problem is visible in Render logs.
 async function warmUp() {
-  if (!isConfigured()) {
-    console.error("SMTP not configured (SMTP_USER/SMTP_PASS missing) — reset emails will fail.");
+  if (hasHttpApi()) {
+    const provider = process.env.RESEND_API_KEY ? "Resend" : process.env.BREVO_API_KEY ? "Brevo" : "Mailjet";
+    console.log(`Email: ${provider} HTTP API configured (sender ${senderIdentity().email}).`);
+    return true;
+  }
+  if (!hasSmtp()) {
+    console.error("Email not configured (no BREVO_API_KEY and no SMTP_USER/PASS) — reset emails will fail.");
     return false;
   }
   try {
@@ -61,14 +160,8 @@ async function warmUp() {
   }
 }
 
-async function sendPasswordReset(toEmail, resetUrl) {
-  const t = await getTransporter();
-  if (!t) throw new Error("SMTP is not configured");
-  const from = process.env.MAIL_FROM || `Scam Patrol <${process.env.SMTP_USER}>`;
-
-  const info = await t.sendMail({
-    from,
-    to: toEmail,
+function resetEmailContent(resetUrl) {
+  return {
     subject: "Reset your Scam Patrol password",
     text:
       `We received a request to reset your Scam Patrol password.\n\n` +
@@ -82,8 +175,34 @@ async function sendPasswordReset(toEmail, resetUrl) {
       `padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a></p>` +
       `<p style="color:#5b6776;font-size:13px">If you didn't request this, you can ignore this email.</p>` +
       `</div>`,
-  });
-  console.log(`Password reset email sent (id ${info.messageId}) -> ${toEmail}`);
+  };
+}
+
+async function sendPasswordReset(toEmail, resetUrl) {
+  const { subject, text, html } = resetEmailContent(resetUrl);
+
+  // Prefer an HTTP API (works where outbound SMTP is blocked, e.g. Render free tier).
+  if (process.env.RESEND_API_KEY) {
+    const info = await sendViaResend({ to: toEmail, subject, text, html });
+    console.log(`Password reset email sent via Resend (id ${info.messageId}) -> ${toEmail}`);
+    return info;
+  }
+  if (process.env.BREVO_API_KEY) {
+    const info = await sendViaBrevo({ to: toEmail, subject, text, html });
+    console.log(`Password reset email sent via Brevo (id ${info.messageId}) -> ${toEmail}`);
+    return info;
+  }
+  if (hasMailjet()) {
+    const info = await sendViaMailjet({ to: toEmail, subject, text, html });
+    console.log(`Password reset email sent via Mailjet (id ${info.messageId}) -> ${toEmail}`);
+    return info;
+  }
+
+  const t = await getTransporter();
+  if (!t) throw new Error("Email is not configured");
+  const from = process.env.MAIL_FROM || `Scam Patrol <${process.env.SMTP_USER}>`;
+  const info = await t.sendMail({ from, to: toEmail, subject, text, html });
+  console.log(`Password reset email sent via SMTP (id ${info.messageId}) -> ${toEmail}`);
   return info;
 }
 

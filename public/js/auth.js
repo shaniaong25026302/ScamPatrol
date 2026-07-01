@@ -160,9 +160,17 @@
 
       const { ok, data } = await postJSON("/api/auth/forgot-password", { email });
       if (ok) {
-        // Reset links are sent by email only — never shown on screen.
-        banner(forgotForm, "form-success",
-          data.message || "If that email is registered, a reset link has been sent. Check your spam folder too.");
+        const msg = data.message || "If that email is registered, a reset link has been sent. Check your spam folder too.";
+        if (data.resetUrl) {
+          // Email couldn't be delivered (e.g. host blocks SMTP) — offer the link directly.
+          const el = document.getElementById("form-success");
+          if (el) {
+            el.style.display = "flex";
+            el.innerHTML = msg + ' <a href="' + data.resetUrl + '">Reset your password →</a>';
+          }
+        } else {
+          banner(forgotForm, "form-success", msg);
+        }
       } else {
         applyServerErrors(forgotForm, data);
       }
