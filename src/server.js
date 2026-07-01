@@ -4,6 +4,10 @@
 // This is the M1-owned skeleton: teammates mount their routes + views at the marked points below.
 require("dotenv").config();
 
+// Prefer IPv4 for ALL outbound DNS. Render has no outbound IPv6 route, so resolving
+// smtp.gmail.com to an IPv6 address caused ENETUNREACH / SMTP connection timeouts.
+require("dns").setDefaultResultOrder("ipv4first");
+
 const path = require("path");
 const express = require("express");
 const cookieParser = require("cookie-parser");
