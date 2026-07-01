@@ -412,4 +412,10 @@ img.owl { object-fit: contain; }
 .map-node .df { font-size: .8rem; color: var(--gw-muted); } .map-node .st { color: var(--gw-gold); font-size: .8rem; }
 .map-boss-note { text-align: center; margin-top: .9rem; color: var(--gw-muted); }
 @media (max-width: 640px) { .map-node { width: 74px; } .map-board { min-height: 320px; } }
+
+/* ---------- text-overflow safety: pixel text must never overlap its box ---------- */
+.game-world, .game-world * { overflow-wrap: break-word; min-width: 0; }
+.badge-card .nm, .map-node .nm, .shop-name, .villain .nm, td.who { overflow-wrap: anywhere; }
+.badge-grid { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
+.badge-card .nm { font-size: .62rem; line-height: 1.55; }
 /* <Shania End> */
