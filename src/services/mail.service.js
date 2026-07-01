@@ -3,6 +3,7 @@
 // Used for password-reset links. If SMTP isn't configured, isConfigured() is false
 // and callers fall back to the on-screen dev link instead of throwing.
 const nodemailer = require("nodemailer");
+const dns = require("dns").promises;
 
 let transporter;
 
@@ -10,20 +11,26 @@ function isConfigured() {
   return Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
-function getTransporter() {
+async function getTransporter() {
   if (!isConfigured()) return null;
   if (!transporter) {
     const port = Number(process.env.SMTP_PORT) || 587;
+    const hostname = process.env.SMTP_HOST || "smtp.gmail.com";
+    // Render has NO outbound IPv6 route, so letting Node resolve smtp.gmail.com
+    // (which prefers an AAAA/IPv6 record) caused ENETUNREACH / timeouts. Resolve a
+    // literal IPv4 ourselves and pin TLS to the real hostname so the cert still validates.
+    let host = hostname;
+    try {
+      host = (await dns.lookup(hostname, { family: 4 })).address;
+    } catch (_) {
+      /* fall back to the hostname if the lookup fails */
+    }
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      host,
       port,
       secure: port === 465, // 465 = implicit TLS; 587 = STARTTLS
-      // Force IPv4: Render can't route outbound IPv6, so resolving Gmail to an
-      // IPv6 address caused ENETUNREACH / connection timeouts.
-      family: 4,
+      tls: { servername: hostname }, // SNI + cert validation against smtp.gmail.com
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      // Keep an authenticated connection warm so each reset email skips the
-      // slow DNS + TLS + AUTH handshake (this is what made delivery feel laggy).
       pool: true,
       maxConnections: 3,
       maxMessages: 100,
@@ -44,7 +51,8 @@ async function warmUp() {
     return false;
   }
   try {
-    await getTransporter().verify();
+    const t = await getTransporter();
+    await t.verify();
     console.log(`SMTP ready: ${process.env.SMTP_HOST}:${process.env.SMTP_PORT} as ${process.env.SMTP_USER}`);
     return true;
   } catch (e) {
@@ -54,7 +62,7 @@ async function warmUp() {
 }
 
 async function sendPasswordReset(toEmail, resetUrl) {
-  const t = getTransporter();
+  const t = await getTransporter();
   if (!t) throw new Error("SMTP is not configured");
   const from = process.env.MAIL_FROM || `Scam Patrol <${process.env.SMTP_USER}>`;
 
@@ -81,7 +89,7 @@ async function sendPasswordReset(toEmail, resetUrl) {
 
 // Optional: verify SMTP credentials/connection (used by tooling/tests).
 async function verifyConnection() {
-  const t = getTransporter();
+  const t = await getTransporter();
   if (!t) throw new Error("SMTP is not configured");
   return t.verify();
 }
