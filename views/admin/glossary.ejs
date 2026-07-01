@@ -1,7 +1,7 @@
 <h1>Scam Glossary</h1>
 
 <a href="/admin/glossary/new" class="btn btn-primary">
-Add New Entry
+    Add New Entry
 </a>
 
 <hr>
@@ -9,24 +9,23 @@ Add New Entry
 <table class="table">
 
 <tr>
-<th>Term</th>
-<th>Action</th>
+    <th>Term</th>
+    <th>Description</th>
+    <th>Prevention</th>
 </tr>
 
-<tr>
-<td>Phishing</td>
-<td>
-<button>Edit</button>
-<button>Delete</button>
-</td>
-</tr>
+<% glossary.forEach(item => { %>
 
 <tr>
-<td>Investment Scam</td>
-<td>
-<button>Edit</button>
-<button>Delete</button>
-</td>
+
+<td><%= item.term %></td>
+
+<td><%= item.description %></td>
+
+<td><%= item.prevention %></td>
+
 </tr>
+
+<% }) %>
 
 </table>

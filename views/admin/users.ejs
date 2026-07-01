@@ -2,21 +2,34 @@
 
 <table class="table">
 
-<tr>
-<th>User</th>
-<th>Email</th>
-<th>Role</th>
-<th>Action</th>
-</tr>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Created At</th>
+        <th>Action</th>
+    </tr>
 
-<tr>
-<td>Shawn</td>
-<td>shawn@email.com</td>
-<td>User</td>
-<td>
-<button>Promote</button>
-<button>Suspend</button>
-</td>
-</tr>
+    <% users.forEach(user => { %>
+
+        <tr>
+
+            <td><%= user.id %></td>
+            <td><%= user.username %></td>
+            <td><%= user.email %></td>
+            <td><%= user.role %></td>
+            <td><%= user.created_at %></td>
+
+            <td>
+
+                <button>Promote</button>
+                <button>Suspend</button>
+
+            </td>
+
+        </tr>
+
+    <% }) %>
 
 </table>
