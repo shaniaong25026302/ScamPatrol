@@ -1,0 +1,36 @@
+<%# <CG Member 4 Start> %>
+<div class="card comments-card">
+  <h3>Comments</h3>
+
+  <!-- New Comment Form -->
+  <form class="comment-form" action="/cases/<%= case.id %>/comments" method="POST">
+    <div class="form-group">
+      <textarea name="content" rows="3" placeholder="Write your comment..." required></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit">Post Comment</button>
+  </form>
+
+  <!-- Existing Comments -->
+  <% if (comments && comments.length > 0) { %>
+    <% comments.forEach(comment => { %>
+      <div class="comment">
+        <p><%= comment.content %></p>
+        <small>By User <%= comment.user_id %> · <%= new Date(comment.created_at).toLocaleString('en-SG') %></small>
+
+        <% if (currentUser && comment.user_id === currentUser.id) { %>
+          <form class="inline-form" action="/comments/<%= comment.id %>/edit" method="POST">
+            <input type="text" name="content" value="<%= comment.content %>">
+            <button class="btn btn-ghost" type="submit">Edit</button>
+          </form>
+          <form class="inline-form" action="/comments/<%= comment.id %>/delete" method="POST" onsubmit="return confirm('Delete this comment?');">
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        <% } %>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <p class="empty-state">No comments yet. Be the first to share your thoughts!</p>
+  <% } %>
+</div>
+
+<%# <CG Member 4 End> %>
