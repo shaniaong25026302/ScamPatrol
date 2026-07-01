@@ -31,7 +31,7 @@
     if (!el) return;
     if (p.energy >= (p.energyMax || 5)) { el.textContent = ""; return; } // full → no timer
     let secs = p.energyNextSec || 0;
-    el.textContent = "+1 " + fmtTime(secs);
+    el.textContent = fmtTime(secs);
     energyTimer = setInterval(() => {
       secs -= 1;
       if (secs <= 0) {
@@ -40,7 +40,7 @@
         HQ.refresh(); // energy regenerated — refetch
         return;
       }
-      el.textContent = "+1 " + fmtTime(secs);
+      el.textContent = fmtTime(secs);
     }, 1000);
   }
 

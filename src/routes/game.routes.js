@@ -13,6 +13,7 @@ router.post("/mission/start", requireAuth, h(c.missionStart));
 router.post("/mission/check", h(c.missionCheck));
 router.post("/roast", h(c.roast));
 router.post("/challenge/complete", requireAuth, h(c.completeChallenge));
+router.post("/poke", requireAuth, h(c.pokeReward));
 router.post("/story/complete", h(c.storyComplete));
 router.get("/shop", requireAuth, h(c.getShop));
 router.post("/shop/buy", requireAuth, h(c.buyItem));

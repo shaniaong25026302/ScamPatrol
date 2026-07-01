@@ -120,15 +120,15 @@
 
   // ---- Interactive mentor: poke Inspector Hoot ----
   const SG_FACTS = [
-    "Singapore scam victims lost over $650 MILLION in a single year.",
-    "Your bank will NEVER ask for your full PIN, password or OTP.",
-    "Unsure? Call the national Anti-Scam Helpline: 1800-722-6688.",
-    "ScamShield is a free Police app that blocks scam calls & SMS.",
-    "Job & e-commerce scams are among the most reported in Singapore.",
-    "A real govt officer will never demand money or your Singpass by phone.",
-    "Never transfer money to someone you've only ever met online.",
+    "Nearly 3 in 4 scam victims in Singapore are under 50 — it's not just an 'elderly' problem.",
+    "Over 90% of scam victims transfer the money THEMSELVES — no hacking needed.",
+    "Young adults aged 20–39 are the single largest group of scam victims here.",
+    "Singapore logged more than 46,000 scam cases in one year — a record high.",
+    "E-commerce scams are the most REPORTED scam type in Singapore by case count.",
+    "Scam victims here lost over $650 MILLION in just one year.",
+    "Some romance scammers chat for WEEKS before ever mentioning money.",
+    "Malware scams can drain a banking app without the victim typing any password.",
   ];
-  let coinPokes = 0;
   function mentorSay(text) {
     const sp = document.getElementById("mentor-speech");
     if (!sp) return;
@@ -145,6 +145,24 @@
     wrap.appendChild(c);
     setTimeout(() => c.remove(), 1200);
   }
+  // Award real coins (server-capped at 10/day) and reflect the new balance in the HUD.
+  async function pokeCoin(mentor) {
+    try {
+      const r = await fetch("/api/game/poke", { method: "POST", headers: { "Content-Type": "application/json" } });
+      const d = await r.json();
+      if (!d.awarded) {
+        if (window.SOUND) window.SOUND.sfx.hoot();
+        mentorSay("That's all " + (d.cap || 10) + " coins for today, recruit — come back tomorrow! 🌙");
+        return;
+      }
+      dropCoin(mentor);
+      if (window.SOUND) window.SOUND.sfx.xp();
+      mentorSay("+" + d.awarded + " 🪙! " + (d.remaining > 0 ? "Don't get greedy…" : "That's your last coin for today!"));
+      if (window.HQ) window.HQ.refresh(); // update the coin counter in the HUD
+    } catch (_) {
+      /* ignore */
+    }
+  }
   function initMentor() {
     const mentor = document.getElementById("mentor");
     if (!mentor || mentor.dataset.bound) return;
@@ -154,14 +172,10 @@
       const roll = Math.random();
       if (roll < 0.34) {
         if (owl) { owl.className = "owl owl-state-alarm"; setTimeout(() => { owl.className = "owl"; }, 1200); }
-        if (window.SOUND) window.SOUND.sfx.hoot();
+        if (window.SOUND) window.SOUND.sfx.ow();
         mentorSay("Ow! 🦉 Easy on the feathers, recruit!");
       } else if (roll < 0.67) {
-        coinPokes += 1;
-        dropCoin(mentor);
-        if (window.SOUND) window.SOUND.sfx.xp();
-        if (coinPokes >= 5) { mentorSay("Enough! 🪙 Go EARN your gold on missions!"); coinPokes = 0; }
-        else mentorSay("Here's a shiny one... don't get greedy! 🪙");
+        pokeCoin(mentor);
       } else {
         if (window.SOUND) window.SOUND.sfx.hoot();
         mentorSay("🦉 Did you know? " + SG_FACTS[Math.floor(Math.random() * SG_FACTS.length)]);

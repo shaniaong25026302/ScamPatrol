@@ -1,7 +1,7 @@
 {
   "name": "scamlah",
   "version": "1.0.0",
-  "description": "scamlah (ScamGuard SG) — Express + EJS + MySQL scam-reporting & AI checker app",
+  "description": "Scam Patrol — Express + EJS + MySQL scam-reporting & AI checker app",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {

@@ -50,12 +50,16 @@ async function spendEnergy(userId) {
 }
 
 // Field-mission map progress (stars + Boss unlock) from per-kind clear counts.
+// Boss unlocks once EACH non-Boss stage has been cleared at least once; clearing the
+// same stage again does not count toward the requirement (distinct stages only).
 function missionsProgress(sc) {
-  const total = Object.keys(sc).filter((k) => k.startsWith("mn_")).reduce((s, k) => s + sc[k], 0);
+  const nonBoss = missions.KINDS.filter((k) => k !== "Boss");
+  const needed = nonBoss.length;
+  const distinctCleared = nonBoss.filter((k) => (sc["mn_" + k] || 0) >= 1).length;
   return missions.KINDS.map((kind) => {
     const cleared = sc["mn_" + kind] || 0;
     const stars = cleared >= 5 ? 3 : cleared >= 3 ? 2 : cleared >= 1 ? 1 : 0;
-    return { kind, cleared, stars, locked: kind === "Boss" && total < 6 };
+    return { kind, cleared, stars, locked: kind === "Boss" && distinctCleared < needed };
   });
 }
 
@@ -165,6 +169,25 @@ async function completeChallenge(req, res) {
   return res.json({ reward });
 }
 
+// POST /api/game/poke — coins for poking Inspector Hoot, capped at 10 coins/day.
+const POKE_DAILY_CAP = 10;
+const POKE_PER_HIT = 2;
+async function pokeReward(req, res) {
+  await Game.ensureProfile(req.user.id);
+  const awardedToday = await Game.coinsFromActionToday(req.user.id, "owl_poke");
+  const remainingBefore = Math.max(0, POKE_DAILY_CAP - awardedToday);
+  if (remainingBefore <= 0) {
+    const p = await Game.getProfile(req.user.id);
+    return res.json({ awarded: 0, limit: true, remaining: 0, coins: p ? p.coins : 0, cap: POKE_DAILY_CAP });
+  }
+  const award = Math.min(POKE_PER_HIT, remainingBefore);
+  await Game.addXp(req.user.id, 0, award); // coins only, no XP
+  await Game.logEvent(req.user.id, "owl_poke", 0, award);
+  const p = await Game.getProfile(req.user.id);
+  const remaining = remainingBefore - award;
+  return res.json({ awarded: award, limit: remaining <= 0, remaining, coins: p.coins, cap: POKE_DAILY_CAP });
+}
+
 // GET /api/game/shop
 async function getShop(req, res) {
   const p = await Game.getProfile(req.user.id);
@@ -215,6 +238,6 @@ async function storyComplete(req, res) {
 
 module.exports = {
   profile, leaderboard, missionStart, missionCheck, roast, completeChallenge, storyComplete,
-  getShop, buyItem, equipItem,
+  getShop, buyItem, equipItem, pokeReward,
 };
 // <Shania End>

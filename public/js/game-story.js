@@ -7,12 +7,12 @@
 
   // ---------- CUTSCENES ----------
   const scenes = [
-    { char: "🧓", speaker: "STORY", text: "This is your Uncle Tan. Retired bus captain. Loves his grandkids and his kopi-o.", btn: "Next ▸" },
+    { char: "🧓", speaker: "STORY", text: "This is your Uncle Ong. Retired bus captain. Loves his grandkids and his kopi-o.", btn: "Next ▸" },
     { char: "📱", speaker: "STORY", text: "One quiet afternoon, a text message buzzed on his phone…", btn: "Read it ▸" },
     { char: "💬", speaker: "THE SMS", text: "\"POSB: Your account is LOCKED. Verify now or it will be suspended: http://posb-secure-verify.xyz\"", btn: "And then? ▸" },
     { char: "😰", speaker: "STORY", text: "He clicked the link. He typed his bank login. By dinner, his life savings — $8,000 — were gone.", btn: "…", shake: true },
     { html: LOGO, speaker: "INSPECTOR HOOT", text: "Hoot hoot! I am INSPECTOR HOOT of Scam Patrol HQ. Don't lose hope, recruit.", btn: "Who are you? ▸" },
-    { portal: true, speaker: "INSPECTOR HOOT", text: "I can turn back time — to the very moment that SMS arrived. This time, YOU guide Uncle Tan's hands.", btn: "🌀 ENTER THE PORTAL" },
+    { portal: true, speaker: "INSPECTOR HOOT", text: "I can turn back time — to the very moment that SMS arrived. This time, YOU guide Uncle Ong's hands.", btn: "🌀 ENTER THE PORTAL" },
   ];
 
   let si = 0;
@@ -69,12 +69,12 @@
     },
     good_call: {
       who: "owl",
-      text: "Smart move! 🦉 You called the OFFICIAL number. POSB confirms there was no problem — that SMS was a SCAM. Uncle Tan's money is safe! 💰",
+      text: "Smart move! 🦉 You called the OFFICIAL number. POSB confirms there was no problem — that SMS was a SCAM. Uncle Ong's money is safe! 💰",
       choices: [{ label: "Continue ▸", goto: "report_prompt" }],
     },
     good_app: {
       who: "owl",
-      text: "Excellent! 🦉 The REAL app shows nothing wrong. The SMS was fake all along. Uncle Tan is safe! 💰",
+      text: "Excellent! 🦉 The REAL app shows nothing wrong. The SMS was fake all along. Uncle Ong is safe! 💰",
       choices: [{ label: "Continue ▸", goto: "report_prompt" }],
     },
     report_prompt: {
@@ -85,9 +85,9 @@
         { label: "Just stay safe for now", goto: "win_safe" },
       ],
     },
-    win_report: { outcome: "win", xp: true, title: "🎉 UNCLE TAN IS SAVED!",
+    win_report: { outcome: "win", xp: true, title: "🎉 UNCLE ONG IS SAVED!",
       text: "And you reported the scam — the whole neighbourhood is safer. You're a natural, recruit." },
-    win_safe: { outcome: "win", xp: true, title: "✅ Uncle Tan is safe!",
+    win_safe: { outcome: "win", xp: true, title: "✅ Uncle Ong is safe!",
       text: "His savings are protected. Welcome to Scam Patrol HQ." },
   };
 
@@ -117,7 +117,7 @@
       b.className = "gw-btn ghost";
       b.textContent = c.label;
       b.addEventListener("click", () => {
-        if (c.say) addBubble("me", "Uncle Tan", c.say);
+        if (c.say) addBubble("me", "Uncle Ong", c.say);
         goto(c.goto);
       });
       box.appendChild(b);

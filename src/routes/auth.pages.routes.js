@@ -11,20 +11,20 @@ function guestOnly(req, res, next) {
 }
 
 router.get("/login", guestOnly, (req, res) => {
-  res.render("auth/login", { title: "Log in · scamlah", activePage: "login", next: req.query.next || "" });
+  res.render("auth/login", { title: "Log in · Scam Patrol", activePage: "login", next: req.query.next || "" });
 });
 
 router.get("/register", guestOnly, (req, res) => {
-  res.render("auth/register", { title: "Create account · scamlah", activePage: "register" });
+  res.render("auth/register", { title: "Create account · Scam Patrol", activePage: "register" });
 });
 
 router.get("/forgot-password", guestOnly, (req, res) => {
-  res.render("auth/forgot-password", { title: "Forgot password · scamlah", activePage: "" });
+  res.render("auth/forgot-password", { title: "Forgot password · Scam Patrol", activePage: "" });
 });
 
 router.get("/reset-password", guestOnly, (req, res) => {
   res.render("auth/reset-password", {
-    title: "Reset password · scamlah",
+    title: "Reset password · Scam Patrol",
     activePage: "",
     token: req.query.token || "",
   });

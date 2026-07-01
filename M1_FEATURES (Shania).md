@@ -1,4 +1,4 @@
-# scamlah — M1 Feature Summary (Shania)
+# Scam Patrol — M1 Feature Summary (Shania)
 
 **My module (M1):** Authentication · AI Scam Checker · Team Lead (app skeleton, shared layout/theme,
 initial DB schema) — **plus** I took over **Leaderboard / gamification** from M5 and turned the whole
@@ -73,8 +73,8 @@ countdown to the next refill; gates missions.
 
 ## 10. 🗺️ Field Missions + clickable operations map
 Click locations on a map board (Email · SMS · Website · Call · Boss, joined by a path) with ★ ratings
-and a locked Boss (unlocks after 6 clears); each run costs energy and shows a full-screen
-Correct/Not-quite popup with the explanation.
+and a locked Boss (unlocks once each case type is cleared at least once); each run costs energy and
+shows a full-screen Correct/Not-quite popup with the explanation.
 **Files:** `src/data/missions.js` · `src/controllers/game.controller.js`
 (`missionStart`/`missionCheck`/`missionsProgress`) · `views/game/missions.ejs` ·
 `public/js/game-missions.js`
@@ -88,7 +88,7 @@ your profile picture (updates the HUD).
 `public/js/game-shop.js` · `db/schema.sql` (`user_purchases`, `game_profiles.avatar`)
 
 ## 12. 📖 Story mode (interactive origin story)
-"Second Chance": Uncle Tan gets scammed → Inspector Hoot → portal rewinds time → branching scammer
+"Second Chance": Uncle Ong gets scammed → Inspector Hoot → portal rewinds time → branching scammer
 chat (choices → endings, owl second-chance rewind). Guests are prompted to sign up.
 **Files:** `views/game/story.ejs` · `public/js/game-story.js` ·
 `src/controllers/game.controller.js` (`storyComplete`)

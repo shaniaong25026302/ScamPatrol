@@ -5,11 +5,11 @@
   const map = document.getElementById("mission-map");
   if (!map) return;
   const $ = (id) => document.getElementById(id);
-  const ICONS = { Email: "✉️", SMS: "💬", Website: "🌐", Call: "📞", Boss: "💀" };
+  const ICONS = { Email: "📧", SMS: "💬", Website: "🌐", Call: "📞", Boss: "💀" };
+  const NAMES = { Email: "Email Check", SMS: "SMS Scanner", Website: "Website Watch", Call: "Call Center", Boss: "Boss Battle: The Scammer" };
   const DIFF = { Email: "Easy", SMS: "Easy", Website: "Medium", Call: "Hard", Boss: "Expert" };
   const DCLASS = { Email: "easy", SMS: "easy", Website: "medium", Call: "hard", Boss: "expert" };
   const POS = { Email: { x: 12, y: 28 }, SMS: { x: 30, y: 66 }, Website: { x: 50, y: 20 }, Call: { x: 70, y: 66 }, Boss: { x: 87, y: 30 } };
-  const BOSS_NEED = 6;
   let current = null;
 
   const stars = (n) => "★★★".slice(0, n) + "☆☆☆".slice(0, 3 - n);
@@ -25,9 +25,10 @@
 
       map.querySelectorAll(".map-node").forEach((n) => n.remove()); // keep the svg path
       const nodes = p.missions || [];
-      let totalCleared = 0;
+      let distinctCleared = 0;
+      let needed = 0;
       nodes.forEach((n) => {
-        if (n.kind !== "Boss") totalCleared += n.cleared || 0;
+        if (n.kind !== "Boss") { needed += 1; if ((n.cleared || 0) >= 1) distinctCleared += 1; }
         const pos = POS[n.kind] || { x: 50, y: 50 };
         const btn = document.createElement("button");
         btn.className = "map-node " + (DCLASS[n.kind] || "easy") + (n.locked ? " locked" : "");
@@ -36,18 +37,19 @@
         if (n.locked) btn.disabled = true;
         else btn.setAttribute("data-kind", n.kind);
         btn.innerHTML =
-          '<div class="st">' + stars(n.stars) + "</div>" +
-          '<div class="ic">' + (n.locked ? "🔒" : ICONS[n.kind] || "❓") + "</div>" +
-          '<div class="nm">' + n.kind + "</div>" +
-          '<div class="df">' + (DIFF[n.kind] || "") + "</div>";
+          '<span class="st">' + stars(n.stars) + "</span>" +
+          '<span class="orb"><span class="ic">' + (ICONS[n.kind] || "❓") + "</span>" +
+          (n.locked ? '<span class="lock">🔒</span>' : "") + "</span>" +
+          '<span class="lbl"><b>' + (NAMES[n.kind] || n.kind) + "</b>" +
+          '<small>(' + (DIFF[n.kind] || "") + ")</small></span>";
         map.appendChild(btn);
       });
 
       const boss = nodes.find((n) => n.kind === "Boss");
       const note = $("boss-note");
       if (boss && boss.locked) {
-        note.innerHTML = "💀 <b>Boss: The Scammer</b> is locked — clear <b>" + BOSS_NEED +
-          "</b> cases to challenge it (" + totalCleared + "/" + BOSS_NEED + ").";
+        note.innerHTML = "💀 <b>Boss: The Scammer</b> is locked — clear <b>every</b> case type once to " +
+          "challenge it (" + distinctCleared + "/" + needed + ").";
       } else {
         note.innerHTML = "💀 <b>Boss: The Scammer</b> is <b style='color:var(--gw-red)'>UNLOCKED</b> — click it to challenge!";
       }

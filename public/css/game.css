@@ -304,12 +304,13 @@
 
 /* Story phone: keep all bubbles (incl. the owl's) INSIDE the phone, scroll if long */
 .phone { display: flex; flex-direction: column; }
-.chat { max-height: 360px; overflow-y: auto; }
+.chat { max-height: 360px; overflow-y: auto; align-items: stretch; }
 /* flex:0 0 auto stops bubbles being squashed (the cause of the text overlap) */
-.chat .bubble { flex: 0 0 auto; line-height: 1.4; }
+.chat .bubble { flex: 0 0 auto; line-height: 1.4; box-sizing: border-box; }
+/* owl bubble is not full-width and must stay clear of the phone edges */
+.bubble.owl { align-self: center; max-width: 90%; margin: .15rem auto; }
 #phone-view .choices { margin-top: 1rem; clear: both; }
 #story-outcome { margin-top: 1rem; clear: both; }
-.bubble.owl { margin: .15rem 0; }
 
 /* =========================================================
    Full-screen result popup ("Correct!" / "Not quite")
@@ -388,34 +389,75 @@ img.owl { object-fit: contain; }
 
 /* ---------- operations map (clickable locations) ---------- */
 .map-board {
-  position: relative; min-height: 380px; margin-top: 1rem; border-radius: 12px; border: 2px solid var(--gw-border);
+  position: relative; min-height: 440px; margin-top: 1rem; border-radius: 12px; border: 2px solid var(--gw-border);
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 35%, rgba(65,208,224,.07), transparent 62%),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 28px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 28px),
-    linear-gradient(180deg, #0d1730, #0a0f1f);
+    radial-gradient(circle at 50% 30%, rgba(65,208,224,.09), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 30px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 30px),
+    linear-gradient(180deg, #101c38, #0a0f1f);
 }
 .map-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.map-path path { fill: none; stroke: rgba(139,123,255,.55); stroke-width: .7; stroke-dasharray: 2.2 2.2; }
+.map-path path { fill: none; stroke: rgba(255,255,255,.4); stroke-width: .6; stroke-dasharray: 1.6 2; }
+
+/* Circular "quest node" — stars above, glowing difficulty orb, label below */
 .map-node {
-  position: absolute; transform: translate(-50%, -50%); width: 98px; padding: .5rem .3rem; text-align: center;
-  background: var(--gw-panel2); border: 2px solid var(--gw-border); border-radius: 12px; cursor: pointer;
-  color: var(--gw-text); font-family: inherit; transition: transform .12s, box-shadow .15s;
+  position: absolute; transform: translate(-50%, -50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: .28rem;
+  width: 122px; padding: 0; background: none; border: none; cursor: pointer;
+  color: var(--gw-text); font-family: inherit;
 }
-.map-node:hover:not(:disabled) { box-shadow: 0 0 18px rgba(139,123,255,.55); transform: translate(-50%, -50%) scale(1.07); z-index: 3; }
-.map-node.easy { border-color: #59e08a; } .map-node.medium { border-color: var(--gw-amber); }
-.map-node.hard { border-color: #ff7a7a; } .map-node.expert { border-color: var(--gw-purple); }
-.map-node.locked { opacity: .55; cursor: not-allowed; }
-.map-node .ic { font-size: 1.7rem; line-height: 1.1; }
-.map-node .nm { font-family: "Press Start 2P", monospace; font-size: .5rem; margin-top: .25rem; }
-.map-node .df { font-size: .8rem; color: var(--gw-muted); } .map-node .st { color: var(--gw-gold); font-size: .8rem; }
+.map-node .st { color: var(--gw-gold); font-size: .72rem; letter-spacing: 2px; text-shadow: 0 1px 0 #000; }
+.map-node .orb {
+  position: relative; width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 34%, #2a3860, #121a30);
+  border: 3px solid var(--gw-border); box-shadow: 0 0 0 4px rgba(0,0,0,.35);
+  transition: transform .12s ease, box-shadow .15s ease;
+}
+.map-node .orb .ic { font-size: 2rem; line-height: 1; }
+.map-node .orb .lock { position: absolute; right: -7px; bottom: -7px; font-size: 1.05rem; filter: drop-shadow(0 1px 2px #000); }
+.map-node .lbl { display: flex; flex-direction: column; line-height: 1.25; }
+.map-node .lbl b { font-family: "Press Start 2P", monospace; font-size: .5rem; }
+.map-node .lbl small { font-size: .92rem; font-weight: 700; margin-top: .1rem; }
+.map-node:hover:not(:disabled) .orb { transform: scale(1.12); }
+
+/* difficulty → ring glow + label colour (green → yellow → orange → red) */
+.map-node.easy   .orb { border-color: #4ade80; box-shadow: 0 0 18px rgba(74,222,128,.55); }
+.map-node.easy   .lbl small { color: #4ade80; }
+.map-node.medium .orb { border-color: #f4c33b; box-shadow: 0 0 18px rgba(244,195,59,.55); }
+.map-node.medium .lbl small { color: #f4c33b; }
+.map-node.hard   .orb { border-color: #ff922e; box-shadow: 0 0 18px rgba(255,146,46,.55); }
+.map-node.hard   .lbl small { color: #ff922e; }
+.map-node.expert .orb { border-color: #ff4d4d; box-shadow: 0 0 18px rgba(255,77,77,.6); }
+.map-node.expert .lbl small { color: #ff4d4d; }
+.map-node.locked { cursor: not-allowed; }
+.map-node.locked .orb { filter: grayscale(.35) brightness(.8); }
+
+/* difficulty legend, pinned bottom-left like an arcade map */
+.map-legend {
+  position: absolute; left: 12px; bottom: 12px; z-index: 4; display: flex; flex-direction: column; gap: 3px;
+  background: rgba(8,12,24,.72); border: 1px solid var(--gw-border); border-radius: 8px; padding: .45rem .6rem;
+  font-size: .82rem; letter-spacing: .3px;
+}
+.map-legend span { display: flex; align-items: center; gap: .45rem; }
+.map-legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px currentColor; }
+
 .map-boss-note { text-align: center; margin-top: .9rem; color: var(--gw-muted); }
-@media (max-width: 640px) { .map-node { width: 74px; } .map-board { min-height: 320px; } }
+
+/* the new owl art is a smooth illustration, not pixel art */
+img.owl { image-rendering: auto; }
+
+@media (max-width: 640px) {
+  .map-node { width: 88px; } .map-node .orb { width: 54px; height: 54px; } .map-node .orb .ic { font-size: 1.6rem; }
+  .map-board { min-height: 380px; }
+}
 
 /* ---------- text-overflow safety: pixel text must never overlap its box ---------- */
 .game-world, .game-world * { overflow-wrap: break-word; min-width: 0; }
-.badge-card .nm, .map-node .nm, .shop-name, .villain .nm, td.who { overflow-wrap: anywhere; }
-.badge-grid { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
-.badge-card .nm { font-size: .62rem; line-height: 1.55; }
+.badge-card .nm, .map-node .lbl, .shop-name, .villain .nm, td.who { overflow-wrap: anywhere; }
+/* Bigger badge cards so the pixel names fit without spilling into neighbours */
+.badge-grid { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: .8rem; }
+.badge-card { padding: .9rem .55rem; }
+.badge-card .ico { font-size: 2rem; }
+.badge-card .nm { font-size: .56rem; line-height: 1.6; }
 /* <Shania End> */

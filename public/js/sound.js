@@ -66,7 +66,10 @@
     level() { if (!sfxOn) return; [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.15, "square", 0.6, i * 0.09)); },
     win() { if (!sfxOn) return; [523, 659, 784, 1046, 880, 1318].forEach((f, i) => tone(f, 0.16, "square", 0.6, i * 0.11)); },
     error() { if (!sfxOn) return; tone(200, 0.2, "sawtooth", 0.6, 0); tone(150, 0.24, "sawtooth", 0.6, 0.12); },
-    hoot() { if (!sfxOn) return; tone(360, 0.14, "sine", 0.65, 0); tone(300, 0.18, "sine", 0.65, 0.12); },
+    // Owl "hoo-hoot" — two soft descending sine notes
+    hoot() { if (!sfxOn) return; tone(420, 0.16, "sine", 0.7, 0); tone(340, 0.22, "sine", 0.7, 0.2); },
+    // Cartoon "ow!" — a quick high-to-low yelp when the owl is poked
+    ow() { if (!sfxOn) return; tone(640, 0.06, "square", 0.6, 0); tone(300, 0.16, "sine", 0.6, 0.05); },
   };
 
   // ---------- MP3 theme song ----------
@@ -133,6 +136,8 @@
 
   document.addEventListener("click", (e) => {
     resumeCtx();
+    // The owl mentors play their own hoot/ow — never the generic button click.
+    if (e.target.closest("#mentor, #owl-react")) return;
     if (e.target.closest("button, .gw-btn, .btn, a, .lb-tab, .badge-card, .villain")) SFX.click();
   });
 

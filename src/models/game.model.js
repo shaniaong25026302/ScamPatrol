@@ -54,6 +54,15 @@ async function hasEventToday(userId, action) {
   return rows.length > 0;
 }
 
+// Total coins already awarded today for a given action (used for daily caps).
+async function coinsFromActionToday(userId, action) {
+  const [rows] = await pool.query(
+    "SELECT COALESCE(SUM(coins), 0) AS c FROM xp_events WHERE user_id = ? AND action = ? AND DATE(created_at) = CURDATE()",
+    [userId, action],
+  );
+  return Number(rows[0].c);
+}
+
 async function getBadges(userId) {
   const [rows] = await pool.query(
     "SELECT badge_key, earned_at FROM user_badges WHERE user_id = ? ORDER BY earned_at",
@@ -134,7 +143,7 @@ async function scoreCounts(userId) {
 
 module.exports = {
   ensureProfile, getProfile, addXp, setLevel, setStreak, logEvent,
-  countByAction, hasEventToday, getBadges, addBadge, recordScore,
+  countByAction, hasEventToday, coinsFromActionToday, getBadges, addBadge, recordScore,
   leaderboard, userRank,
   setEnergy, setAvatar, spendCoins, addPurchase, getPurchases, scoreCounts,
 };

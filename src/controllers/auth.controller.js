@@ -106,12 +106,12 @@ async function forgotPassword(req, res) {
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
     if (mail.isConfigured()) {
-      try {
-        await mail.sendPasswordReset(user.email, resetUrl);
-        response.emailed = true;
-      } catch (e) {
+      // Fire-and-forget: don't block the HTTP response on the SMTP round-trip.
+      // The pooled connection sends it immediately in the background.
+      mail.sendPasswordReset(user.email, resetUrl).catch((e) => {
         console.error("Password reset email failed:", e.message);
-      }
+      });
+      response.emailed = true;
     }
     // Dev convenience: also return the link on-screen so the flow stays testable.
     if (!isProd()) {

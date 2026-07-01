@@ -16,7 +16,7 @@ const XP_RULES = {
   case_vote: { xp: 3, coins: 1, label: "Voted on a case" },
   case_flag: { xp: 4, coins: 2, label: "Flagged a case" },
   comment: { xp: 5, coins: 2, label: "Left a comment" },
-  story_win: { xp: 50, coins: 40, label: "Saved Uncle Tan" },
+  story_win: { xp: 50, coins: 40, label: "Saved Uncle Ong" },
 };
 
 // Ranks shown on the HUD / rank-up panel.

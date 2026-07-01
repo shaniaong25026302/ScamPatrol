@@ -1,5 +1,5 @@
 // <Shania Start>
-// src/server.js — scamlah single Express app.
+// src/server.js — Scam Patrol single Express app.
 // Serves the JSON API (/api/*) AND renders the EJS pages (res.render) into views/layout.ejs.
 // This is the M1-owned skeleton: teammates mount their routes + views at the marked points below.
 require("dotenv").config();
@@ -106,7 +106,7 @@ app.use((req, res) => {
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ error: "Not found" });
   }
-  res.status(404).render("index", { title: "Not found · scamlah", activePage: "" });
+  res.status(404).render("index", { title: "Not found · Scam Patrol", activePage: "" });
 });
 
 // ── Error handler ──
@@ -122,7 +122,11 @@ app.use((err, req, res, next) => {
 // Only listen when started directly (node src/server.js). When required by tests,
 // the app is exported un-started so they can listen on an ephemeral port.
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`scamlah running on http://localhost:${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`Scam Patrol running on http://localhost:${PORT}`);
+    // Warm the SMTP pool so the first password-reset email skips the handshake.
+    require("./services/mail.service").warmUp().catch(() => {});
+  });
 }
 
 module.exports = app;
