@@ -241,12 +241,17 @@
   padding: .8rem; box-shadow: 0 0 0 3px #000, 0 10px 0 rgba(0,0,0,.4); }
 .phone-top { text-align: center; font-family: "Press Start 2P", monospace; font-size: .55rem; color: var(--gw-muted);
   padding: .5rem 0 .8rem; border-bottom: 2px solid var(--gw-border); }
-.chat { display: flex; flex-direction: column; gap: .6rem; padding: .9rem .2rem; min-height: 180px; }
-.bubble { max-width: 82%; padding: .6rem .8rem; border-radius: 10px; font-size: 1.2rem; line-height: 1.3; animation: pop-in .25s ease; }
+/* Block flow (not flex) so bubbles can NEVER overlap; each hugs its own text. */
+.chat { display: block; padding: .9rem .5rem; min-height: 180px; }
+.bubble { display: block; box-sizing: border-box; width: fit-content; max-width: 85%;
+  margin: 0 0 .6rem; padding: .6rem .8rem; border-radius: 10px; font-size: 1.2rem;
+  line-height: 1.35; overflow-wrap: anywhere; animation: pop-in .25s ease; }
 @keyframes pop-in { from { transform: scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
-.bubble.them { align-self: flex-start; background: #1f2a48; border: 2px solid #2c3a5e; }
-.bubble.me { align-self: flex-end; background: #1f9d57; color: #fff; }
-.bubble.owl { align-self: center; background: rgba(139,123,255,.18); border: 2px solid var(--gw-purple); text-align: center; max-width: 96%; }
+.bubble.them { margin-right: auto; background: #1f2a48; border: 2px solid #2c3a5e; }
+.bubble.me { margin-left: auto; background: #1f9d57; color: #fff; }
+/* owl = system narration: spans the full phone width so its text always fits inside */
+.bubble.owl { width: auto; max-width: 100%; background: rgba(139,123,255,.18);
+  border: 2px solid var(--gw-purple); text-align: center; }
 .bubble .who { font-family: "Press Start 2P", monospace; font-size: .5rem; opacity: .75; display: block; margin-bottom: .35rem; }
 .choices { display: flex; flex-direction: column; gap: .5rem; margin-top: .8rem; }
 
@@ -302,13 +307,8 @@
 .game-world .form-foot { color: var(--gw-muted); }
 .game-world .form-foot a, .game-world .auth-card a { color: var(--gw-cyan); }
 
-/* Story phone: keep all bubbles (incl. the owl's) INSIDE the phone, scroll if long */
-.phone { display: flex; flex-direction: column; }
-.chat { max-height: 360px; overflow-y: auto; align-items: stretch; }
-/* flex:0 0 auto stops bubbles being squashed (the cause of the text overlap) */
-.chat .bubble { flex: 0 0 auto; line-height: 1.4; box-sizing: border-box; }
-/* owl bubble is not full-width and must stay clear of the phone edges */
-.bubble.owl { align-self: center; max-width: 90%; margin: .15rem auto; }
+/* Story phone: block-flow chat that scrolls when long (bubbles stack, never overlap) */
+.chat { max-height: 360px; overflow-y: auto; }
 #phone-view .choices { margin-top: 1rem; clear: both; }
 #story-outcome { margin-top: 1rem; clear: both; }
 

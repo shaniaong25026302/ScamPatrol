@@ -76,12 +76,14 @@
 
     const cb = $("challenge-box");
     if (cb && p.challenge) {
+      const head = "<p>" + p.challenge.icon + " <b>" + esc(p.challenge.label) + "</b></p>";
       if (p.challenge.done) {
-        cb.innerHTML = "<p>" + p.challenge.icon + " <b>" + esc(p.challenge.label) +
-          '</b></p><span class="gw-risk low">Completed ✅</span>';
+        cb.innerHTML = head + '<span class="gw-risk low">Completed ✅</span>';
+      } else if (p.challenge.met) {
+        cb.innerHTML = head + '<button class="gw-btn gold" id="claim-challenge">Claim +50 XP 🪙</button>';
       } else {
-        cb.innerHTML = "<p>" + p.challenge.icon + " <b>" + esc(p.challenge.label) +
-          '</b></p><button class="gw-btn gold" id="claim-challenge">Claim +50 XP 🪙</button>';
+        cb.innerHTML = head + '<p class="muted" style="margin:.3rem 0 0">Progress: <b>' +
+          (p.challenge.have || 0) + "</b>/" + p.challenge.need + " — complete it to claim.</p>";
       }
     }
 

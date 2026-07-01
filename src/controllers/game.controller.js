@@ -20,6 +20,12 @@ function questSteps(counts, profile) {
 }
 
 // Daily challenge: rotates by date; "done" if completed today.
+// Each challenge maps to a real action + target so the reward can't be claimed without doing it.
+const CHALLENGE_REQ = {
+  check3: { action: "ai_check", n: 3 },
+  mission3: { action: "mission_correct", n: 3 },
+  roast1: { action: "roast", n: 1 },
+};
 function todaysChallenge() {
   const pool = [
     { key: "check3", label: "Analyze 3 messages today", icon: "🔍" },
@@ -76,6 +82,9 @@ async function profile(req, res) {
   }));
   const rank = await Game.userRank(req.user.id);
   const challenge = todaysChallenge();
+  const chReq = CHALLENGE_REQ[challenge.key];
+  const chClaimed = await Game.hasEventToday(req.user.id, "daily_challenge");
+  const chHave = chClaimed ? chReq.n : await Game.countActionToday(req.user.id, chReq.action);
   const energy = await readEnergy(req.user.id);
   const sc = await Game.scoreCounts(req.user.id);
   const avatarImg = (shop.byKey(p.avatar) || {}).img || "/img/avatars/recruit.png";
@@ -89,7 +98,7 @@ async function profile(req, res) {
     leaderboardRank: rank,
     badges,
     quest: questSteps(counts, p),
-    challenge: { ...challenge, done: await Game.hasEventToday(req.user.id, "daily_challenge") },
+    challenge: { ...challenge, done: chClaimed, have: Math.min(chHave, chReq.n), need: chReq.n, met: chHave >= chReq.n },
     missions: missionsProgress(sc),
     stats: counts,
   });
@@ -113,14 +122,28 @@ async function leaderboard(req, res) {
   });
 }
 
+// In-flight mission per user (server-side, single instance): a mission must be STARTED
+// — which costs energy — before it can be checked, so checks can't be replayed to farm
+// XP/coins for free. Keyed by userId; consumed on the matching check.
+const activeMission = new Map();
+
 // POST /api/game/mission/start { kind } — costs 1 energy; returns a mission of that kind
 async function missionStart(req, res) {
   const kind = (req.body && req.body.kind) || null;
+  // Enforce the Boss lock server-side (the map also disables it, but the API must too).
+  if (kind === "Boss") {
+    const sc = await Game.scoreCounts(req.user.id);
+    const boss = missionsProgress(sc).find((n) => n.kind === "Boss");
+    if (boss && boss.locked) {
+      return res.status(403).json({ locked: true, error: "Clear every case type once to unlock the Boss." });
+    }
+  }
   const spent = await spendEnergy(req.user.id);
   if (!spent.ok) {
     return res.status(403).json({ noEnergy: true, energy: 0, energyMax: spent.max, energyNextSec: spent.nextSec });
   }
   const m = kind ? missions.randomByKind(kind) : missions.randomMission();
+  activeMission.set(req.user.id, m.id);
   return res.json({
     mission: missions.publicMission(m),
     energy: spent.energy, energyMax: spent.max, energyNextSec: spent.nextSec,
@@ -132,13 +155,15 @@ async function missionCheck(req, res) {
   const { missionId, answer } = req.body || {};
   const m = missions.byId(missionId);
   if (!m) return res.status(400).json({ error: "Unknown mission." });
+  // Must be checking the mission you actually started (prevents free XP/coin farming).
+  if (!req.user || activeMission.get(req.user.id) !== missionId) {
+    return res.status(400).json({ error: "Start the mission before checking it." });
+  }
+  activeMission.delete(req.user.id); // consume — one check per energy-costed start
   const correct = String(answer).toLowerCase() === m.answer;
 
-  let reward = null;
-  if (req.user) {
-    reward = await gamify.award(req.user.id, correct ? "mission_correct" : "mission_wrong");
-    if (correct) await Game.recordScore(req.user.id, "mn_" + m.kind, 1);
-  }
+  const reward = await gamify.award(req.user.id, correct ? "mission_correct" : "mission_wrong");
+  if (correct) await Game.recordScore(req.user.id, "mn_" + m.kind, 1);
   return res.json({ correct, answer: m.answer, why: m.why, reward });
 }
 
@@ -160,10 +185,17 @@ async function roast(req, res) {
   return res.json({ ...result, reward });
 }
 
-// POST /api/game/challenge/complete — marks today's daily challenge done (idempotent)
+// POST /api/game/challenge/complete — claim today's daily-challenge reward.
+// Idempotent, and only pays out once the task is ACTUALLY done today.
 async function completeChallenge(req, res) {
   if (await Game.hasEventToday(req.user.id, "daily_challenge")) {
     return res.json({ alreadyDone: true });
+  }
+  const ch = todaysChallenge();
+  const need = CHALLENGE_REQ[ch.key];
+  const have = await Game.countActionToday(req.user.id, need.action);
+  if (have < need.n) {
+    return res.status(400).json({ notYet: true, have, need: need.n, error: `Not done yet — ${have}/${need.n}.` });
   }
   const reward = await gamify.award(req.user.id, "daily_challenge");
   return res.json({ reward });

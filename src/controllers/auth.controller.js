@@ -19,6 +19,11 @@ const SALT_ROUNDS = 12;
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 const isProd = () => process.env.NODE_ENV === "production";
 
+// Canonicalise auth inputs so casing/whitespace never creates "phantom" accounts
+// or emails that look stuck. Emails are stored + matched lowercase; names are trimmed.
+const normEmail = (v) => (typeof v === "string" ? v.trim().toLowerCase() : v);
+const normName = (v) => (typeof v === "string" ? v.trim() : v);
+
 function issueSession(res, user) {
   const payload = { sub: user.id, username: user.username, role: user.role };
   res.cookie("token", signAccess(payload), accessCookieOpts());
@@ -31,7 +36,10 @@ function publicUser(u) {
 
 // POST /api/auth/register
 async function register(req, res) {
-  const { username, email, password, confirmPassword } = req.body || {};
+  const body = req.body || {};
+  const username = normName(body.username);
+  const email = normEmail(body.email);
+  const { password, confirmPassword } = body;
 
   const errors = {};
   const uErr = validateUsername(username);
@@ -58,7 +66,8 @@ async function register(req, res) {
 
 // POST /api/auth/login
 async function login(req, res) {
-  const { email, password } = req.body || {};
+  const email = normEmail((req.body || {}).email);
+  const password = (req.body || {}).password;
   if (!email || !password)
     return res.status(400).json({ error: "Email and password are required." });
 
@@ -88,7 +97,7 @@ async function logout(req, res) {
 
 // POST /api/auth/forgot-password
 async function forgotPassword(req, res) {
-  const { email } = req.body || {};
+  const email = normEmail((req.body || {}).email);
   const eErr = validateEmail(email);
   if (eErr) return res.status(400).json({ errors: { email: eErr } });
 
