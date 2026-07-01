@@ -1,0 +1,33 @@
+<%# CG Member 4 Start %>
+<section class="page-heading">
+  <h1>My Profile</h1>
+  <p>Manage your account details and see your activity.</p>
+</section>
+
+<div class="card profile-card">
+  <h2>Account Info</h2>
+  <p><strong>Username:</strong> <%= user.username %></p>
+  <p><strong>Email:</strong> <%= user.email %></p>
+
+  <div class="profile-actions">
+    <a class="btn btn-primary" href="/profile/edit">Edit Profile</a>
+    <form action="/auth/logout" method="POST" style="display:inline;">
+      <button class="btn btn-danger" type="submit">Logout</button>
+    </form>
+  </div>
+</div>
+
+<div class="card profile-comments">
+  <h2>My Comments</h2>
+  <% if (comments && comments.length > 0) { %>
+    <% comments.forEach(c => { %>
+      <div class="comment">
+        <p><%= c.content %></p>
+        <small>On case <%= c.case_id %> · <%= new Date(c.created_at).toLocaleString('en-SG') %></small>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <p class="empty-state">You haven’t posted any comments yet.</p>
+  <% } %>
+</div>
+<%# CG Member 4 End %>
