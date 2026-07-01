@@ -1,7 +1,7 @@
 // <Shania Start>
 // src/controllers/game.controller.js — Scam Patrol HQ API (profile, leaderboard, missions, roast, challenge).
-const Game = require("../models/game.model");
-const gamify = require("../services/gamification.service");
+const Game = require("../models/game.model"); 
+const gamify = require("../services/gamification.service"); 
 const missions = require("../data/missions");
 const shop = require("../data/shop");
 const { roastScam } = require("../services/gemini.service");

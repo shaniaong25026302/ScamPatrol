@@ -17,7 +17,6 @@ const {
 
 const SALT_ROUNDS = 12;
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
-const isProd = () => process.env.NODE_ENV === "production";
 
 // Canonicalise auth inputs so casing/whitespace never creates "phantom" accounts
 // or emails that look stuck. Emails are stored + matched lowercase; names are trimmed.
@@ -102,7 +101,9 @@ async function forgotPassword(req, res) {
   if (eErr) return res.status(400).json({ errors: { email: eErr } });
 
   const user = await User.findByEmail(email);
-  const response = { message: "If that email is registered, a reset link has been sent." };
+  const response = {
+    message: "If that email is registered, a reset link has been sent. Check your inbox — and your spam/junk folder.",
+  };
 
   if (user) {
     const token = crypto.randomBytes(32).toString("hex");
@@ -114,18 +115,18 @@ async function forgotPassword(req, res) {
     const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
-    if (mail.isConfigured()) {
-      // Fire-and-forget: don't block the HTTP response on the SMTP round-trip.
-      // The pooled connection sends it immediately in the background.
-      mail.sendPasswordReset(user.email, resetUrl).catch((e) => {
-        console.error("Password reset email failed:", e.message);
-      });
-      response.emailed = true;
+    // Reset links are delivered ONLY by email — never returned to the browser.
+    if (!mail.isConfigured()) {
+      console.error("SMTP not configured — cannot send password reset email.");
+      return res.status(503).json({ error: "Password reset is temporarily unavailable. Please try again later." });
     }
-    // Dev convenience: also return the link on-screen so the flow stays testable.
-    if (!isProd()) {
-      response.resetToken = token;
-      response.resetUrl = `/auth/reset-password?token=${token}`;
+    try {
+      // Awaited (via the warm SMTP pool) so we can tell the user if it truly failed.
+      await mail.sendPasswordReset(user.email, resetUrl);
+      response.emailed = true;
+    } catch (e) {
+      console.error("Password reset email failed:", e.message);
+      return res.status(502).json({ error: "We couldn't send the reset email right now. Please try again shortly." });
     }
   }
   return res.json(response);

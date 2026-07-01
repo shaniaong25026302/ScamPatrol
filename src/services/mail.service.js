@@ -48,7 +48,7 @@ async function sendPasswordReset(toEmail, resetUrl) {
   if (!t) throw new Error("SMTP is not configured");
   const from = process.env.MAIL_FROM || `Scam Patrol <${process.env.SMTP_USER}>`;
 
-  await t.sendMail({
+  const info = await t.sendMail({
     from,
     to: toEmail,
     subject: "Reset your Scam Patrol password",
@@ -65,6 +65,8 @@ async function sendPasswordReset(toEmail, resetUrl) {
       `<p style="color:#5b6776;font-size:13px">If you didn't request this, you can ignore this email.</p>` +
       `</div>`,
   });
+  console.log(`Password reset email sent (id ${info.messageId}) -> ${toEmail}`);
+  return info;
 }
 
 // Optional: verify SMTP credentials/connection (used by tooling/tests).

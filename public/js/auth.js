@@ -160,17 +160,9 @@
 
       const { ok, data } = await postJSON("/api/auth/forgot-password", { email });
       if (ok) {
-        let msg = data.message || "If that email is registered, a reset link has been sent.";
-        // Dev convenience: the API returns a reset link when no mail service is configured.
-        if (data.resetUrl) {
-          banner(forgotForm, "form-success", "");
-          const el = document.getElementById("form-success");
-          el.style.display = "flex";
-          el.innerHTML =
-            msg + ' <a href="' + data.resetUrl + '">Open reset link</a>';
-        } else {
-          banner(forgotForm, "form-success", msg);
-        }
+        // Reset links are sent by email only — never shown on screen.
+        banner(forgotForm, "form-success",
+          data.message || "If that email is registered, a reset link has been sent. Check your spam folder too.");
       } else {
         applyServerErrors(forgotForm, data);
       }

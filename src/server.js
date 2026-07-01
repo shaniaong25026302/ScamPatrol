@@ -14,6 +14,10 @@ const { ping } = require("./db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Behind Render's proxy: trust X-Forwarded-* so req.protocol=https and req.get('host')
+// resolve correctly (this makes the password-reset link build the real public URL).
+app.set("trust proxy", 1);
+
 // ── View engine: EJS + a single shared layout (views/layout.ejs) ──
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "..", "views"));
