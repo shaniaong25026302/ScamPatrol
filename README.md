@@ -142,14 +142,16 @@ ScamPatrol/
 
 ## Team modules
 
-| Member | Owns |
+What each member built into the app:
+
+| Member | Contribution (live in the app) |
 |---|---|
-| M1 (Shania) | Auth, AI Scam Checker, app skeleton, shared layout/theme, DB schema, tests, **Scam Patrol HQ gamification + leaderboard** |
-| M2 (Rebecca) | Scam case create + case tables |
-| M3 (Nivi) | Case browse / vote / flag |
-| M4 (CG) | Comments + profile |
-| M5 (Liam) | Points + Docker |
-| M6 (Shawn) | Landing / glossary / admin + README |
+| M1 (Shania) | Authentication, AI Scam Checker, app skeleton + shared retro theme/layout, DB schema, tests — and the whole **Scam Patrol HQ gamification**: XP / levels / coins / streaks, badges, energy, field missions, gold shop, interactive story, HQ dashboard, and the **points + world leaderboard** (taken over from M5) |
+| M2 (Rebecca) | Scam case reporting — create cases, case tables, image upload |
+| M3 (Nivi) | Community case browse, vote & flag |
+| M4 (CG) | Comments + user profile |
+| M5 (Liam) | Docker (points/leaderboard were taken over by M1) |
+| M6 (Shawn) | Landing page, scam glossary, admin |
 
 Only edit shared files (`db/schema.sql`, `views/layout.ejs`, `views/partials/game-nav.ejs`)
 **additively**, and flag the owner (M1).
