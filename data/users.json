@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1782955484788,
+    "username": "Liam",
+    "email": "25021923@admin.scamlah.local",
+    "role": "admin",
+    "salt": "03e0aa7c18a22b919ac010336808ffac",
+    "passwordHash": "d0e86e061ca38d099d0e9cbf42247e1c6ca60c5587e7a56167a5315ee1abb616",
+    "createdAt": "2026-07-02T01:24:44.603Z"
+  }
+]

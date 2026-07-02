@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "title": "Festive period: parcel scam alerts",
+    "category": "advice",
+    "mediaType": "image",
+    "mediaUrl": "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80",
+    "caption": "Watch out for fake parcel fee messages during shopping seasons.",
+    "body": "Scammers often send SMS or chat messages claiming that a parcel is stuck until a small delivery fee is paid. Always check your order inside the official shopping or courier app instead of trusting random links.",
+    "authorId": 1,
+    "authorName": "Liam",
+    "createdAt": "2026-07-02T01:24:45.526Z",
+    "updatedAt": "2026-07-02T01:24:45.526Z"
+  },
+  {
+    "id": 2,
+    "title": "Tax season: IRAS impersonation warning",
+    "category": "news",
+    "mediaType": "none",
+    "mediaUrl": "",
+    "caption": "Seasonal reminder: tax/refund scams can become more believable around filing periods.",
+    "body": "During tax-related periods, scam messages may pretend to be from official agencies. They may claim you owe money or are due a refund. Do not click suspicious links or provide Singpass, OTP, or banking details.",
+    "authorId": 1,
+    "authorName": "Liam",
+    "createdAt": "2026-07-02T01:24:45.526Z",
+    "updatedAt": "2026-07-02T01:24:45.526Z"
+  }
+]

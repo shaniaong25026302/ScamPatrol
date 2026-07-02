@@ -1,0 +1,11 @@
+<%- include('../partials/header', { title: title || 'Access denied', activePage: 'scam-weather' }) %>
+
+<main class="container auth-page">
+  <section class="card auth-card">
+    <h1><%= title || 'Access denied' %></h1>
+    <p class="muted">Scam Weather can be viewed by everyone, but only admins can publish or manage posts.</p>
+    <a href="/scam-weather" class="btn btn-primary">Back to Scam Weather</a>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

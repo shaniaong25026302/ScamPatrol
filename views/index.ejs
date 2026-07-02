@@ -2,39 +2,52 @@
 
 <main class="container">
   <section class="hero">
+    <p class="eyebrow">Report · Check · Stay safe</p>
     <h1><span class="scam">scam</span><span class="lah">lah</span></h1>
-    <p>Report. Check. Stay safe.</p>
+    <p>Community scam reporting with points, badges, and seasonal Scam Weather warnings.</p>
     <div class="hero-actions">
-      <a href="/leaderboard" class="btn btn-primary">View leaderboard</a>
-      <a href="/api/points/config" class="btn btn-ghost">View points API config</a>
+      <a href="/scam-weather" class="btn btn-primary">Check Scam Weather</a>
+      <a href="/leaderboard" class="btn btn-ghost">View leaderboard</a>
     </div>
   </section>
 
   <section class="grid home-preview">
+    <div class="card is-danger">
+      <h2>Scam Weather now live</h2>
+      <p><strong><%= scamWeatherForecast.season.label %>:</strong> <%= scamWeatherForecast.season.headline %></p>
+      <a href="/scam-weather" class="btn btn-primary">Open Scam Weather</a>
+    </div>
+
     <div class="card">
-      <h2>Points leaderboard</h2>
-      <p>The community leaderboard rewards users for case reports, comments, and scam verification.</p>
+      <h2>Top contributors</h2>
       <% const previewLeaderboard = Array.isArray(leaderboard) ? leaderboard : []; %>
       <% if (previewLeaderboard.length) { %>
         <ul class="leaderboard-preview-list">
-          <% previewLeaderboard.forEach((user, index) => { %>
-            <li>
-              <span>#<%= index + 1 %></span>
-              <strong><%= user.username %></strong>
-              <em><%= user.points %> points</em>
-            </li>
+          <% previewLeaderboard.forEach((user) => { %>
+            <li><strong><%= user.username %></strong> — <%= user.points %> points</li>
           <% }) %>
         </ul>
       <% } else { %>
         <p>No leaderboard data yet.</p>
       <% } %>
     </div>
+  </section>
 
-    <div class="card">
-      <h2>Badge milestones</h2>
-      <p>Users unlock badges for signing up, submitting reports, posting comments, and earning points.</p>
-      <a href="/leaderboard" class="btn btn-ghost">Open badge path</a>
-    </div>
+  <section class="card">
+    <h2>Latest Scam Weather posts</h2>
+    <% if (latestScamWeatherPosts.length) { %>
+      <div class="mini-post-list">
+        <% latestScamWeatherPosts.forEach((post) => { %>
+          <article class="mini-post">
+            <span class="pill <%= post.category %>"><%= post.category %></span>
+            <h3><%= post.title %></h3>
+            <p><%= post.caption || post.body.slice(0, 120) %></p>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p>No Scam Weather posts yet.</p>
+    <% } %>
   </section>
 </main>
 

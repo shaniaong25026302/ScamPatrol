@@ -8,6 +8,7 @@
 </head>
 <body>
 
+  <!-- Flash messages can be passed by any route when needed. -->
   <% if (typeof flash !== 'undefined' && flash) { %>
     <div class="alert alert-<%= flash.category || 'warning' %>">⚠️ <%= flash.message %></div>
   <% } %>

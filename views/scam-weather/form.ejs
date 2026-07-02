@@ -1,0 +1,58 @@
+<%- include('../partials/header', { title: mode === 'edit' ? 'Edit Scam Weather Post' : 'New Scam Weather Post', activePage: 'scam-weather' }) %>
+
+<main class="container auth-page">
+  <section class="card auth-card wide-form">
+    <h1><%= mode === 'edit' ? 'Edit Scam Weather post' : 'Create Scam Weather post' %></h1>
+    <p class="muted">Admins can publish scam news or seasonal advice. Keep the title clear and the advice practical.</p>
+
+    <% if (error) { %>
+      <div class="alert alert-warning"><%= error %></div>
+    <% } %>
+
+    <form action="<%= mode === 'edit' ? `/scam-weather/${post.id}/edit` : '/scam-weather' %>" method="POST" class="form-stack">
+      <label>
+        Title
+        <input type="text" name="title" value="<%= post && post.title ? post.title : '' %>" placeholder="e.g. Festive parcel scam warning" required>
+      </label>
+
+      <label>
+        Category
+        <select name="category" required>
+          <option value="news" <%= post && post.category === 'news' ? 'selected' : '' %>>News</option>
+          <option value="advice" <%= !post || post.category === 'advice' ? 'selected' : '' %>>Advice</option>
+        </select>
+      </label>
+
+      <label>
+        Media type
+        <select name="mediaType">
+          <option value="none" <%= !post || post.mediaType === 'none' ? 'selected' : '' %>>None</option>
+          <option value="image" <%= post && post.mediaType === 'image' ? 'selected' : '' %>>Image URL</option>
+          <option value="video" <%= post && post.mediaType === 'video' ? 'selected' : '' %>>Video URL</option>
+        </select>
+      </label>
+
+      <label>
+        Image/video URL
+        <input type="url" name="mediaUrl" value="<%= post && post.mediaUrl ? post.mediaUrl : '' %>" placeholder="https://example.com/image-or-video">
+      </label>
+
+      <label>
+        Caption
+        <input type="text" name="caption" value="<%= post && post.caption ? post.caption : '' %>" placeholder="Short caption for the media or article">
+      </label>
+
+      <label>
+        Post content
+        <textarea name="body" rows="8" placeholder="Write the scam warning, article summary, or prevention advice here." required><%= post && post.body ? post.body : '' %></textarea>
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><%= mode === 'edit' ? 'Save changes' : 'Publish post' %></button>
+        <a href="/scam-weather" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

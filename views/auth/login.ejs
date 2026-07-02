@@ -1,0 +1,35 @@
+<%- include('../partials/header', { title: 'Login', activePage: 'login' }) %>
+
+<main class="container auth-page">
+  <section class="card auth-card">
+    <h1>Login</h1>
+    <p class="muted">Use your ScamLah account to manage Scam Weather if you are an admin.</p>
+
+    <% if (message) { %>
+      <div class="alert alert-warning"><%= message %></div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="alert alert-warning"><%= error %></div>
+    <% } %>
+
+    <form action="/login" method="POST" class="form-stack">
+      <label>
+        Username
+        <input type="text" name="username" placeholder="e.g. Liam" required>
+      </label>
+
+      <label>
+        Password
+        <input type="password" name="password" placeholder="Enter password" required>
+      </label>
+
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+
+    <p class="form-note">No account yet? <a href="/signup">Create one here</a>.</p>
+    <p class="form-note"><strong>Demo admin:</strong> Liam / 25021923</p>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,102 @@
+<%- include('../partials/header', { title: 'Scam Weather', activePage: 'scam-weather' }) %>
+
+<main class="container scam-weather-page">
+  <section class="hero scam-weather-hero">
+    <p class="eyebrow">Seasonal scam forecast</p>
+    <h1>🌦️ Scam Weather</h1>
+    <p><%= forecast.season.headline %></p>
+
+    <% if (currentUser && currentUser.isAdmin) { %>
+      <div class="hero-actions">
+        <a href="/scam-weather/new" class="btn btn-primary">Add Scam Weather post</a>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="grid weather-summary-grid">
+    <div class="card weather-risk-card is-danger">
+      <span class="pill danger"><%= forecast.season.riskLevel %> risk</span>
+      <h2><%= forecast.season.label %></h2>
+      <p><%= forecast.season.headline %></p>
+    </div>
+
+    <div class="card is-safe">
+      <h2>Seasonal advice</h2>
+      <ul class="advice-list">
+        <% forecast.season.advice.forEach((item) => { %>
+          <li><%= item %></li>
+        <% }) %>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Report-data signals</h2>
+    <p class="muted">Temporary demo trends. These are ready to be replaced with real report counts from the case report feature later.</p>
+
+    <div class="signal-grid">
+      <% forecast.reportSignals.forEach((signal) => { %>
+        <article class="signal-card">
+          <span class="pill <%= signal.riskLevel.toLowerCase() %>"><%= signal.riskLevel %></span>
+          <h3><%= signal.scamType %></h3>
+          <p><strong><%= signal.reportCount %></strong> recent reports · trend: <%= signal.trend %></p>
+        </article>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="weather-toolbar">
+    <div>
+      <h2>News & advice</h2>
+      <p class="muted">Admins publish Scam Weather updates. Regular users can view them.</p>
+    </div>
+
+    <div class="filter-tabs">
+      <a href="/scam-weather" class="<%= selectedCategory === 'all' ? 'active' : '' %>">All</a>
+      <a href="/scam-weather?category=news" class="<%= selectedCategory === 'news' ? 'active' : '' %>">News</a>
+      <a href="/scam-weather?category=advice" class="<%= selectedCategory === 'advice' ? 'active' : '' %>">Advice</a>
+    </div>
+  </section>
+
+  <% if (posts.length) { %>
+    <section class="weather-post-list">
+      <% posts.forEach((post) => { %>
+        <article class="card weather-post">
+          <div class="post-meta-row">
+            <span class="pill <%= post.category %>"><%= post.category %></span>
+            <span class="muted">By <%= post.authorName %> · <%= new Date(post.createdAt).toLocaleDateString() %></span>
+          </div>
+
+          <h2><%= post.title %></h2>
+
+          <% if (post.mediaType === 'image' && post.mediaUrl) { %>
+            <img class="weather-media" src="<%= post.mediaUrl %>" alt="<%= post.caption || post.title %>">
+          <% } else if (post.mediaType === 'video' && post.mediaUrl) { %>
+            <video class="weather-media" controls src="<%= post.mediaUrl %>"></video>
+          <% } %>
+
+          <% if (post.caption) { %>
+            <p class="caption"><%= post.caption %></p>
+          <% } %>
+
+          <p><%= post.body %></p>
+
+          <% if (post.canEdit) { %>
+            <div class="post-actions">
+              <a href="/scam-weather/<%= post.id %>/edit" class="btn btn-ghost">Edit</a>
+              <form action="/scam-weather/<%= post.id %>/delete" method="POST" onsubmit="return confirm('Delete this Scam Weather post?')">
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
+            </div>
+          <% } %>
+        </article>
+      <% }) %>
+    </section>
+  <% } else { %>
+    <section class="card">
+      <p>No Scam Weather posts in this category yet.</p>
+    </section>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>

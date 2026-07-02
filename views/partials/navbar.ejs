@@ -1,7 +1,18 @@
+<!-- ===== Navbar ===== -->
 <nav class="navbar">
   <a href="/" class="brand"><span class="scam">scam</span><span class="lah">lah</span></a>
+
   <div class="links">
     <a href="/" class="<%= activePage === 'home' ? 'active' : '' %>">Home</a>
+    <a href="/scam-weather" class="<%= activePage === 'scam-weather' ? 'active' : '' %>">Scam Weather</a>
     <a href="/leaderboard" class="button <%= activePage === 'leaderboard' ? 'active' : '' %>">Leaderboard</a>
+
+    <% if (currentUser) { %>
+      <span class="nav-user">Hi, <%= currentUser.username %><%= currentUser.isAdmin ? ' · Admin' : '' %></span>
+      <a href="/logout">Logout</a>
+    <% } else { %>
+      <a href="/login" class="<%= activePage === 'login' ? 'active' : '' %>">Login</a>
+      <a href="/signup" class="<%= activePage === 'signup' ? 'active' : '' %>">Sign up</a>
+    <% } %>
   </div>
 </nav>

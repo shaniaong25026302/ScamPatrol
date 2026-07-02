@@ -1,0 +1,35 @@
+<%- include('../partials/header', { title: 'Sign up', activePage: 'signup' }) %>
+
+<main class="container auth-page">
+  <section class="card auth-card">
+    <h1>Create an account</h1>
+    <p class="muted">New signups become regular users. Regular users can view Scam Weather posts.</p>
+
+    <% if (error) { %>
+      <div class="alert alert-warning"><%= error %></div>
+    <% } %>
+
+    <form action="/signup" method="POST" class="form-stack">
+      <label>
+        Username
+        <input type="text" name="username" placeholder="Choose a username" required>
+      </label>
+
+      <label>
+        Email
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </label>
+
+      <label>
+        Password
+        <input type="password" name="password" placeholder="At least 4 characters" required>
+      </label>
+
+      <button type="submit" class="btn btn-primary">Sign up</button>
+    </form>
+
+    <p class="form-note">Already have an account? <a href="/login">Login here</a>.</p>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>
