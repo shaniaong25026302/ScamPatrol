@@ -11,6 +11,7 @@ const router = express.Router();
 router.post("/analyze", requireAuth, h(c.analyze)); // login required
 router.get("/history", requireAuth, h(c.history));
 router.post("/relationship", requireAuth, h(c.relationship)); // long-con / romance detector
+router.post("/chat", requireAuth, h(c.chat)); // "Ask Inspector Hoot" chatbot
 
 module.exports = router;
 // <Shania End>

@@ -4,7 +4,7 @@
 //   history       → the user's past checks
 //   relationship  → long-con / romance scam timeline mapper
 const Ai = require("../models/ai.model");
-const { analyzeText, analyzeRelationship } = require("../services/gemini.service");
+const { analyzeText, analyzeRelationship, chatReply } = require("../services/gemini.service");
 const gamify = require("../services/gamification.service");
 
 const MIN_LEN = 10;
@@ -85,5 +85,33 @@ async function relationship(req, res) {
   return res.json({ ...result, reward });
 }
 
-module.exports = { analyze, history, relationship };
+// POST /api/ai/chat — "Ask Inspector Hoot" anti-scam chatbot.
+// Body: { messages: [{ role: 'user'|'assistant', text }] } — the whole conversation.
+const MAX_CHAT_MSGS = 20;
+async function chat(req, res) {
+  const raw = Array.isArray((req.body || {}).messages) ? req.body.messages : null;
+  if (!raw || !raw.length) return res.status(400).json({ error: "Send a message." });
+
+  const messages = raw
+    .slice(-MAX_CHAT_MSGS)
+    .map((m) => ({
+      role: m && m.role === "assistant" ? "assistant" : "user",
+      text: String((m && m.text) || "").slice(0, 2000),
+    }))
+    .filter((m) => m.text.trim());
+
+  if (!messages.length || messages[messages.length - 1].role !== "user")
+    return res.status(400).json({ error: "Send a message." });
+
+  let reply;
+  try {
+    reply = await chatReply(messages);
+  } catch (e) {
+    console.error("chat failed:", e.message);
+    return res.status(502).json({ error: "Inspector Hoot is unavailable right now. Try again shortly." });
+  }
+  return res.json({ reply });
+}
+
+module.exports = { analyze, history, relationship, chat };
 // <Shania End>

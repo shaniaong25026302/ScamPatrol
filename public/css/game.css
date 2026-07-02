@@ -460,4 +460,49 @@ img.owl { image-rendering: auto; }
 .badge-card { padding: .9rem .55rem; }
 .badge-card .ico { font-size: 2rem; }
 .badge-card .nm { font-size: .56rem; line-height: 1.6; }
+
+/* ---------- Ask Inspector Hoot chatbot ---------- */
+.chatbot { min-height: 160px; max-height: 440px; overflow-y: auto; padding: .4rem .3rem; margin-bottom: .5rem; }
+.chatbot-quick { display: flex; flex-wrap: wrap; gap: .4rem; margin: .2rem 0 .8rem; }
+.chatbot-quick .gw-chip { cursor: pointer; }
+.chatbot-input { display: flex; gap: .5rem; align-items: stretch; }
+.chatbot-input input { flex: 1; }
+.chatbot-typing { display: inline-flex; align-items: center; gap: 3px; }
+.chatbot-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--gw-muted); animation: hoot-typing 1s infinite; }
+.chatbot-typing span:nth-child(2) { animation-delay: .2s; }
+.chatbot-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes hoot-typing { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+/* Floating "Ask Inspector Hoot" chat widget — top-right, under the navbar */
+.hoot-launcher {
+  position: fixed; top: 84px; right: 18px; z-index: 8000; display: inline-flex; align-items: center; gap: .45rem;
+  padding: .3rem .8rem .3rem .35rem; cursor: pointer; color: var(--gw-text);
+  background: var(--gw-panel2); border: 2px solid var(--gw-purple); border-radius: 999px;
+  box-shadow: 0 4px 0 rgba(0,0,0,.45), 0 0 16px rgba(139,123,255,.45);
+}
+.hoot-launcher img { width: 36px; height: 36px; image-rendering: auto; }
+.hoot-launcher-label { font-family: "Press Start 2P", monospace; font-size: .5rem; }
+.hoot-launcher:hover { transform: translateY(-1px); box-shadow: 0 5px 0 rgba(0,0,0,.45), 0 0 22px rgba(139,123,255,.75); }
+
+.hoot-panel {
+  position: fixed; top: 84px; right: 18px; z-index: 8001; width: min(380px, calc(100vw - 32px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--gw-panel); border: 2px solid var(--gw-purple); border-radius: 14px;
+  box-shadow: 0 10px 0 rgba(0,0,0,.35), 0 0 26px rgba(0,0,0,.55);
+}
+.hoot-panel[hidden] { display: none; }
+.hoot-head { display: flex; align-items: center; gap: .6rem; padding: .55rem .8rem; background: var(--gw-panel2); border-bottom: 2px solid var(--gw-border); }
+.hoot-head img { width: 40px; height: 40px; image-rendering: auto; }
+.hoot-head b { font-family: "Press Start 2P", monospace; font-size: .58rem; display: block; }
+.hoot-head small { color: var(--gw-muted); font-size: .82rem; }
+.hoot-close { margin-left: auto; background: none; border: none; color: var(--gw-muted); cursor: pointer; font-size: 1.05rem; padding: .2rem .4rem; }
+.hoot-close:hover { color: var(--gw-text); }
+.hoot-panel .chatbot { min-height: 200px; max-height: min(52vh, 420px); padding: .6rem .7rem; margin: 0; }
+.hoot-panel .chatbot-quick { padding: 0 .7rem; margin: 0 0 .3rem; }
+.hoot-panel .chatbot-input { padding: .55rem .7rem .75rem; }
+
+@media (max-width: 480px) {
+  .hoot-launcher-label { display: none; }
+  .hoot-launcher, .hoot-panel { top: 70px; right: 10px; }
+}
 /* <Shania End> */

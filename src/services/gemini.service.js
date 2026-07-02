@@ -228,5 +228,49 @@ async function analyzeRelationship(text) {
   };
 }
 
-module.exports = { analyzeText, roastScam, analyzeRelationship, MODEL, RISK_LEVELS };
+// ---- Chatbot: "Ask Inspector Hoot" (anti-scam Q&A assistant) ----
+const CHAT_SYSTEM = [
+  "You are Inspector Hoot, the friendly anti-scam assistant for 'Scam Patrol', a Singapore public-education app.",
+  "Help everyday members of the public understand scams and know exactly what to do. Be warm, calm and practical.",
+  "",
+  "Ground your answers in these Singapore facts when relevant:",
+  "- National Anti-Scam Helpline: 1799 (call to check if something is a scam or get advice).",
+  "- Police emergency: 999. Police non-emergency: 1800-255-0000. Report scams at police.gov.sg.",
+  "- If money was ALREADY sent: tell them to contact their bank immediately to freeze the account / stop the transfer, then make a police report and call 1799.",
+  "- Banks and government agencies NEVER ask for your full PIN, password, OTP or Singpass via call, SMS or links.",
+  "- Common local scams: phishing, e-commerce, job/task, investment, love/romance, bank & government impersonation, parcel/delivery.",
+  "",
+  "Rules:",
+  "- Keep replies short and actionable — a few sentences or short bullet points.",
+  "- If the person may have lost money or is in danger, lead with the urgent steps (bank + 999 / 1799).",
+  "- Only discuss scams, online safety and this app. If asked something unrelated, gently steer back.",
+  "- Never ask the user for passwords, OTPs, card numbers or Singpass. Don't give financial or legal advice beyond general safety.",
+].join("\n");
+
+function fakeChat(messages) {
+  const last = String((messages[messages.length - 1] || {}).text || "").toLowerCase();
+  if (/helpline|number|hotline|call|contact/.test(last))
+    return "[test mode] Call the national Anti-Scam Helpline at 1799, or the Police at 999 in an emergency.";
+  if (/lost money|transferred|sent money|scammed|paid/.test(last))
+    return "[test mode] Contact your bank immediately to freeze the transfer, make a police report, and call 1799.";
+  return "[test mode] I'm Inspector Hoot 🦉 — ask me about scams, what to do if scammed, or the anti-scam helpline.";
+}
+
+// messages: [{ role: 'user' | 'assistant', text }] — full conversation so far.
+async function chatReply(messages) {
+  if (process.env.AI_FAKE === "1") return fakeChat(messages);
+  const ai = getClient();
+  const contents = messages.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: String(m.text || "") }],
+  }));
+  const res = await ai.models.generateContent({
+    model: MODEL,
+    contents,
+    config: { systemInstruction: CHAT_SYSTEM, temperature: 0.4, maxOutputTokens: 600 },
+  });
+  return String(res.text || "").trim() || "Sorry, I couldn't answer that — try rephrasing?";
+}
+
+module.exports = { analyzeText, roastScam, analyzeRelationship, chatReply, MODEL, RISK_LEVELS };
 // <Shania End>

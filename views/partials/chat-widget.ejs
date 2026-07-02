@@ -1,0 +1,29 @@
+<%# <Shania Start> %>
+<% if (typeof user !== 'undefined' && user) { %>
+<div class="hoot-widget">
+  <button id="hoot-launcher" class="hoot-launcher" aria-label="Ask Inspector Hoot" title="Ask Inspector Hoot">
+    <img src="/img/owl-mentor.png?v=2" alt="" class="pixel" />
+    <span class="hoot-launcher-label">Ask&nbsp;Hoot</span>
+  </button>
+
+  <div id="hoot-panel" class="hoot-panel" hidden>
+    <div class="hoot-head">
+      <img src="/img/owl-mentor.png?v=2" alt="" class="pixel" />
+      <div><b>Inspector Hoot</b><small>Anti-scam helper</small></div>
+      <button id="hoot-close" class="hoot-close" aria-label="Close chat">✕</button>
+    </div>
+    <div class="chatbot" id="chatbot"></div>
+    <div class="chatbot-quick" id="chatbot-quick">
+      <button type="button" class="gw-chip" data-q="What is the anti-scam helpline number?">📞 Helpline?</button>
+      <button type="button" class="gw-chip" data-q="I think I got scammed and already sent money. What do I do?">💸 I sent money</button>
+      <button type="button" class="gw-chip" data-q="How do I spot a phishing SMS?">🎣 Phishing?</button>
+    </div>
+    <form id="chatbot-form" class="chatbot-input" autocomplete="off">
+      <input type="text" id="chatbot-text" placeholder="Ask about scams…" maxlength="2000" />
+      <button class="gw-btn gold" type="submit" aria-label="Send">➤</button>
+    </form>
+  </div>
+</div>
+<script src="/js/chat-widget.js" defer></script>
+<% } %>
+<%# <Shania End> %>
