@@ -14,7 +14,7 @@ const crypto = require("crypto");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
-const COOKIE_NAME = "scamlahUserId";
+const COOKIE_NAME = "scamPatrolUserId";
 
 function ensureDataFile() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -24,7 +24,7 @@ function ensureDataFile() {
   if (!fs.existsSync(USERS_FILE)) {
     const admin = createUserRecord({
       username: "Liam",
-      email: "25021923@admin.scamlah.local",
+      email: "25021923@admin.scampatrol.local",
       password: "25021923",
       role: "admin"
     });
@@ -39,7 +39,7 @@ function ensureDataFile() {
   if (!hasAdmin) {
     users.push(createUserRecord({
       username: "Liam",
-      email: "25021923@admin.scamlah.local",
+      email: "25021923@admin.scampatrol.local",
       password: "25021923",
       role: "admin"
     }));

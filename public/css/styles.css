@@ -1,29 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 /* =========================================================
-   scamlah — Dark pixel-themed Scam Weather UI
+   Scam Patrol — Dark cyber-police UI
    ========================================================= */
 
 :root {
-  --bg: #060812;
-  --surface: rgba(10, 15, 35, 0.95);
-  --surface-strong: rgba(15, 23, 55, 0.98);
-  --surface-soft: rgba(14, 18, 40, 0.9);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #edf1ff;
-  --text-muted: #9ca7d1;
-  --accent: #8f5bff;
-  --accent-dark: #5d3cff;
-  --danger: #ff5b7a;
+  --bg: #050813;
+  --surface: rgba(12, 17, 35, 0.96);
+  --surface-strong: rgba(10, 12, 25, 0.99);
+  --surface-soft: rgba(16, 21, 44, 0.88);
+  --border: rgba(161, 185, 255, 0.16);
+  --text: #edf2ff;
+  --text-muted: #96a6cf;
+  --accent: #7bb8ff;
+  --accent-dark: #3c7dff;
+  --danger: #ff6b86;
   --danger-dark: #ff3d62;
-  --success: #38d9a9;
-  --success-dark: #24b98d;
-  --warning-soft: rgba(255, 207, 117, 0.16);
-  --warning-dark: #d5b24b;
-  --radius: 20px;
-  --radius-sm: 12px;
-  --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-  --shadow-hover: 0 24px 70px rgba(0, 0, 0, 0.4);
+  --success: #4fe7ca;
+  --success-dark: #2bb58f;
+  --warning-soft: rgba(255, 211, 123, 0.16);
+  --warning-dark: #d4b24a;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --shadow: 0 26px 80px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 30px 90px rgba(0, 0, 0, 0.45);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,8 +31,8 @@ html { scroll-behavior: smooth; }
 body {
   min-height: 100vh;
   font-family: 'Press Start 2P', 'Courier New', Courier, monospace;
-  background: radial-gradient(circle at top left, rgba(143, 91, 255, 0.18), transparent 22%),
-              radial-gradient(circle at bottom right, rgba(56, 217, 169, 0.16), transparent 20%),
+  background: radial-gradient(circle at 20% 10%, rgba(123, 184, 255, 0.16), transparent 22%),
+              radial-gradient(circle at 80% 10%, rgba(79, 231, 202, 0.12), transparent 18%),
               linear-gradient(180deg, #070a14 0%, #02030a 100%);
   color: var(--text);
   line-height: 1.65;
@@ -57,20 +57,24 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 1.25rem;
   padding: 1rem 1.5rem;
-  background: rgba(8, 12, 28, 0.88);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
+  background: rgba(8, 11, 24, 0.92);
+  border-bottom: 1px solid rgba(123, 184, 255, 0.12);
+  backdrop-filter: blur(16px);
 }
 .navbar .brand {
   display: flex;
   align-items: center;
-  gap: 0;
-  font-size: 1.25rem;
-  color: #b091ff;
-  text-shadow: 0 0 12px rgba(143, 91, 255, 0.45);
+  gap: 0.75rem;
+  font-size: 1.1rem;
+  color: #a4b8ff;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-.scam { color: var(--danger); }
-.lah { color: var(--success); }
+.navbar .brand span {
+  display: inline-block;
+}
+.navbar .brand .brand-name { color: #dfe8ff; }
+.navbar .brand .brand-tag { font-size: 0.78rem; color: var(--accent); letter-spacing: 0.22em; }
 .navbar .links {
   display: flex;
   align-items: center;
@@ -90,21 +94,21 @@ a:hover { text-decoration: underline; }
 }
 .navbar .links a:hover,
 .navbar .links a:focus {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text);
   transform: translateY(-1px);
 }
 .navbar .links a.active {
-  background: rgba(143, 91, 255, 0.15);
-  color: #dcd7ff;
+  background: rgba(123, 184, 255, 0.14);
+  color: #e9eeff;
 }
 .navbar .links a.button {
   background: var(--success);
-  color: #0a121e;
+  color: #08101e;
 }
 .navbar .links a.button:hover { background: var(--success-dark); color: #fff; }
 .navbar .links a.button.active { background: var(--danger); color: #fff; }
-.nav-user { background: rgba(56, 217, 169, 0.12); color: #ccece0; }
+.nav-user { background: rgba(79, 231, 202, 0.12); color: #ccece0; }
 
 /* =========================================================
    Alerts, hero, cards
@@ -123,36 +127,47 @@ a:hover { text-decoration: underline; }
 .alert-success { background: rgba(56, 217, 169, 0.14); color: #c3f1d7; border: 1px solid rgba(56, 217, 169, 0.22); }
 
 .hero {
-  max-width: 1120px;
-  margin: 2rem auto 1.5rem;
-  padding: 3rem 2rem;
+  max-width: 960px;
+  margin: 2.5rem auto 1.5rem;
+  padding: 3rem 2.2rem;
   text-align: center;
-  background: rgba(12, 17, 35, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: 4px solid rgba(143, 91, 255, 0.8);
-  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(17, 22, 46, 0.96), rgba(10, 14, 28, 0.98));
+  border: 1px solid rgba(123, 184, 255, 0.16);
+  border-top: 4px solid rgba(123, 184, 255, 0.9);
+  border-radius: calc(var(--radius) + 4px);
   box-shadow: var(--shadow);
 }
 .hero h1 {
-  font-size: clamp(2.6rem, 4.5vw, 3.6rem);
-  letter-spacing: 0.08em;
-  margin-bottom: 0.6rem;
+  font-size: clamp(2.8rem, 4.8vw, 4.4rem);
+  letter-spacing: 0.14em;
+  margin-bottom: 0.75rem;
+  color: #f2f7ff;
+}
+.hero h1 strong {
+  display: block;
+  font-size: 2.6rem;
+  color: var(--accent);
+  letter-spacing: 0.25em;
+  margin-top: 0.5rem;
 }
 .hero p {
   font-size: 1rem;
   color: var(--text-muted);
-  margin-top: 0.5rem;
+  margin-top: 0.8rem;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .hero-actions {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.85rem;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
 }
 .eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.32em;
   font-size: 0.78rem !important;
   font-weight: 700;
   color: var(--accent);
