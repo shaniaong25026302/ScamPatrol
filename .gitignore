@@ -1,6 +1,7 @@
 # <Shania Start>
 node_modules/
 npm-debug.log*
+# [DevOps: Secrets management] .env holds DB/JWT/API secrets and is NEVER committed
 .env
 .DS_Store
 # <Shania End>

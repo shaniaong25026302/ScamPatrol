@@ -2,6 +2,8 @@
 // src/utils/validate.js — server-side validation (mirrored client-side in public/js/auth.js).
 // Each function returns an error string, or null when valid.
 
+// [DevOps: Security / input validation] every user input is validated server-side (never trust the
+// client), which the API and the inline client checks both use — one source of truth for the rules.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/;
 

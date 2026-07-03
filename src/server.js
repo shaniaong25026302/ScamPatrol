@@ -2,6 +2,8 @@
 // src/server.js — Scam Patrol single Express app.
 // Serves the JSON API (/api/*) AND renders the EJS pages (res.render) into views/layout.ejs.
 // This is the M1-owned skeleton: teammates mount their routes + views at the marked points below.
+// [DevOps: Config & secrets management] all configuration comes from environment variables (.env),
+// which is gitignored so credentials are never committed to source control.
 require("dotenv").config();
 
 // Prefer IPv4 for ALL outbound DNS. Render has no outbound IPv6 route, so resolving
@@ -63,7 +65,8 @@ app.use((req, res, next) => {
   return res.redirect("/");
 });
 
-// ── Health check ──
+// [DevOps: Monitoring / health check] a liveness+readiness endpoint that also probes the DB,
+// so uptime monitors (and Render) can detect when the service or database is unhealthy.
 app.get("/api/health", async (req, res) => {
   try {
     await ping();
@@ -117,7 +120,8 @@ app.use((req, res) => {
   res.status(404).render("index", { title: "Not found · Scam Patrol", activePage: "" });
 });
 
-// ── Error handler ──
+// [DevOps: Centralized error handling / resilience] one place catches every unhandled error so
+// a fault in any route returns a clean 500 instead of crashing the whole process.
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);
@@ -130,11 +134,20 @@ app.use((err, req, res, next) => {
 // Only listen when started directly (node src/server.js). When required by tests,
 // the app is exported un-started so they can listen on an ephemeral port.
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Scam Patrol running on http://localhost:${PORT}`);
     // Warm the SMTP pool so the first password-reset email skips the handshake.
     require("./services/mail.service").warmUp().catch(() => {});
   });
+
+  // [DevOps: Graceful shutdown] on a termination signal, stop accepting requests and close the
+  // DB pool before exiting, so no connection is left dangling (matters on the 5-connection cap).
+  const shutdown = (sig) => {
+    console.log(`${sig} received — shutting down gracefully`);
+    server.close(() => require("./db").pool.end().finally(() => process.exit(0)));
+  };
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 module.exports = app;

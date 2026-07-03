@@ -139,6 +139,94 @@ Logged-out users can only see the gamified homepage; everything else requires lo
 
 ---
 
+## 🛠️ DevOps practices I applied (M1)
+This is a DevOps module, so I applied DevOps practices across my part of the codebase. Every one is
+commented in-place with a `[DevOps: …]` tag so it can be traced to the exact line. All files below are
+mine (M1). *(Docker + CI/CD are Final-Assessment scope, not CA2.)*
+
+**1. Config & secrets management (12-factor)** — all config comes from environment variables; secrets
+are never committed. `src/server.js:5` · `.gitignore:4`
+```js
+// [DevOps: Config & secrets management] all configuration comes from environment variables (.env)
+require("dotenv").config();
+```
+
+**2. Environment consistency (Node version pinning)** — `package.json:8`
+```json
+"engines": { "node": ">=18" }
+```
+
+**3. Automated testing** — a `node --test` suite (38 tests). `package.json:15` · `tests/api.test.js` · `tests/jwt.test.js` · `tests/validate.test.js`
+```json
+"test": "node --test"
+```
+
+**4. Static analysis & formatting (quality gate)** — `package.json:13-14` · `eslint.config.js` · `.prettierrc.json`
+```json
+"lint": "eslint .",
+"format": "prettier --write ."
+```
+
+**5. Monitoring / health check** — `src/server.js:68`
+```js
+// [DevOps: Monitoring / health check] liveness+readiness endpoint that also probes the DB
+app.get("/api/health", async (req, res) => {
+  try { await ping(); res.json({ status: "ok", db: "up" }); }
+  catch (err) { res.status(503).json({ status: "degraded", db: "down", error: err.code }); }
+});
+```
+
+**6. Centralized error handling + async wrappers** — one handler catches every fault so the process
+never crashes. `src/server.js:123` · `src/routes/ai.routes.js:7`
+```js
+app.use((err, req, res, next) => { console.error(err); res.status(500).json({ error: "Internal server error" }); });
+const h = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+```
+
+**7. Graceful shutdown** — `src/server.js:143`
+```js
+// [DevOps: Graceful shutdown] close server + DB pool cleanly on termination signals
+const shutdown = (sig) => { server.close(() => require("./db").pool.end().finally(() => process.exit(0))); };
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+```
+
+**8. Resource management (tuned connection pool)** — `src/db.js:13`
+```js
+// [DevOps: Resource management] tuned pool (filess.io caps at 5 connections)
+connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 4,
+maxIdle: 2,
+idleTimeout: 30000,
+```
+
+**9. Observability / structured logging** — `src/services/mail.service.js:145,189`
+```js
+console.log(`Email: ${provider} HTTP API configured (sender ${senderIdentity().email}).`);
+console.log(`Password reset email sent via ... (id ${info.messageId}) -> ${toEmail}`);
+```
+
+**10. Reliability / provider failover** — HTTP email API with SMTP fallback. `src/services/mail.service.js:184`
+```js
+// [DevOps: Reliability / provider failover]
+if (process.env.RESEND_API_KEY) { /* Resend */ }
+if (process.env.BREVO_API_KEY) { /* Brevo */ }
+if (hasMailjet()) { /* Mailjet */ }
+```
+
+**11. Security by default (DevSecOps)**
+- httpOnly + secure cookies — `src/utils/jwt.js:25` → `return { httpOnly: true, sameSite: "lax", secure: isProd(), maxAge: DAY };`
+- password hashing — `src/controllers/auth.controller.js:18` → `const SALT_ROUNDS = 12;`
+- server-side input validation — `src/utils/validate.js:5`
+- auth guard / guest-gating — `src/server.js:64` → `return res.status(401).json({ error: "Login required." });`
+
+**12. Config-driven deployment** — `src/server.js:21,25`
+```js
+const PORT = process.env.PORT || 3000;   // [12-factor] bind to the port the platform injects
+app.set("trust proxy", 1);               // trust the platform's proxy (correct https + host)
+```
+
+---
+
 ## Database tables I own (`db/schema.sql`)
 `users` · `password_resets` · `ai_analyses` · `game_profiles` · `xp_events` · `user_badges` ·
 `game_scores` · `user_purchases`

@@ -150,7 +150,7 @@ What each member built into the app:
 | M2 (Rebecca) | Scam case reporting — create cases, case tables, image upload |
 | M3 (Nivi) | Community case browse, vote & flag |
 | M4 (CG) | Comments + user profile |
-| M5 (Liam) | Docker (points/leaderboard were taken over by M1) |
+| M5 (Liam) | Points / leaderboard (now part of M1's gamification) |
 | M6 (Shawn) | Landing page, scam glossary, admin |
 
 Only edit shared files (`db/schema.sql`, `views/layout.ejs`, `views/partials/game-nav.ejs`)

@@ -22,7 +22,8 @@ function verify(token) {
 
 const isProd = () => process.env.NODE_ENV === "production";
 
-// secure cookies only over HTTPS (prod); sameSite=lax is fine for same-site form posts.
+// [DevOps: Security by default / DevSecOps] auth token is an httpOnly cookie (not readable by JS,
+// mitigates XSS token theft) and only sent over HTTPS in production (secure flag driven by env).
 function accessCookieOpts() {
   return { httpOnly: true, sameSite: "lax", secure: isProd(), maxAge: DAY };
 }

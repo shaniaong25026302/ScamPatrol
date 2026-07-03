@@ -181,7 +181,9 @@ function resetEmailContent(resetUrl) {
 async function sendPasswordReset(toEmail, resetUrl) {
   const { subject, text, html } = resetEmailContent(resetUrl);
 
-  // Prefer an HTTP API (works where outbound SMTP is blocked, e.g. Render free tier).
+  // [DevOps: Reliability / provider failover] email is sent over an HTTP API (Mailjet/Resend/Brevo)
+  // which works where the host blocks SMTP, and falls back to SMTP — so a single provider or
+  // protocol being down doesn't take password reset down with it.
   if (process.env.RESEND_API_KEY) {
     const info = await sendViaResend({ to: toEmail, subject, text, html });
     console.log(`Password reset email sent via Resend (id ${info.messageId}) -> ${toEmail}`);

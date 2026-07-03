@@ -10,8 +10,9 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  // Filess.io free tier caps concurrent connections at 5 — keep the pool small AND
-  // release idle connections quickly so restarts/other tools aren't locked out.
+  // [DevOps: Resource management] a tuned connection pool. Filess.io free tier caps concurrent
+  // connections at 5, so the pool is kept small AND idle connections are released quickly so
+  // restarts / a 2nd instance aren't locked out.
   connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 4,
   maxIdle: 2,
   idleTimeout: 30000, // close idle connections after 30s to free the host's cap
