@@ -144,14 +144,14 @@ ScamPatrol/
 
 What each member built into the app:
 
-| Member | Contribution (live in the app) |
+| Member | Contribution |
 |---|---|
-| M1 (Shania) | Authentication (register / login / logout / password reset, **JWT in httpOnly cookies** + refresh token, bcrypt), AI Scam Checker, **Ask Inspector Hoot chatbot** (floating Gemini anti-scam assistant), Long-Con detector, app skeleton + shared retro theme/layout, DB schema, tests — and the whole **Scam Patrol HQ gamification**: XP / levels / coins / streaks, badges, energy, field missions, gold shop, interactive story, HQ dashboard, and the **points + world leaderboard** (taken over from M5) |
-| M2 (Rebecca) | Scam case reporting — create cases, case tables, image upload |
+| M1 (Shania) | App skeleton + shared retro theme/layout, authentication (**JWT in httpOnly cookies** + bcrypt), AI Scam Checker, **Ask Inspector Hoot chatbot**, Long-Con detector, the whole **Scam Patrol HQ gamification** (XP / levels / coins / streaks, badges, energy, field missions, gold shop, story, world leaderboard), DB schema, tests, deployment (Render) + email (Mailjet) |
+| M2 (Rebecca) | Scam case reporting — create / edit / delete cases, categories, image upload |
 | M3 (Nivi) | Community case browse, vote & flag |
 | M4 (CG) | Comments + user profile |
-| M5 (Liam) | Points / leaderboard (now part of M1's gamification) |
-| M6 (Shawn) | Landing page, scam glossary, admin |
+| M5 (Liam) | Points/leaderboard + Scam Weather services (in progress on feature branches) |
+| M6 (Shawn) | Landing page, scam glossary, admin pages (dashboard, moderation) |
 
 Only edit shared files (`db/schema.sql`, `views/layout.ejs`, `views/partials/game-nav.ejs`)
 **additively**, and flag the owner (M1).
