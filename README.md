@@ -150,7 +150,7 @@ What each member built into the app:
 | M2 (Rebecca) | Scam case reporting — create / edit / delete cases, categories, image upload |
 | M3 (Nivi) | Community case browse, vote & flag |
 | M4 (CG) | Comments + user profile |
-| M5 (Liam) | Points/leaderboard + Scam Weather services (in progress on feature branches) |
+| M5 (Liam) | Scam Weather services (in progress on feature branches) |
 | M6 (Shawn) | Landing page, scam glossary, admin pages (dashboard, moderation) |
 
 Only edit shared files (`db/schema.sql`, `views/layout.ejs`, `views/partials/game-nav.ejs`)
