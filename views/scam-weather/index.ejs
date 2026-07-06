@@ -1,0 +1,83 @@
+<%# <Liam Member 5 Start> %>
+<section class="gw-hero">
+  <div>
+    <p class="muted">Seasonal scam forecast</p>
+    <h1>🌦️ Scam Weather</h1>
+    <p><%= forecast.season.headline %></p>
+    <% if (currentUser && currentUser.isAdmin) { %>
+      <div style="margin-top:.6rem"><a href="/scam-weather/new" class="gw-btn gold">Add Scam Weather post</a></div>
+    <% } %>
+  </div>
+</section>
+
+<div class="gw-grid">
+  <div class="panel col-7">
+    <span class="gw-risk high"><%= forecast.season.riskLevel %> risk</span>
+    <h2><%= forecast.season.label %></h2>
+    <p><%= forecast.season.headline %></p>
+  </div>
+  <div class="panel col-5">
+    <h2>Seasonal advice</h2>
+    <ul>
+      <% forecast.season.advice.forEach((item) => { %><li><%= item %></li><% }) %>
+    </ul>
+  </div>
+</div>
+
+<section class="panel">
+  <h2>Report-data signals</h2>
+  <p class="muted">Temporary demo trends — ready to be replaced with real report counts from the case-report feature later.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem">
+    <% forecast.reportSignals.forEach((signal) => { %>
+      <article class="panel">
+        <span class="gw-risk <%= signal.riskLevel.toLowerCase() %>"><%= signal.riskLevel %></span>
+        <h3><%= signal.scamType %></h3>
+        <p><strong><%= signal.reportCount %></strong> recent reports · trend: <%= signal.trend %></p>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<section class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+    <div>
+      <h2>News &amp; advice</h2>
+      <p class="muted">Admins publish Scam Weather updates. Everyone can view them.</p>
+    </div>
+    <div style="display:flex;gap:.4rem">
+      <a href="/scam-weather" class="gw-chip"><%= selectedCategory === 'all' ? '● ' : '' %>All</a>
+      <a href="/scam-weather?category=news" class="gw-chip"><%= selectedCategory === 'news' ? '● ' : '' %>News</a>
+      <a href="/scam-weather?category=advice" class="gw-chip"><%= selectedCategory === 'advice' ? '● ' : '' %>Advice</a>
+    </div>
+  </div>
+</section>
+
+<% if (posts.length) { %>
+  <% posts.forEach((post) => { %>
+    <article class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span class="gw-chip"><%= post.category %></span>
+        <span class="muted">By <%= post.authorName %> · <%= new Date(post.createdAt).toLocaleDateString() %></span>
+      </div>
+      <h2><%= post.title %></h2>
+      <% if (post.mediaType === 'image' && post.mediaUrl) { %>
+        <img style="max-width:100%;border-radius:8px" src="<%= post.mediaUrl %>" alt="<%= post.caption || post.title %>">
+      <% } else if (post.mediaType === 'video' && post.mediaUrl) { %>
+        <video style="max-width:100%;border-radius:8px" controls src="<%= post.mediaUrl %>"></video>
+      <% } %>
+      <% if (post.caption) { %><p class="muted"><%= post.caption %></p><% } %>
+      <p><%= post.body %></p>
+      <% if (post.canEdit) { %>
+        <div style="display:flex;gap:.5rem;margin-top:.6rem">
+          <a href="/scam-weather/<%= post.id %>/edit" class="gw-btn ghost">Edit</a>
+          <form action="/scam-weather/<%= post.id %>/delete" method="POST" onsubmit="return confirm('Delete this Scam Weather post?')">
+            <button type="submit" class="gw-btn danger">Delete</button>
+          </form>
+        </div>
+      <% } %>
+    </article>
+  <% }) %>
+<% } else { %>
+  <section class="panel"><p class="muted">No Scam Weather posts in this category yet.</p></section>
+<% } %>
+<%# <Liam Member 5 End> %>

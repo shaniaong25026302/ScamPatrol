@@ -105,7 +105,8 @@ app.use("/api/categories", require("./routes/categories.routes"));
 // M3 Nivi — case browse/vote/flag + shared case pages
 app.use("/cases", require("./routes/cases.pages.routes"));
 // M4 CG — comments + profile
-// M5 Liam — points/leaderboard
+// M5 Liam — Scam Weather (seasonal scam forecast + admin posts)
+app.use("/scam-weather", require("./routes/scamweather.pages.routes"));
 // M6 Shawn — landing/glossary/admin
 app.use("/admin", require("./routes/admin.pages.routes")); //Shawn
 // <Shania End>

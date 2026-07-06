@@ -10,3 +10,4 @@ npm-debug.log*
 public/uploads/*
 !public/uploads/.gitkeep
 # <Rebecca Member 2 End>
+src/data/scamWeatherPosts.json
