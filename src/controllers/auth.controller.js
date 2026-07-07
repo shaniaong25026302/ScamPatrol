@@ -1,98 +1,100 @@
 // <Shania Start>
-// src/controllers/auth.controller.js — the logic behind every /api/auth/* endpoint (routed in src/routes/auth.routes.js).
-const crypto = require("crypto"); // Node built-in — used here to generate random reset tokens
-const bcrypt = require("bcrypt"); // hashes passwords (one-way) so we never store the plain text
+// src/controllers/auth.controller.js — register, login, me, logout, password reset, refresh.
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
-const User = require("../models/user.model"); // DB functions for users/resets — src/models/user.model.js
-const mail = require("../services/mail.service"); // sends the reset email — src/services/mail.service.js
-const { validateEmail, validateUsername, validatePassword } = require("../utils/validate"); // rules — src/utils/validate.js
+const User = require("../models/user.model");
+const mail = require("../services/mail.service");
+const { validateEmail, validateUsername, validatePassword } = require("../utils/validate");
 const {
-  signAccess, signRefresh, verify, // token helpers — src/utils/jwt.js
-  accessCookieOpts, refreshCookieOpts, clearCookieOpts, // cookie settings — src/utils/jwt.js
+  signAccess,
+  signRefresh,
+  verify,
+  accessCookieOpts,
+  refreshCookieOpts,
+  clearCookieOpts,
 } = require("../utils/jwt");
 
-const SALT_ROUNDS = 12; // bcrypt cost: 2^12 hashing rounds — high enough to make cracking stolen hashes slow
-const RESET_TTL_MS = 60 * 60 * 1000; // reset token lifetime = 1 hour in ms (60min × 60s × 1000ms)
+const SALT_ROUNDS = 12;
+const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-// Clean up inputs so "Bob@X.com " and "bob@x.com" are the same account (prevents duplicate/phantom users).
-const normEmail = (v) => (typeof v === "string" ? v.trim().toLowerCase() : v); // trim spaces + lowercase the email
-const normName = (v) => (typeof v === "string" ? v.trim() : v); // trim spaces off the username
+// Canonicalise auth inputs so casing/whitespace never creates "phantom" accounts
+// or emails that look stuck. Emails are stored + matched lowercase; names are trimmed.
+const normEmail = (v) => (typeof v === "string" ? v.trim().toLowerCase() : v);
+const normName = (v) => (typeof v === "string" ? v.trim() : v);
 
-// Set BOTH auth cookies on the response. Called after register/login. res.cookie(name, value, options).
 function issueSession(res, user) {
-  const payload = { sub: user.id, username: user.username, role: user.role }; // what we store inside the JWT (sub = subject = user id)
-  res.cookie("token", signAccess(payload), accessCookieOpts()); // access-token cookie (24h)
-  res.cookie("refresh_token", signRefresh({ sub: user.id }), refreshCookieOpts()); // refresh-token cookie (7d)
+  const payload = { sub: user.id, username: user.username, role: user.role };
+  res.cookie("token", signAccess(payload), accessCookieOpts());
+  res.cookie("refresh_token", signRefresh({ sub: user.id }), refreshCookieOpts());
 }
 
-// Strip a user down to only fields that are safe to return to the browser.
 function publicUser(u) {
   return { id: u.id, username: u.username, email: u.email, role: u.role };
 }
 
-// POST /api/auth/register — create a new account.
+// POST /api/auth/register
 async function register(req, res) {
-  const body = req.body || {}; // the JSON the client sent (|| {} guards against no body)
+  const body = req.body || {};
   const username = normName(body.username);
   const email = normEmail(body.email);
-  const { password, confirmPassword } = body; // passwords aren't trimmed — a space could be intentional
+  const { password, confirmPassword } = body;
 
-  const errors = {}; // collect all field errors so we can return them together (better UX than one at a time)
+  const errors = {};
   const uErr = validateUsername(username);
   if (uErr) errors.username = uErr;
   const eErr = validateEmail(email);
   if (eErr) errors.email = eErr;
   const pErr = validatePassword(password);
   if (pErr) errors.password = pErr;
-  if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match."; // the two boxes must match
-  if (Object.keys(errors).length) return res.status(400).json({ errors }); // any errors → 400 (Bad Request) with all of them
+  if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match.";
+  if (Object.keys(errors).length) return res.status(400).json({ errors });
 
-  if (await User.findByEmail(email)) // is the email taken?
-    return res.status(409).json({ errors: { email: "That email is already registered." } }); // 409 = Conflict
-  if (await User.findByUsername(username)) // is the username taken?
+  if (await User.findByEmail(email))
+    return res.status(409).json({ errors: { email: "That email is already registered." } });
+  if (await User.findByUsername(username))
     return res.status(409).json({ errors: { username: "That username is taken." } });
 
-  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS); // hash the password with 12 rounds (await = wait for it)
-  const id = await User.createUser({ username, email, passwordHash }); // insert; returns the new id
-  const user = { id, username, email, role: "user" }; // new accounts default to the "user" role
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  const id = await User.createUser({ username, email, passwordHash });
+  const user = { id, username, email, role: "user" };
 
-  issueSession(res, user); // log them straight in (set cookies)
-  return res.status(201).json({ user: publicUser(user) }); // 201 = Created
+  issueSession(res, user);
+  return res.status(201).json({ user: publicUser(user) });
 }
 
-// POST /api/auth/login — check email + password, then start a session.
+// POST /api/auth/login
 async function login(req, res) {
   const email = normEmail((req.body || {}).email);
   const password = (req.body || {}).password;
   if (!email || !password)
     return res.status(400).json({ error: "Email and password are required." });
 
-  const user = await User.findByEmail(email); // look up by email
-  // Always run bcrypt.compare, even if the user doesn't exist, using a dummy hash. This makes login take
-  // the same time whether or not the email is registered → attackers can't tell which emails exist (timing attack defence).
+  const user = await User.findByEmail(email);
+  // Always run a compare to avoid leaking which emails exist (timing).
   const hash = user ? user.password_hash : "$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinv";
-  const ok = await bcrypt.compare(password, hash); // compare the typed password against the stored hash
-  if (!user || !ok) return res.status(401).json({ error: "Invalid email or password." }); // generic message — don't reveal which was wrong
+  const ok = await bcrypt.compare(password, hash);
+  if (!user || !ok) return res.status(401).json({ error: "Invalid email or password." });
 
-  issueSession(res, user); // set the cookies
+  issueSession(res, user);
   return res.json({ user: publicUser(user) });
 }
 
-// GET /api/auth/me — return the currently logged-in user. requireAuth guarantees req.user exists.
+// GET /api/auth/me  (requireAuth)
 async function me(req, res) {
-  const user = await User.findPublicById(req.user.id); // safe fields only
-  if (!user) return res.status(404).json({ error: "User not found." }); // account deleted mid-session
+  const user = await User.findPublicById(req.user.id);
+  if (!user) return res.status(404).json({ error: "User not found." });
   return res.json({ user });
 }
 
-// POST /api/auth/logout — clear both cookies.
+// POST /api/auth/logout
 async function logout(req, res) {
-  res.clearCookie("token", clearCookieOpts()); // remove the access cookie
-  res.clearCookie("refresh_token", clearCookieOpts()); // remove the refresh cookie
+  res.clearCookie("token", clearCookieOpts());
+  res.clearCookie("refresh_token", clearCookieOpts());
   return res.json({ ok: true });
 }
 
-// POST /api/auth/forgot-password — email a reset link (or hand it back on-screen if email is unavailable).
+// POST /api/auth/forgot-password
 async function forgotPassword(req, res) {
   const email = normEmail((req.body || {}).email);
   const eErr = validateEmail(email);
@@ -100,76 +102,81 @@ async function forgotPassword(req, res) {
 
   const user = await User.findByEmail(email);
   const response = {
-    // The SAME message whether or not the email exists → we never reveal who has an account (enumeration protection).
     message: "If that email is registered, a reset link has been sent. Check your inbox — and your spam/junk folder.",
   };
 
-  if (user) { // only actually create a token if the email belongs to a real user
-    const token = crypto.randomBytes(32).toString("hex"); // 32 random bytes → a 64-char hex string that's impossible to guess
-    const expiresAt = new Date(Date.now() + RESET_TTL_MS); // now + 1 hour
-    await User.deleteResetsForUser(user.id); // kill any older tokens first
-    await User.createReset(user.id, token, expiresAt); // save the new token
+  if (user) {
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + RESET_TTL_MS);
+    await User.deleteResetsForUser(user.id);
+    await User.createReset(user.id, token, expiresAt);
 
-    // Build the absolute link. APP_BASE_URL (set on Render) wins; otherwise use the request's own protocol+host.
+    // Absolute link for the email; APP_BASE_URL wins (correct behind Render's proxy).
     const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
-    const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`; // the clickable link
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
-    // Prefer email. If it can't be delivered (Render free tier blocks SMTP), fall back to returning the link on-screen.
+    // Prefer email. If it can't be delivered (e.g. Render free tier blocks outbound
+    // SMTP), fall back to returning the link on-screen so reset is never fully broken.
     let sent = false;
-    if (mail.isConfigured()) { // is any email provider set up?
+    if (mail.isConfigured()) {
       try {
-        await mail.sendPasswordReset(user.email, resetUrl); // actually send it (await = wait for the send)
+        await mail.sendPasswordReset(user.email, resetUrl);
         sent = true;
-        response.emailed = true; // tell the client it went out by email
+        response.emailed = true;
       } catch (e) {
-        console.error("Password reset email failed:", e.message); // log but don't crash
+        console.error("Password reset email failed:", e.message);
       }
     } else {
       console.error("SMTP not configured — cannot send password reset email.");
     }
-    if (!sent) { // email failed / not configured → put the link in the response so reset still works
+    if (!sent) {
+      // Email unavailable — hand back the link so the user can still reset.
       response.resetUrl = `/auth/reset-password?token=${token}`;
       response.message = "Email delivery is unavailable here — use the reset link below to set a new password.";
     }
   }
-  return res.json(response); // always 200 — never reveal whether the email existed
+  return res.json(response);
 }
 
-// POST /api/auth/reset-password — set a new password using a valid token.
+// POST /api/auth/reset-password
 async function resetPassword(req, res) {
   const { token, password, confirmPassword } = req.body || {};
   if (!token) return res.status(400).json({ error: "Reset token is required." });
 
-  const pErr = validatePassword(password); // new password must meet the rules
+  const pErr = validatePassword(password);
   if (pErr) return res.status(400).json({ errors: { password: pErr } });
   if (password !== confirmPassword)
     return res.status(400).json({ errors: { confirmPassword: "Passwords do not match." } });
 
-  const reset = await User.findReset(token); // look up the token
-  if (!reset || new Date(reset.expires_at) < new Date()) // missing, OR its expiry is before now (expired)
+  const reset = await User.findReset(token);
+  if (!reset || new Date(reset.expires_at) < new Date())
     return res.status(400).json({ error: "This reset link is invalid or has expired." });
 
-  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS); // hash the new password
-  await User.updatePassword(reset.user_id, passwordHash); // save it
-  await User.deleteResetsForUser(reset.user_id); // burn all tokens (single-use)
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  await User.updatePassword(reset.user_id, passwordHash);
+  await User.deleteResetsForUser(reset.user_id);
   return res.json({ message: "Password updated. You can now log in." });
 }
 
-// POST /api/auth/refresh — issue a fresh access token using the refresh cookie (extends the session past 24h).
+// POST /api/auth/refresh — mint a new access token from the refresh cookie.
 async function refresh(req, res) {
-  const token = req.cookies && req.cookies.refresh_token; // read the refresh cookie
+  const token = req.cookies && req.cookies.refresh_token;
   if (!token) return res.status(401).json({ error: "No refresh token." });
   try {
-    const payload = verify(token); // verify it (throws if invalid/expired)
-    if (payload.type !== "refresh") throw new Error("wrong token type"); // must be a refresh token, not an access token
-    const user = await User.findPublicById(payload.sub); // make sure the user still exists
+    const payload = verify(token);
+    if (payload.type !== "refresh") throw new Error("wrong token type");
+    const user = await User.findPublicById(payload.sub);
     if (!user) return res.status(401).json({ error: "User no longer exists." });
-    res.cookie("token", signAccess({ sub: user.id, username: user.username, role: user.role }), accessCookieOpts()); // new access cookie
+    res.cookie(
+      "token",
+      signAccess({ sub: user.id, username: user.username, role: user.role }),
+      accessCookieOpts(),
+    );
     return res.json({ user });
   } catch (_) {
-    return res.status(401).json({ error: "Invalid refresh token." }); // any problem → 401
+    return res.status(401).json({ error: "Invalid refresh token." });
   }
 }
 
-module.exports = { register, login, me, logout, forgotPassword, resetPassword, refresh }; // used by src/routes/auth.routes.js
+module.exports = { register, login, me, logout, forgotPassword, resetPassword, refresh };
 // <Shania End>
