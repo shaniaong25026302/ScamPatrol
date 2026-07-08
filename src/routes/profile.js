@@ -1,4 +1,4 @@
-<%# CG Member 4 Start%>
+// <%# CG Member 4 Start%>
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
@@ -59,4 +59,4 @@ router.post("/edit", async (req, res) => {
 });
 
 module.exports = router;
-<%# CG Member 4 End%>
+//  <%# CG Member 4 End%>

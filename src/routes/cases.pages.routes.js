@@ -1,3 +1,5 @@
+// <Rebecca Member 2 Start>
+
 const express = require("express");
 const caseController = require("../controllers/case.controller");
 const upload = require("../middleware/upload.middleware");
@@ -14,7 +16,6 @@ const {
 
 const router = express.Router();
 
-// <Rebecca Member 2 Start>
 // Report Scam page + page form actions.
 router.get("/drafts", caseController.listDraftsPage);
 router.post("/drafts", upload.array("images", 3), caseController.saveDraftPage);
