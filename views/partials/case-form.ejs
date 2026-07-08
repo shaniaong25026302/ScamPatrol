@@ -2,6 +2,9 @@
 <% const data = typeof caseData !== 'undefined' ? caseData : {}; %>
 <% const action = typeof formAction !== 'undefined' ? formAction : '/cases'; %>
 <% const buttonText = typeof submitLabel !== 'undefined' ? submitLabel : 'Submit'; %>
+<% const draftAction = typeof saveDraftAction !== 'undefined' ? saveDraftAction : ''; %>
+<% const draftDeleteAction = typeof deleteDraftAction !== 'undefined' ? deleteDraftAction : ''; %>
+<% const draftMode = typeof isDraft !== 'undefined' ? isDraft : false; %>
 
 <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
   <div class="alert alert-danger case-form-errors">
@@ -101,7 +104,31 @@
 
   <div class="case-form-actions">
     <button class="btn btn-primary" type="submit"><%= buttonText %></button>
-    <a class="btn btn-ghost" href="/cases">Cancel</a>
+
+    <% if (draftAction) { %>
+      <button
+        class="btn btn-secondary"
+        type="submit"
+        formaction="<%= draftAction %>"
+        formnovalidate
+      >
+        Save as Draft
+      </button>
+    <% } %>
+
+    <% if (draftDeleteAction) { %>
+      <button
+        class="btn btn-danger"
+        type="submit"
+        formaction="<%= draftDeleteAction %>"
+        formnovalidate
+        onclick="return confirm('Delete this draft?')"
+      >
+        Delete Draft
+      </button>
+    <% } %>
+
+    <a class="btn btn-ghost" href="<%= draftMode ? '/cases/drafts' : '/cases' %>">Cancel</a>
   </div>
 </form>
 

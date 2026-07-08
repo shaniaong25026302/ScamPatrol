@@ -20,6 +20,16 @@
     </div>
     <form id="chatbot-form" class="chatbot-input" autocomplete="off">
       <input type="text" id="chatbot-text" placeholder="Ask about scams…" maxlength="2000" />
+      <%# <Rebecca Feature 3 Start> %>
+      <button
+        id="chatbot-mic"
+        class="gw-btn voice-btn"
+        type="button"
+        aria-label="Hold to speak"
+        title="Hold to speak"
+      >🎙️</button>
+      <span id="chatbot-voice-status" class="voice-status" aria-live="polite"></span>
+      <%# <Rebecca Feature 3 End> %>
       <button class="gw-btn gold" type="submit" aria-label="Send">➤</button>
     </form>
   </div>

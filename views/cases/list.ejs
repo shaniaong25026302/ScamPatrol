@@ -8,7 +8,13 @@
   <p class="case-count">
     <%= cases.length %> scam report(s) found
   </p>
-  <a class="btn btn-primary" href="/cases/new">+ Report a Scam</a>
+
+  <%# <Rebecca Member 2 Start> %>
+  <div class="community-action-buttons">
+    <a class="btn btn-secondary" href="/cases/drafts">My Drafts</a>
+    <a class="btn btn-primary" href="/cases/new">+ Report a Scam</a>
+  </div>
+  <%# <Rebecca Member 2 End> %>
 </div>
 
 <% if (typeof success !== "undefined" && success === "deleted") { %>

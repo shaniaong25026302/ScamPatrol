@@ -8,6 +8,8 @@
   const box = document.getElementById("chatbot");
   const form = document.getElementById("chatbot-form");
   const input = document.getElementById("chatbot-text");
+  const micBtn = document.getElementById("chatbot-mic");
+  const voiceStatus = document.getElementById("chatbot-voice-status");
   if (!launcher || !panel || !box || !form || !input) return;
 
   const esc = (s) =>
@@ -17,7 +19,202 @@
   let busy = false;
   let greeted = false;
 
+  // <Rebecca Feature 3 Start>
+  // Voice Input / Output: hold mic to transcribe speech into the textbox, and read Hoot's replies aloud.
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const canUseSpeechRecognition = Boolean(SpeechRecognition);
+  const canUseSpeechSynthesis = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  let recognition = null;
+  let isListening = false;
+  let baseVoiceText = "";
+  let finalTranscript = "";
+
+  function voiceLang() {
+    return document.documentElement.lang || "en-SG";
+  }
+
+  function setVoiceStatus(message) {
+    if (voiceStatus) voiceStatus.textContent = message || "";
+  }
+
+  function updateVoiceInput(interimTranscript) {
+    const pieces = [];
+    if (baseVoiceText) pieces.push(baseVoiceText);
+    if (finalTranscript.trim()) pieces.push(finalTranscript.trim());
+    if (interimTranscript && interimTranscript.trim()) pieces.push(interimTranscript.trim());
+    input.value = pieces.join(" ").replace(/\s+/g, " ").trimStart();
+  }
+
+  function buildRecognition() {
+    if (!canUseSpeechRecognition) return null;
+    const r = new SpeechRecognition();
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = voiceLang();
+
+    r.onstart = () => {
+      isListening = true;
+      finalTranscript = "";
+      baseVoiceText = input.value.trim();
+      if (micBtn) {
+        micBtn.classList.add("listening");
+        micBtn.textContent = "🛑";
+        micBtn.setAttribute("aria-label", "Release to stop speaking");
+        micBtn.setAttribute("title", "Release to stop speaking");
+      }
+      setVoiceStatus("Listening… release to stop");
+    };
+
+    r.onresult = (event) => {
+      let interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalTranscript += transcript + " ";
+        else interimTranscript += transcript;
+      }
+      updateVoiceInput(interimTranscript);
+    };
+
+    r.onerror = (event) => {
+      const reason = event.error === "not-allowed"
+        ? "Mic permission blocked"
+        : event.error === "no-speech"
+          ? "No speech detected"
+          : "Voice input unavailable";
+      setVoiceStatus(reason);
+    };
+
+    r.onend = () => {
+      isListening = false;
+      if (micBtn) {
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎙️";
+        micBtn.setAttribute("aria-label", "Hold to speak");
+        micBtn.setAttribute("title", "Hold to speak");
+      }
+      if (input.value.trim()) setVoiceStatus("Speech added to text box");
+      setTimeout(() => setVoiceStatus(""), 2500);
+      input.focus();
+    };
+
+    return r;
+  }
+
+  function startVoiceInput() {
+    if (!micBtn || !canUseSpeechRecognition || busy || isListening) return;
+    try {
+      recognition = buildRecognition();
+      recognition.start();
+    } catch (_) {
+      setVoiceStatus("Voice input could not start");
+    }
+  }
+
+  function stopVoiceInput() {
+    if (!recognition || !isListening) return;
+    try {
+      recognition.stop();
+    } catch (_) {
+      setVoiceStatus("Voice input stopped");
+    }
+  }
+
+  function speakReply(text, button) {
+    if (!canUseSpeechSynthesis) {
+      setVoiceStatus("Read aloud is not supported here");
+      return;
+    }
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      if (button && button.dataset.speaking === "true") {
+        button.dataset.speaking = "false";
+        button.textContent = "🔊";
+        setVoiceStatus("Read aloud stopped");
+        return;
+      }
+    }
+
+    const utterance = new SpeechSynthesisUtterance(String(text || ""));
+    utterance.lang = voiceLang();
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+
+    if (button) {
+      button.dataset.speaking = "true";
+      button.textContent = "⏹";
+    }
+    setVoiceStatus("Reading aloud…");
+
+    utterance.onend = () => {
+      if (button) {
+        button.dataset.speaking = "false";
+        button.textContent = "🔊";
+      }
+      setVoiceStatus("");
+    };
+    utterance.onerror = () => {
+      if (button) {
+        button.dataset.speaking = "false";
+        button.textContent = "🔊";
+      }
+      setVoiceStatus("Could not read aloud");
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  if (micBtn) {
+    if (!canUseSpeechRecognition) {
+      micBtn.disabled = true;
+      micBtn.title = "Voice input is not supported in this browser";
+      micBtn.setAttribute("aria-label", "Voice input not supported");
+      setVoiceStatus("Voice input not supported in this browser");
+      setTimeout(() => setVoiceStatus(""), 3000);
+    } else {
+      micBtn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        micBtn.setPointerCapture?.(e.pointerId);
+        startVoiceInput();
+      });
+      micBtn.addEventListener("pointerup", (e) => {
+        e.preventDefault();
+        stopVoiceInput();
+      });
+      micBtn.addEventListener("pointercancel", stopVoiceInput);
+      micBtn.addEventListener("pointerleave", stopVoiceInput);
+    }
+  }
+  // <Rebecca Feature 3 End>
+
   function addBubble(role, text) {
+    // <Rebecca Feature 3 Start>
+    if (role === "assistant") {
+      const row = document.createElement("div");
+      row.className = "chatbot-reply-row";
+
+      const div = document.createElement("div");
+      div.className = "bubble them";
+      div.innerHTML = esc(text).replace(/\n/g, "<br>");
+      row.appendChild(div);
+
+      if (canUseSpeechSynthesis) {
+        const readBtn = document.createElement("button");
+        readBtn.type = "button";
+        readBtn.className = "read-aloud-btn";
+        readBtn.textContent = "🔊";
+        readBtn.setAttribute("aria-label", "Read chatbot reply aloud");
+        readBtn.setAttribute("title", "Read aloud");
+        readBtn.addEventListener("click", () => speakReply(text, readBtn));
+        row.appendChild(readBtn);
+      }
+
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+      return;
+    }
+    // <Rebecca Feature 3 End>
+
     const div = document.createElement("div");
     div.className = "bubble " + (role === "user" ? "me" : "them");
     div.innerHTML = esc(text).replace(/\n/g, "<br>");
@@ -40,6 +237,7 @@
   async function send(text) {
     const msg = String(text || "").trim();
     if (!msg || busy) return;
+    stopVoiceInput();
     busy = true;
     input.value = "";
     addBubble("user", msg);
@@ -79,6 +277,8 @@
     setTimeout(() => input.focus(), 50);
   }
   function close() {
+    stopVoiceInput();
+    if (canUseSpeechSynthesis) window.speechSynthesis.cancel();
     panel.hidden = true;
     launcher.setAttribute("aria-expanded", "false");
   }

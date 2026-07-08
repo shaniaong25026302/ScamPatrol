@@ -44,6 +44,12 @@ function canEditCase(req, scam) {
   return Number(scam.user_id) === Number(req.user.id);
 }
 
+function requireDraftUser(req, res) {
+  if (req.user && req.user.id) return req.user.id;
+  res.redirect(`/auth/login?next=${encodeURIComponent(req.originalUrl)}`);
+  return null;
+}
+
 async function renderCaseForm(res, options = {}) {
   const categories = await caseModel.getCategories();
 
@@ -54,7 +60,10 @@ async function renderCaseForm(res, options = {}) {
     caseData: options.caseData || {},
     errors: options.errors || [],
     formAction: options.formAction,
-    submitLabel: options.submitLabel
+    submitLabel: options.submitLabel,
+    saveDraftAction: options.saveDraftAction,
+    deleteDraftAction: options.deleteDraftAction,
+    isDraft: options.isDraft || false
   });
 }
 
@@ -64,7 +73,8 @@ exports.showNewCaseForm = async (req, res, next) => {
       view: "cases/new",
       title: "Report a Scam",
       formAction: "/cases",
-      submitLabel: "Submit Scam Report"
+      submitLabel: "Submit Scam Report",
+      saveDraftAction: "/cases/drafts"
     });
   } catch (err) {
     next(err);
@@ -82,7 +92,8 @@ exports.createCasePage = async (req, res, next) => {
         caseData: req.body,
         errors,
         formAction: "/cases",
-        submitLabel: "Submit Scam Report"
+        submitLabel: "Submit Scam Report",
+        saveDraftAction: "/cases/drafts"
       });
     }
 
@@ -163,6 +174,127 @@ exports.deleteCasePage = async (req, res, next) => {
 
     await caseModel.deleteCase(req.params.id);
     return res.redirect("/cases?success=deleted");
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+exports.listDraftsPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const drafts = await caseModel.getDraftsByUser(userId);
+
+    return res.render("cases/drafts", {
+      title: "Saved Scam Drafts",
+      activePage: "cases",
+      drafts,
+      success: req.query.success
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.saveDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    await caseModel.createDraft({ ...buildCaseData(req), user_id: userId });
+    return res.redirect("/cases/drafts?success=saved");
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.showDraftForm = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const draft = await caseModel.getDraftById(req.params.id, userId);
+
+    if (!draft) {
+      return res.status(404).send("Draft not found.");
+    }
+
+    return renderCaseForm(res, {
+      view: "cases/new",
+      title: "Continue Scam Draft",
+      caseData: draft,
+      formAction: `/cases/drafts/${draft.id}/submit`,
+      saveDraftAction: `/cases/drafts/${draft.id}`,
+      deleteDraftAction: `/cases/drafts/${draft.id}/delete`,
+      submitLabel: "Submit Scam Report",
+      isDraft: true
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const draft = await caseModel.getDraftById(req.params.id, userId);
+
+    if (!draft) {
+      return res.status(404).send("Draft not found.");
+    }
+
+    await caseModel.updateDraft(req.params.id, { ...buildCaseData(req), user_id: userId });
+    return res.redirect("/cases/drafts?success=saved");
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.submitDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const draft = await caseModel.getDraftById(req.params.id, userId);
+
+    if (!draft) {
+      return res.status(404).send("Draft not found.");
+    }
+
+    const errors = validateCasePayload(req.body);
+
+    if (errors.length > 0) {
+      return renderCaseForm(res, {
+        view: "cases/new",
+        title: "Continue Scam Draft",
+        caseData: { ...draft, ...req.body },
+        errors,
+        formAction: `/cases/drafts/${draft.id}/submit`,
+        saveDraftAction: `/cases/drafts/${draft.id}`,
+        deleteDraftAction: `/cases/drafts/${draft.id}/delete`,
+        submitLabel: "Submit Scam Report",
+        isDraft: true
+      });
+    }
+
+    const scam = await caseModel.submitDraft(req.params.id, { ...buildCaseData(req), user_id: userId }, getUploadedImagePaths(req));
+    return res.redirect(`/cases/${scam.id}?success=created`);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    await caseModel.deleteDraft(req.params.id, userId);
+    return res.redirect("/cases/drafts?success=deleted");
   } catch (err) {
     next(err);
   }

@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- ---------- ai_analyses ----------
 CREATE TABLE IF NOT EXISTS ai_analyses (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id     INT UNSIGNED DEFAULT NULL,
+  user_id     INT DEFAULT NULL,
   input_text  TEXT NOT NULL,
   risk_level  ENUM('low', 'medium', 'high') NOT NULL,
   explanation TEXT NOT NULL,
@@ -81,13 +81,13 @@ INSERT IGNORE INTO categories (name) VALUES
 
 -- ---------- scam_cases ----------
 CREATE TABLE IF NOT EXISTS scam_cases (
-  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id          INT NOT NULL AUTO_INCREMENT,
   title       VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
-  category_id INT UNSIGNED DEFAULT NULL,
+  category_id INT DEFAULT NULL,
   platform    VARCHAR(100) DEFAULT NULL,
   scam_date   DATE DEFAULT NULL,
-  user_id     INT UNSIGNED DEFAULT NULL,
+  user_id     INT DEFAULT NULL,
   status      ENUM('pending', 'verified', 'rejected') NOT NULL DEFAULT 'pending',
   created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -99,6 +99,23 @@ CREATE TABLE IF NOT EXISTS scam_cases (
     FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL,
   CONSTRAINT fk_scam_cases_user
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- ---------- scam_case_drafts ----------
+CREATE TABLE IF NOT EXISTS scam_case_drafts (
+  id          INT NOT NULL AUTO_INCREMENT,
+  title       VARCHAR(255) DEFAULT NULL,
+  description TEXT DEFAULT NULL,
+  category_id INT DEFAULT NULL,
+  platform    VARCHAR(100) DEFAULT NULL,
+  scam_date   DATE DEFAULT NULL,
+  user_id     INT DEFAULT NULL,
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_scam_case_drafts_user (user_id),
+  KEY idx_scam_case_drafts_category (category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ---------- case_images ----------

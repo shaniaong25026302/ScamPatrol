@@ -16,6 +16,12 @@ const router = express.Router();
 
 // <Rebecca Member 2 Start>
 // Report Scam page + page form actions.
+router.get("/drafts", caseController.listDraftsPage);
+router.post("/drafts", upload.array("images", 3), caseController.saveDraftPage);
+router.get("/drafts/:id/edit", caseController.showDraftForm);
+router.post("/drafts/:id", upload.array("images", 3), caseController.updateDraftPage);
+router.post("/drafts/:id/submit", upload.array("images", 3), caseController.submitDraftPage);
+router.post("/drafts/:id/delete", caseController.deleteDraftPage);
 router.get("/new", caseController.showNewCaseForm);
 router.post("/", upload.array("images", 3), caseController.createCasePage);
 router.get("/:id/edit", caseController.showEditCaseForm);
