@@ -686,3 +686,77 @@ input.invalid, textarea.invalid { border-color: var(--red); box-shadow: 0 0 0 3p
 /* <Rebecca Member 2 End> */
 
 /* <Nivi Member 3 Support End> */
+
+/* <Rebecca Member 2 Start> */
+/* Auto-save status + removable evidence preview for Report Scam form */
+.draft-autosave-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: var(--navy-soft);
+  color: var(--navy);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.draft-autosave-status[data-state="pending"],
+.draft-autosave-status[data-state="saving"] {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.draft-autosave-status[data-state="saved"] {
+  background: var(--green-soft);
+  color: var(--green-dark);
+}
+
+.draft-autosave-status[data-state="error"] {
+  background: var(--red-soft);
+  color: var(--red-dark);
+}
+
+.evidence-preview-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.evidence-preview-item {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.evidence-preview-item img {
+  display: block;
+  border: none;
+  border-radius: 0;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  background: rgba(209, 45, 45, 0.94);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.evidence-preview-name {
+  display: block;
+  padding: 0.45rem 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* <Rebecca Member 2 End> */

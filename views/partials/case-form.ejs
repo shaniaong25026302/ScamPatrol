@@ -19,7 +19,21 @@
   </div>
 <% } %>
 
-<form class="case-form" action="<%= action %>" method="POST" enctype="multipart/form-data">
+<form
+  id="case-form"
+  class="case-form"
+  action="<%= action %>"
+  method="POST"
+  enctype="multipart/form-data"
+  data-autosave-create-url="<%= saveDraftAction ? '/cases/drafts/autosave' : '' %>"
+  data-autosave-update-url="<%= draftMode && data.id ? '/cases/drafts/' + data.id + '/autosave' : '' %>"
+  data-draft-id="<%= draftMode && data.id ? data.id : '' %>"
+>
+  <% if (saveDraftAction) { %>
+    <div class="draft-autosave-status" id="draft-autosave-status" aria-live="polite">
+      Auto-save is ready. Your typed details will be saved as a draft after you pause.
+    </div>
+  <% } %>
   <div class="form-group">
     <label for="title">Scam Title</label>
     <input
@@ -99,7 +113,8 @@
       multiple
     >
     <p class="field-hint">Upload up to 3 images. JPG, PNG, WEBP, or GIF. Max 3MB each.</p>
-    <div id="image-preview" class="image-preview-grid"></div>
+    <p class="field-hint">Selected images can be previewed and removed before submitting.</p>
+    <div id="image-preview" class="image-preview-grid evidence-preview-grid"></div>
   </div>
 
   <div class="case-form-actions">
@@ -133,4 +148,7 @@
 </form>
 
 <script src="/js/case-form.js" defer></script>
+<% if (saveDraftAction) { %>
+  <script src="/js/case-draft-autosave.js" defer></script>
+<% } %>
 <%# <Rebecca Member 2 End> %>

@@ -49,4 +49,10 @@ This ZIP contains Rebecca's Member 2 work for scamlah.
 7. Open Community Watch at `http://localhost:3000/cases`.
 8. Open case detail, then test Edit and Delete.
 
+## Rebecca Add-on: Auto-save Drafts + Evidence Preview
+
+- Added auto-save for the Report Scam form so unfinished report details are saved after the user pauses typing.
+- Added a visible auto-save status message such as pending, saving, saved, and failed.
+- Added evidence image preview with a remove button before final submission.
+- This extends Member 2's existing report scam, saved draft, image upload, and case CRUD workflow.
 

@@ -210,6 +210,49 @@ exports.saveDraftPage = async (req, res, next) => {
   }
 };
 
+// Auto-save lets users keep unfinished reports without clicking Save as Draft manually.
+// It intentionally saves text fields only; evidence images are still handled by the normal submit/save buttons.
+exports.autoSaveDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const payload = { ...buildCaseData(req), user_id: userId };
+    const draftId = req.params.id || req.body.draft_id;
+
+    let draft;
+    if (draftId) {
+      const existingDraft = await caseModel.getDraftById(draftId, userId);
+      if (!existingDraft) {
+        return res.status(404).json({ error: "Draft not found." });
+      }
+      draft = await caseModel.updateDraft(draftId, payload);
+    } else {
+      const hasTypedAnything = [
+        payload.title,
+        payload.description,
+        payload.category_id,
+        payload.platform,
+        payload.scam_date
+      ].some((value) => value !== undefined && value !== null && String(value).trim() !== "");
+
+      if (!hasTypedAnything) {
+        return res.json({ skipped: true, message: "Nothing to auto-save yet." });
+      }
+
+      draft = await caseModel.createDraft(payload);
+    }
+
+    return res.json({
+      message: "Draft auto-saved.",
+      draftId: draft.id,
+      updatedAt: draft.updated_at || new Date()
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.showDraftForm = async (req, res, next) => {
   try {
     const userId = requireDraftUser(req, res);
