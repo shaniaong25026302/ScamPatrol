@@ -1,9 +1,12 @@
+// <Shawn Start>
 const express = require("express");
 const glossaryModel = require("../models/glossary.model");
 const userModel = require("../models/user.model");
 const caseModel = require("../models/case.model");
 
+const { requireAdmin } = require("../middleware/admin.middleware");
 const router = express.Router();
+router.use(requireAdmin);
 
 // Dashboard
 router.get("/", (req, res) => {
@@ -168,3 +171,4 @@ router.post("/glossary/delete/:id", async (req, res) => {
 });
 
 module.exports = router;
+// <Shawn End>

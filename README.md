@@ -147,7 +147,7 @@ What each member built into the app:
 | Member | Contribution |
 |---|---|
 | M1 (Shania) | App skeleton + shared retro theme/layout, authentication (JWT in httpOnly cookies + bcrypt), AI Scam Checker, Ask Inspector Hoot chatbot, Long-Con detector, the whole Scam Patrol HQ gamification (XP / levels / coins / streaks, badges, energy, field missions, gold shop, story, points + world leaderboard), DB schema, tests, deployment (Render) + email (Mailjet) |
-| M2 (Rebecca) | Scam case reporting — create / edit / delete cases, categories, image upload |
+| M2 (Rebecca) | Scam case reporting — create / edit / delete cases, categories, image upload, saved drafts |
 | M3 (Nivi) | Community Watch — browse / search cases, case detail page, vote & flag |
 | M4 (CG) | Comments + user profile (files added; not yet wired into the app) |
 | M5 (Liam) | Scam Weather service (on feature branch; not yet merged) |

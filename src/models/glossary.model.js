@@ -1,3 +1,4 @@
+// <Shawn Start>
 const { pool } = require("../db");
 
 // Get all glossary entries
@@ -59,3 +60,4 @@ module.exports = {
     updateGlossary,
     deleteGlossary
 };
+// <Shawn End>

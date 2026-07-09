@@ -54,6 +54,7 @@ async function deleteResetsForUser(userId) {
   await pool.query("DELETE FROM password_resets WHERE user_id = ?", [userId]);
 }
 
+// <Shawn Start>
 //Shawn Admin Panel for User Management
 async function getAllUsers() {
   const [rows] = await pool.query(`
@@ -69,6 +70,8 @@ async function getAllUsers() {
 
   return rows;
 }
+// <Shawn End>
+
 
 module.exports = {
   findByEmail,
@@ -79,6 +82,8 @@ module.exports = {
   createReset,
   findReset,
   deleteResetsForUser,
+  // <Shawn Start>
   getAllUsers //Shawn Admin Panel for User Management
+  // <Shawn End>
 };
 // <Shania End>

@@ -1,0 +1,67 @@
+<%# <Rebecca Member 2 Start> %>
+<section class="page-heading">
+  <p class="eyebrow">Member 2 · Saved Drafts</p>
+  <h1>My Scam Report Drafts</h1>
+  <p>Scroll through reports you saved earlier. New report forms can now auto-save while you type, so you can continue, submit, or delete drafts whenever you are ready.</p>
+</section>
+
+<% if (success === 'saved') { %>
+  <div class="alert alert-success">Draft saved successfully.</div>
+<% } %>
+
+<% if (success === 'deleted') { %>
+  <div class="alert alert-success">Draft deleted successfully.</div>
+<% } %>
+
+<div class="case-top-actions draft-top-actions">
+  <p class="case-count">
+    <%= drafts && drafts.length ? drafts.length : 0 %> saved draft(s)
+  </p>
+
+  <div class="community-action-buttons">
+    <a class="btn btn-secondary" href="/cases">← Back to Community</a>
+    <a class="btn btn-primary" href="/cases/new">+ New Report</a>
+  </div>
+</div>
+
+<% if (!drafts || drafts.length === 0) { %>
+  <div class="card empty-state">
+    <h2>No saved drafts yet</h2>
+    <p>Start a scam report and click <strong>Save as Draft</strong> if you want to finish it later.</p>
+    <a class="btn btn-primary" href="/cases/new">Start a Report</a>
+  </div>
+<% } else { %>
+  <div class="draft-scroll-list">
+    <% drafts.forEach(draft => { %>
+      <article class="case-card draft-card">
+        <div class="case-card-body">
+          <div class="case-title-row">
+            <h2><%= draft.title || 'Untitled draft' %></h2>
+            <%- include('../partials/category-badge', { categoryName: draft.category_name || 'No category' }) %>
+          </div>
+
+          <p>
+            <%= draft.description
+              ? (draft.description.length > 180 ? draft.description.slice(0, 180) + '...' : draft.description)
+              : 'No description added yet.' %>
+          </p>
+
+          <div class="case-meta">
+            <% if (draft.platform) { %>
+              <span>Platform: <%= draft.platform %></span>
+            <% } %>
+            <span>Last saved: <%= draft.updated_at ? new Date(draft.updated_at).toLocaleString() : 'Recently' %></span>
+          </div>
+        </div>
+
+        <div class="draft-card-actions">
+          <a class="btn btn-primary" href="/cases/drafts/<%= draft.id %>/edit">Continue</a>
+          <form action="/cases/drafts/<%= draft.id %>/delete" method="POST" onsubmit="return confirm('Delete this draft?')">
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+<% } %>
+<%# <Rebecca Member 2 End> %>

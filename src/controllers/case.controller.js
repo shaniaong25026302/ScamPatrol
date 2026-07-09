@@ -7,6 +7,49 @@ function getUploadedImagePaths(req) {
   return req.files.map((file) => `/uploads/${file.filename}`);
 }
 
+function getTodayDateString() {
+  const parts = new Intl.DateTimeFormat("en-SG", {
+    timeZone: "Asia/Singapore",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+
+  const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
+function isRealDateString(dateValue) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) return false;
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
+}
+
+function validateScamDate(body) {
+  const errors = [];
+  const scamDate = body.scam_date ? String(body.scam_date).trim() : "";
+
+  if (!scamDate) return errors;
+
+  if (!isRealDateString(scamDate)) {
+    errors.push("Date of scam must be a valid date.");
+    return errors;
+  }
+
+  if (scamDate > getTodayDateString()) {
+    errors.push("Date of scam cannot be in the future.");
+  }
+
+  return errors;
+}
+
 function validateCasePayload(body) {
   const errors = [];
 
@@ -21,6 +64,8 @@ function validateCasePayload(body) {
   if (!body.category_id) {
     errors.push("Please choose a scam category.");
   }
+
+  errors.push(...validateScamDate(body));
 
   return errors;
 }
@@ -44,6 +89,12 @@ function canEditCase(req, scam) {
   return Number(scam.user_id) === Number(req.user.id);
 }
 
+function requireDraftUser(req, res) {
+  if (req.user && req.user.id) return req.user.id;
+  res.redirect(`/auth/login?next=${encodeURIComponent(req.originalUrl)}`);
+  return null;
+}
+
 async function renderCaseForm(res, options = {}) {
   const categories = await caseModel.getCategories();
 
@@ -54,7 +105,11 @@ async function renderCaseForm(res, options = {}) {
     caseData: options.caseData || {},
     errors: options.errors || [],
     formAction: options.formAction,
-    submitLabel: options.submitLabel
+    submitLabel: options.submitLabel,
+    saveDraftAction: options.saveDraftAction,
+    deleteDraftAction: options.deleteDraftAction,
+    isDraft: options.isDraft || false,
+    maxScamDate: getTodayDateString()
   });
 }
 
@@ -64,7 +119,8 @@ exports.showNewCaseForm = async (req, res, next) => {
       view: "cases/new",
       title: "Report a Scam",
       formAction: "/cases",
-      submitLabel: "Submit Scam Report"
+      submitLabel: "Submit Scam Report",
+      saveDraftAction: "/cases/drafts"
     });
   } catch (err) {
     next(err);
@@ -82,7 +138,8 @@ exports.createCasePage = async (req, res, next) => {
         caseData: req.body,
         errors,
         formAction: "/cases",
-        submitLabel: "Submit Scam Report"
+        submitLabel: "Submit Scam Report",
+        saveDraftAction: "/cases/drafts"
       });
     }
 
@@ -163,6 +220,206 @@ exports.deleteCasePage = async (req, res, next) => {
 
     await caseModel.deleteCase(req.params.id);
     return res.redirect("/cases?success=deleted");
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+exports.listDraftsPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const drafts = await caseModel.getDraftsByUser(userId);
+
+    return res.render("cases/drafts", {
+      title: "Saved Scam Drafts",
+      activePage: "cases",
+      drafts,
+      success: req.query.success
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.saveDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const dateErrors = validateScamDate(req.body);
+
+    if (dateErrors.length > 0) {
+      return renderCaseForm(res, {
+        view: "cases/new",
+        title: "Report a Scam",
+        caseData: req.body,
+        errors: dateErrors,
+        formAction: "/cases",
+        submitLabel: "Submit Scam Report",
+        saveDraftAction: "/cases/drafts"
+      });
+    }
+
+    await caseModel.createDraft({ ...buildCaseData(req), user_id: userId });
+    return res.redirect("/cases/drafts?success=saved");
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Auto-save lets users keep unfinished reports without clicking Save as Draft manually.
+// It intentionally saves text fields only; evidence images are still handled by the normal submit/save buttons.
+exports.autoSaveDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const payload = { ...buildCaseData(req), user_id: userId };
+    const dateErrors = validateScamDate(req.body);
+
+    if (dateErrors.length > 0) {
+      return res.status(400).json({ errors: dateErrors });
+    }
+
+    const draftId = req.params.id || req.body.draft_id;
+
+    let draft;
+    if (draftId) {
+      const existingDraft = await caseModel.getDraftById(draftId, userId);
+      if (!existingDraft) {
+        return res.status(404).json({ error: "Draft not found." });
+      }
+      draft = await caseModel.updateDraft(draftId, payload);
+    } else {
+      const hasTypedAnything = [
+        payload.title,
+        payload.description,
+        payload.category_id,
+        payload.platform,
+        payload.scam_date
+      ].some((value) => value !== undefined && value !== null && String(value).trim() !== "");
+
+      if (!hasTypedAnything) {
+        return res.json({ skipped: true, message: "Nothing to auto-save yet." });
+      }
+
+      draft = await caseModel.createDraft(payload);
+    }
+
+    return res.json({
+      message: "Draft auto-saved.",
+      draftId: draft.id,
+      updatedAt: draft.updated_at || new Date()
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.showDraftForm = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const draft = await caseModel.getDraftById(req.params.id, userId);
+
+    if (!draft) {
+      return res.status(404).send("Draft not found.");
+    }
+
+    return renderCaseForm(res, {
+      view: "cases/new",
+      title: "Continue Scam Draft",
+      caseData: draft,
+      formAction: `/cases/drafts/${draft.id}/submit`,
+      saveDraftAction: `/cases/drafts/${draft.id}`,
+      deleteDraftAction: `/cases/drafts/${draft.id}/delete`,
+      submitLabel: "Submit Scam Report",
+      isDraft: true
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const draft = await caseModel.getDraftById(req.params.id, userId);
+
+    if (!draft) {
+      return res.status(404).send("Draft not found.");
+    }
+
+    const dateErrors = validateScamDate(req.body);
+
+    if (dateErrors.length > 0) {
+      return renderCaseForm(res, {
+        view: "cases/new",
+        title: "Continue Scam Draft",
+        caseData: { ...draft, ...req.body },
+        errors: dateErrors,
+        formAction: `/cases/drafts/${draft.id}/submit`,
+        saveDraftAction: `/cases/drafts/${draft.id}`,
+        deleteDraftAction: `/cases/drafts/${draft.id}/delete`,
+        submitLabel: "Submit Scam Report",
+        isDraft: true
+      });
+    }
+
+    await caseModel.updateDraft(req.params.id, { ...buildCaseData(req), user_id: userId });
+    return res.redirect("/cases/drafts?success=saved");
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.submitDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    const draft = await caseModel.getDraftById(req.params.id, userId);
+
+    if (!draft) {
+      return res.status(404).send("Draft not found.");
+    }
+
+    const errors = validateCasePayload(req.body);
+
+    if (errors.length > 0) {
+      return renderCaseForm(res, {
+        view: "cases/new",
+        title: "Continue Scam Draft",
+        caseData: { ...draft, ...req.body },
+        errors,
+        formAction: `/cases/drafts/${draft.id}/submit`,
+        saveDraftAction: `/cases/drafts/${draft.id}`,
+        deleteDraftAction: `/cases/drafts/${draft.id}/delete`,
+        submitLabel: "Submit Scam Report",
+        isDraft: true
+      });
+    }
+
+    const scam = await caseModel.submitDraft(req.params.id, { ...buildCaseData(req), user_id: userId }, getUploadedImagePaths(req));
+    return res.redirect(`/cases/${scam.id}?success=created`);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteDraftPage = async (req, res, next) => {
+  try {
+    const userId = requireDraftUser(req, res);
+    if (!userId) return;
+
+    await caseModel.deleteDraft(req.params.id, userId);
+    return res.redirect("/cases/drafts?success=deleted");
   } catch (err) {
     next(err);
   }
