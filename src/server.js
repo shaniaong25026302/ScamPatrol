@@ -107,9 +107,11 @@ app.use("/cases", require("./routes/cases.pages.routes"));
 // M4 CG — comments + profile
 // M5 Liam — points/leaderboard
 // M6 Shawn — landing/glossary/admin
+// <Shawn Start>
 app.use("/admin", require("./routes/admin.pages.routes")); //Shawn
-// <Shania End>
 app.use("/glossary", require("./routes/glossary.pages.routes")); // added by M6 (Shawn)
+// <Shawn End>
+// <Shania End>
 // <Shania Start>
 
 // ── 404 (HTML page vs JSON API) ──
