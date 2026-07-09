@@ -7,6 +7,49 @@ function getUploadedImagePaths(req) {
   return req.files.map((file) => `/uploads/${file.filename}`);
 }
 
+function getTodayDateString() {
+  const parts = new Intl.DateTimeFormat("en-SG", {
+    timeZone: "Asia/Singapore",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+
+  const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
+function isRealDateString(dateValue) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) return false;
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
+}
+
+function validateScamDate(body) {
+  const errors = [];
+  const scamDate = body.scam_date ? String(body.scam_date).trim() : "";
+
+  if (!scamDate) return errors;
+
+  if (!isRealDateString(scamDate)) {
+    errors.push("Date of scam must be a valid date.");
+    return errors;
+  }
+
+  if (scamDate > getTodayDateString()) {
+    errors.push("Date of scam cannot be in the future.");
+  }
+
+  return errors;
+}
+
 function validateCasePayload(body) {
   const errors = [];
 
@@ -21,6 +64,8 @@ function validateCasePayload(body) {
   if (!body.category_id) {
     errors.push("Please choose a scam category.");
   }
+
+  errors.push(...validateScamDate(body));
 
   return errors;
 }
@@ -63,7 +108,8 @@ async function renderCaseForm(res, options = {}) {
     submitLabel: options.submitLabel,
     saveDraftAction: options.saveDraftAction,
     deleteDraftAction: options.deleteDraftAction,
-    isDraft: options.isDraft || false
+    isDraft: options.isDraft || false,
+    maxScamDate: getTodayDateString()
   });
 }
 
@@ -203,6 +249,20 @@ exports.saveDraftPage = async (req, res, next) => {
     const userId = requireDraftUser(req, res);
     if (!userId) return;
 
+    const dateErrors = validateScamDate(req.body);
+
+    if (dateErrors.length > 0) {
+      return renderCaseForm(res, {
+        view: "cases/new",
+        title: "Report a Scam",
+        caseData: req.body,
+        errors: dateErrors,
+        formAction: "/cases",
+        submitLabel: "Submit Scam Report",
+        saveDraftAction: "/cases/drafts"
+      });
+    }
+
     await caseModel.createDraft({ ...buildCaseData(req), user_id: userId });
     return res.redirect("/cases/drafts?success=saved");
   } catch (err) {
@@ -218,6 +278,12 @@ exports.autoSaveDraftPage = async (req, res, next) => {
     if (!userId) return;
 
     const payload = { ...buildCaseData(req), user_id: userId };
+    const dateErrors = validateScamDate(req.body);
+
+    if (dateErrors.length > 0) {
+      return res.status(400).json({ errors: dateErrors });
+    }
+
     const draftId = req.params.id || req.body.draft_id;
 
     let draft;
@@ -288,6 +354,22 @@ exports.updateDraftPage = async (req, res, next) => {
 
     if (!draft) {
       return res.status(404).send("Draft not found.");
+    }
+
+    const dateErrors = validateScamDate(req.body);
+
+    if (dateErrors.length > 0) {
+      return renderCaseForm(res, {
+        view: "cases/new",
+        title: "Continue Scam Draft",
+        caseData: { ...draft, ...req.body },
+        errors: dateErrors,
+        formAction: `/cases/drafts/${draft.id}/submit`,
+        saveDraftAction: `/cases/drafts/${draft.id}`,
+        deleteDraftAction: `/cases/drafts/${draft.id}/delete`,
+        submitLabel: "Submit Scam Report",
+        isDraft: true
+      });
     }
 
     await caseModel.updateDraft(req.params.id, { ...buildCaseData(req), user_id: userId });

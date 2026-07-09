@@ -81,3 +81,48 @@
   });
 })();
 // <Rebecca Member 2 End>
+
+// <Rebecca Member 2 Start>
+// Date validation for Report Scam: users cannot submit or save scam reports with future dates.
+(() => {
+  const form = document.querySelector('#case-form');
+  const dateInput = document.querySelector('#scam_date');
+
+  if (!form || !dateInput) return;
+
+  function getTodayDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  const todayString = getTodayDateString();
+  dateInput.max = todayString;
+  dateInput.dataset.maxDate = todayString;
+
+  function validateScamDate() {
+    const selectedDate = dateInput.value;
+
+    if (selectedDate && selectedDate > todayString) {
+      dateInput.setCustomValidity('Date of scam cannot be in the future.');
+    } else {
+      dateInput.setCustomValidity('');
+    }
+  }
+
+  dateInput.addEventListener('input', validateScamDate);
+  dateInput.addEventListener('change', validateScamDate);
+
+  form.addEventListener('submit', (event) => {
+    validateScamDate();
+
+    if (!dateInput.checkValidity()) {
+      event.preventDefault();
+      dateInput.reportValidity();
+    }
+  });
+})();
+// <Rebecca Member 2 End>
+

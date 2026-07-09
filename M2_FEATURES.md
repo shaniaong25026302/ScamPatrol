@@ -56,3 +56,10 @@ This ZIP contains Rebecca's Member 2 work for scamlah.
 - Added evidence image preview with a remove button before final submission.
 - This extends Member 2's existing report scam, saved draft, image upload, and case CRUD workflow.
 
+
+## Rebecca Add-on: Scam Date Validation
+
+- Added validation to prevent future scam dates such as year 2222 from being submitted or saved.
+- Added `max` date protection on the Report Scam date input.
+- Added frontend validation in `public/js/case-form.js` and backend validation in `src/controllers/case.controller.js` so the rule cannot be bypassed by editing browser HTML.
+- The rule applies to creating reports, editing reports, saving drafts, submitting drafts, and auto-saving drafts.

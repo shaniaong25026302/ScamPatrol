@@ -5,6 +5,7 @@
 <% const draftAction = typeof saveDraftAction !== 'undefined' ? saveDraftAction : ''; %>
 <% const draftDeleteAction = typeof deleteDraftAction !== 'undefined' ? deleteDraftAction : ''; %>
 <% const draftMode = typeof isDraft !== 'undefined' ? isDraft : false; %>
+<% const latestScamDate = typeof maxScamDate !== 'undefined' ? maxScamDate : new Date().toISOString().split('T')[0]; %>
 
 <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
   <div class="alert alert-danger case-form-errors">
@@ -76,7 +77,10 @@
       type="date"
       name="scam_date"
       value="<%= data.scam_date ? new Date(data.scam_date).toISOString().split('T')[0] : '' %>"
+      max="<%= latestScamDate %>"
+      data-max-date="<%= latestScamDate %>"
     >
+    <p class="field-hint">Choose today or an earlier date. Future dates are not allowed.</p>
   </div>
 
   <div class="form-group">
