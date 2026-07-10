@@ -67,7 +67,12 @@ function caseListSelect(whereSql = "", orderSql = "ORDER BY sc.created_at DESC")
 }
 
 async function getAllCases() {
-  const [rows] = await pool.query(caseListSelect());
+  // <Shawn Start>
+  // Only approved scam cases are visible to the public Community page.
+  const [rows] = await pool.query(
+    caseListSelect("WHERE sc.status = 'Approved'")
+  );
+  // <Shawn End>
   return rows;
 }
 
@@ -75,10 +80,13 @@ async function searchCases(keyword) {
   const term = `%${keyword}%`;
   const [rows] = await pool.query(
     caseListSelect(`
-      WHERE sc.title LIKE ?
-         OR sc.description LIKE ?
-         OR sc.platform LIKE ?
-         OR c.name LIKE ?
+      WHERE sc.status = 'Approved'
+      AND (
+          sc.title LIKE ?
+          OR sc.description LIKE ?
+          OR sc.platform LIKE ?
+          OR c.name LIKE ?
+      )
     `),
     [term, term, term, term]
   );
@@ -87,7 +95,9 @@ async function searchCases(keyword) {
 
 async function getCasesByCategory(categoryId) {
   const [rows] = await pool.query(
-    caseListSelect("WHERE sc.category_id = ?"),
+    caseListSelect(
+    "WHERE sc.status = 'Approved' AND sc.category_id = ?"
+),
     [categoryId]
   );
   return rows;
@@ -95,7 +105,10 @@ async function getCasesByCategory(categoryId) {
 
 async function getSortedCases(sort) {
   const order = sort === "oldest" ? "ASC" : "DESC";
-  const [rows] = await pool.query(caseListSelect("", `ORDER BY sc.created_at ${order}`));
+  const [rows] = await pool.query(caseListSelect(
+    "WHERE sc.status = 'Approved'",
+    `ORDER BY sc.created_at ${order}`
+));
   return rows;
 }
 
@@ -382,25 +395,80 @@ async function submitDraft(id, data, imagePaths = []) {
   }
 }
 
-async function addVote(caseId, userId = null) {
-  await pool.query(
-    `
-      INSERT INTO votes (case_id, user_id, vote_type)
-      VALUES (?, ?, 'upvote')
-    `,
-    [caseId, toNullable(userId)]
-  );
+async function addVote(caseId) {
+
+    await pool.query(
+        `
+        INSERT INTO votes (case_id)
+        VALUES (?)
+        `,
+        [caseId]
+    );
+
 }
 
 async function addFlag(caseId, userId = null, reason = null) {
-  await pool.query(
-    `
-      INSERT INTO flags (case_id, user_id, reason)
-      VALUES (?, ?, ?)
-    `,
-    [caseId, toNullable(userId), toNullable(reason)]
-  );
+
+    await pool.query(
+        `
+        INSERT INTO flags (case_id, reason)
+        VALUES (?, ?)
+        `,
+        [caseId, toNullable(reason)]
+    );
+
 }
+
+// <Shawn Start>
+
+// Admin - Get all flagged scam cases
+async function getFlaggedCases() {
+
+    const [rows] = await pool.query(`
+        SELECT
+            sc.id,
+            sc.title,
+            sc.platform,
+            COUNT(f.id) AS total_flags
+        FROM scam_cases sc
+        INNER JOIN flags f
+            ON sc.id = f.case_id
+        GROUP BY sc.id
+        ORDER BY total_flags DESC
+    `);
+
+    return rows;
+
+}
+
+// Approve / Reject Case
+async function updateCaseStatus(id, status) {
+
+    console.log("Updating case:", id, "->", status);
+
+    const [result] = await pool.query(
+        `
+        UPDATE scam_cases
+        SET status = ?
+        WHERE id = ?
+        `,
+        [status, id]
+    );
+
+    console.log(result);
+
+}
+
+async function getPendingCases() {
+
+    const [rows] = await pool.query(
+        caseListSelect("WHERE sc.status = 'Pending'")
+    );
+
+    return rows;
+
+}
+// <Shawn End>
 
 module.exports = {
   getAllCases,
@@ -419,6 +487,11 @@ module.exports = {
   deleteDraft,
   submitDraft,
   addVote,
-  addFlag
+  addFlag,
+  // Shawn Start
+  getFlaggedCases,
+  updateCaseStatus,
+  getPendingCases
+  // Shawn End
 };
 // <Rebecca Member 2 End>

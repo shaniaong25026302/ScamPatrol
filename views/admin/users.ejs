@@ -1,4 +1,5 @@
 <%# <Shawn Start> %>
+
 <h1>Manage Users</h1>
 
 <table class="table">
@@ -8,7 +9,6 @@
         <th>Username</th>
         <th>Email</th>
         <th>Role</th>
-        <th>Created At</th>
         <th>Action</th>
     </tr>
 
@@ -17,15 +17,44 @@
         <tr>
 
             <td><%= user.id %></td>
+
             <td><%= user.username %></td>
+
             <td><%= user.email %></td>
+
             <td><%= user.role %></td>
-            <td><%= user.created_at %></td>
 
             <td>
 
-                <button>Promote</button>
-                <button>Suspend</button>
+                <% if (user.id === locals.user.id) { %>
+
+                    <strong>Current Admin</strong>
+
+                <% } else { %>
+
+                    <form action="/admin/users/role/<%= user.id %>" method="POST">
+
+                        <select name="role">
+
+                            <option value="user"
+                                <%= user.role === "user" ? "selected" : "" %>>
+                                User
+                            </option>
+
+                            <option value="admin"
+                                <%= user.role === "admin" ? "selected" : "" %>>
+                                Admin
+                            </option>
+
+                        </select>
+
+                        <button type="submit">
+                            Save
+                        </button>
+
+                    </form>
+
+                <% } %>
 
             </td>
 
@@ -34,4 +63,5 @@
     <% }) %>
 
 </table>
+
 <%# <Shawn End> %>

@@ -6,8 +6,20 @@ function requireAdmin(req, res, next) {
     }
 
     if (req.user.role !== "admin") {
-        return res.status(403).send("403 Forbidden - Admin access only.");
+
+        console.log(
+            `[${new Date().toISOString()}] [DENIED] ${req.user.username} attempted to access ${req.originalUrl}`
+        );
+
+        return res.status(403).render("error403", {
+            title: "Access Denied",
+            activePage: ""
+        });
     }
+
+    console.log(
+        `[${new Date().toISOString()}] [ADMIN] ${req.user.username} accessed ${req.originalUrl}`
+    );
 
     next();
 

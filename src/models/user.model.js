@@ -70,6 +70,16 @@ async function getAllUsers() {
 
   return rows;
 }
+
+// Shawn Admin/User Panel for User Management
+async function updateRole(id, role) {
+
+    await pool.query(
+        "UPDATE users SET role = ? WHERE id = ?",
+        [role, id]
+    );
+
+}
 // <Shawn End>
 
 
@@ -83,7 +93,8 @@ module.exports = {
   findReset,
   deleteResetsForUser,
   // <Shawn Start>
-  getAllUsers //Shawn Admin Panel for User Management
+  getAllUsers, //Shawn Admin Panel for User Management
+  updateRole //Shawn Admin/User Panel for User Management
   // <Shawn End>
 };
 // <Shania End>
