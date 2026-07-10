@@ -1,22 +1,45 @@
 <%# <Shawn Start> %>
+
 <h1>Flagged Reports</h1>
 
 <table class="table">
 
-<tr>
-<th>Report</th>
-<th>Reason</th>
-<th>Action</th>
-</tr>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Platform</th>
+        <th>Total Flags</th>
+        <th>Action</th>
+    </tr>
 
-<tr>
-<td>Spam Comment</td>
-<td>Offensive Language</td>
-<td>
-<button>Keep</button>
-<button>Delete</button>
-</td>
-</tr>
+    <% reports.forEach(report => { %>
+
+        <tr>
+
+            <td><%= report.id %></td>
+
+            <td><%= report.title %></td>
+
+            <td><%= report.platform || "N/A" %></td>
+
+            <td>
+                <span style="color:red;font-weight:bold;">
+                    <%= report.total_flags %>
+                </span>
+            </td>
+
+            <td>
+
+                <a href="/cases/<%= report.id %>" class="btn">
+                    View Case
+                </a>
+
+            </td>
+
+        </tr>
+
+    <% }) %>
 
 </table>
+
 <%# <Shawn End> %>
