@@ -37,7 +37,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 // attachUser: sets req.user + res.locals.user when a valid token is present; never blocks.
-app.use(require("./middleware/auth.middleware").attachUser);
+// requireAuthPage: page-guard the guest-gate below uses to send guests to /auth/login?next=<page>.
+const { attachUser, requireAuthPage } = require("./middleware/auth.middleware");
+app.use(attachUser);
 
 // App-wide gamification: passively award XP for successful actions (incl. teammates' routes).
 app.use(require("./middleware/gamification.middleware").gamificationObserver);
@@ -62,7 +64,7 @@ app.use((req, res, next) => {
     p.startsWith("/api/game/story");
   if (open) return next();
   if (p.startsWith("/api/")) return res.status(401).json({ error: "Login required." });
-  return res.redirect("/");
+  return requireAuthPage(req, res, next); // blocked page → /auth/login?next=<page> (return-to-page after login)
 });
 
 // [DevOps: Monitoring / health check] a liveness+readiness endpoint that also probes the DB,
