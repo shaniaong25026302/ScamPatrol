@@ -15,8 +15,8 @@ function actionFor(req, status) {
   // Community votes / flags (any path containing /vote or /flag)
   if (m === "POST" && /\/vote(\/|$)/.test(p)) return "case_vote";
   if (m === "POST" && /\/flag(\/|$)/.test(p)) return "case_flag";
-  // Member 4 — comments (any POST to a /comment(s) path)
-  if (m === "POST" && /\/comments?(\/|$)/.test(p)) return "comment";
+  // Member 4 — creating a comment (POST to a path ENDING in /comment(s); NOT edit/delete)
+  if (m === "POST" && /\/comments?\/?$/.test(p)) return "comment";
 
   return null;
 }
