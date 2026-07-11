@@ -8,7 +8,8 @@ const gamify = require("../services/gamification.service");
 function actionFor(req, status) {
   if (status < 200 || status >= 400) return null;
   const m = req.method;
-  const p = req.path;
+  // Use the FULL path: on "finish", req.path is mount-relative (POST /cases shows as "/"); req.originalUrl isn't.
+  const p = (req.originalUrl || req.url || "").split("?")[0];
 
   // Member 2/3 — report a scam case (page form POST /cases, API POST /api/cases, or draft submit)
   if (m === "POST" && (/^\/(api\/)?cases\/?$/.test(p) || /^\/cases\/drafts\/\d+\/submit\/?$/.test(p))) return "case_report";
