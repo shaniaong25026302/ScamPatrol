@@ -2,7 +2,6 @@
 // src/middleware/auth.middleware.js — shared auth guards. Teammates import these.
 //   attachUser       → never blocks; sets req.user + res.locals.user. Auto-renews the session from the refresh token.
 //   requireAuth      → API guard; 401 JSON for guests.
-//   requireAuthPage  → page guard; redirects guests to /auth/login.
 // Token is read from the httpOnly cookie OR an `Authorization: Bearer <token>` header.
 const { verify, signAccess, signRefresh, accessCookieOpts, refreshCookieOpts } = require("../utils/jwt");
 const User = require("../models/user.model");
@@ -59,11 +58,5 @@ function requireAuth(req, res, next) {
   return res.status(401).json({ error: "Authentication required." });
 }
 
-function requireAuthPage(req, res, next) {
-  if (req.user) return next();
-  const back = encodeURIComponent(req.originalUrl);
-  return res.redirect(`/auth/login?next=${back}`);
-}
-
-module.exports = { attachUser, requireAuth, requireAuthPage, extractToken };
+module.exports = { attachUser, requireAuth, extractToken };
 // <Shania End>
