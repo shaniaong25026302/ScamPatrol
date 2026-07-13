@@ -286,3 +286,64 @@ CREATE TABLE IF NOT EXISTS scam_weather_refresh_runs (
   KEY idx_scam_weather_runs_started (started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- <Liam Scam Weather End>
+
+-- <Liam Daily Quiz Start>
+-- ============================================================
+-- Member 5 — Daily Quiz future MySQL tables
+-- Current implementation persists to JSON cache files so the feature works
+-- immediately in demos. These tables document the migration path for production.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS daily_quiz_sets (
+  quiz_date      DATE NOT NULL,
+  generated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  source_policy  VARCHAR(255) NOT NULL,
+  question_count INT UNSIGNED NOT NULL DEFAULT 10,
+  PRIMARY KEY (quiz_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS daily_quiz_questions (
+  id             CHAR(32) NOT NULL,
+  quiz_date       DATE NOT NULL,
+  question_order  INT UNSIGNED NOT NULL,
+  kind           VARCHAR(40) NOT NULL,
+  prompt         TEXT NOT NULL,
+  article_title  VARCHAR(512) DEFAULT NULL,
+  article_link   VARCHAR(768) DEFAULT NULL,
+  source_name    VARCHAR(160) DEFAULT NULL,
+  options_json   JSON NOT NULL,
+  correct_index  INT UNSIGNED NOT NULL,
+  explanation    TEXT NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_daily_quiz_questions_date (quiz_date),
+  CONSTRAINT fk_daily_quiz_questions_set
+    FOREIGN KEY (quiz_date) REFERENCES daily_quiz_sets (quiz_date) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS daily_quiz_attempts (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  quiz_date     DATE NOT NULL,
+  user_id       INT UNSIGNED NOT NULL,
+  started_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  completed_at  TIMESTAMP NULL DEFAULT NULL,
+  score         INT UNSIGNED NOT NULL DEFAULT 0,
+  reward_xp     INT UNSIGNED NOT NULL DEFAULT 0,
+  reward_coins  INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_daily_quiz_attempt_user_day (quiz_date, user_id),
+  CONSTRAINT fk_daily_quiz_attempts_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS daily_quiz_answers (
+  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  attempt_id      INT UNSIGNED NOT NULL,
+  question_id     CHAR(32) NOT NULL,
+  selected_index  INT UNSIGNED NOT NULL,
+  correct_index   INT UNSIGNED NOT NULL,
+  is_correct      TINYINT(1) NOT NULL DEFAULT 0,
+  answered_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_daily_quiz_answer_once (attempt_id, question_id),
+  CONSTRAINT fk_daily_quiz_answers_attempt FOREIGN KEY (attempt_id) REFERENCES daily_quiz_attempts (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- <Liam Daily Quiz End>

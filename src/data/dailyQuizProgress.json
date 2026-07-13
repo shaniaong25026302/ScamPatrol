@@ -1,0 +1,110 @@
+{
+  "attempts": {
+    "2026-07-13:71": {
+      "date": "2026-07-13",
+      "userId": "71",
+      "startedAt": "2026-07-13T13:02:15.485Z",
+      "completedAt": "2026-07-13T13:04:11.033Z",
+      "answers": [
+        {
+          "questionId": "dq-2026-07-13-1-86f32ce9",
+          "selectedIndex": 1,
+          "correctIndex": 1,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:02:42.030Z",
+          "explanation": "Phishing appeared 43 time(s) in the current trusted article pool used by Scam Weather."
+        },
+        {
+          "questionId": "dq-2026-07-13-2-2e7761cb",
+          "selectedIndex": 1,
+          "correctIndex": 1,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:02:50.685Z",
+          "explanation": "7 article(s) in the current quiz pool are within the last 24 hours. Older trusted items are allowed as fallback."
+        },
+        {
+          "questionId": "dq-2026-07-13-3-ce72178d",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:02:59.971Z",
+          "explanation": "The article card in Scam News traces this item back to The Hacker News. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "questionId": "dq-2026-07-13-4-a8278518",
+          "selectedIndex": 3,
+          "correctIndex": 3,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:03:18.902Z",
+          "explanation": "This article was classified as Phishing by the same keyword-scoring logic used by Scam Weather. Source: The Hacker News."
+        },
+        {
+          "questionId": "dq-2026-07-13-5-90c3159e",
+          "selectedIndex": 0,
+          "correctIndex": 1,
+          "correct": false,
+          "answeredAt": "2026-07-13T13:03:35.090Z",
+          "explanation": "Phishing is best handled by this precaution because it reduces the chance of trusting fake links, identities, files, or urgent requests."
+        },
+        {
+          "questionId": "dq-2026-07-13-6-fbfb6151",
+          "selectedIndex": 0,
+          "correctIndex": 1,
+          "correct": false,
+          "answeredAt": "2026-07-13T13:03:54.504Z",
+          "explanation": "The article card in Scam News traces this item back to BleepingComputer. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "questionId": "dq-2026-07-13-7-ff8089e6",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:04:00.825Z",
+          "explanation": "This article was classified as Ransomware by the same keyword-scoring logic used by Scam Weather. Source: BleepingComputer."
+        },
+        {
+          "questionId": "dq-2026-07-13-8-465bfb2d",
+          "selectedIndex": 1,
+          "correctIndex": 1,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:04:07.471Z",
+          "explanation": "Phishing is best handled by this precaution because it reduces the chance of trusting fake links, identities, files, or urgent requests."
+        },
+        {
+          "questionId": "dq-2026-07-13-9-0d96392c",
+          "selectedIndex": 1,
+          "correctIndex": 1,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:04:09.363Z",
+          "explanation": "The article card in Scam News traces this item back to BleepingComputer. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "questionId": "dq-2026-07-13-10-1bf379d5",
+          "selectedIndex": 2,
+          "correctIndex": 2,
+          "correct": true,
+          "answeredAt": "2026-07-13T13:04:11.033Z",
+          "explanation": "This article was classified as Phishing by the same keyword-scoring logic used by Scam Weather. Source: CISA Cybersecurity Advisories."
+        }
+      ],
+      "score": 8,
+      "reward": {
+        "action": "daily_quiz_completed",
+        "label": "Daily Quiz completed",
+        "gainedXp": 100,
+        "gainedCoins": 50,
+        "level": 2,
+        "rank": "Recruit",
+        "leveledUp": true,
+        "newBadges": [
+          {
+            "key": "quiz_rookie",
+            "name": "Quiz Rookie",
+            "icon": "🧠",
+            "desc": "Complete your first Daily Quiz"
+          }
+        ]
+      }
+    }
+  }
+}

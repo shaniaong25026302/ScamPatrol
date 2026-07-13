@@ -112,6 +112,11 @@ app.use("/cases", require("./routes/cases.pages.routes"));
 // API first: browser JavaScript uses these endpoints for daily-report automation.
 app.use("/api/scam-weather", require("./routes/scamweather.api.routes"));
 app.use("/scam-weather", require("./routes/scamweather.pages.routes"));
+
+// M5 Liam — Daily Quiz (10 automated Scam News questions per user per day).
+// It reuses Scam Weather's trusted article cache, then saves per-user progress.
+app.use("/api/daily-quiz", require("./routes/dailyquiz.api.routes"));
+app.use("/daily-quiz", require("./routes/dailyquiz.pages.routes"));
 // M6 Shawn — landing/glossary/admin
 // Shawn Start
 // Chat History (Shawn)
