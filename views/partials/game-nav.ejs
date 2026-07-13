@@ -18,9 +18,8 @@
       <a href="/scam-weather" class="<%= gp === 'scam-weather' ? 'active' : '' %>">Scam Weather</a>
       <a href="/leaderboard" class="<%= gp === 'leaderboard' ? 'active' : '' %>">Ranks</a>
     <% } else { %>
+      <%# Guests see only the Story tab. Scam Weather appears after login because it is part of the authenticated app experience. %>
       <a href="/" class="<%= gp === 'story' ? 'active' : '' %>">Story</a>
-      <%# Scam Weather is intentionally visible to guests so public-safety news is accessible. %>
-      <a href="/scam-weather" class="<%= gp === 'scam-weather' ? 'active' : '' %>">Scam Weather</a>
     <% } %>
   </nav>
   <div class="gw-mini-hud" id="mini-hud">

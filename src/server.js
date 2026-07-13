@@ -58,10 +58,10 @@ app.use((req, res, next) => {
     p === "/" ||
     p.startsWith("/auth") ||
     p.startsWith("/api/auth") ||
-    p.startsWith("/scam-weather") ||
-    p.startsWith("/api/scam-weather") ||
     p === "/api/health" ||
     p.startsWith("/api/game/story");
+  // Scam Weather is intentionally NOT in this guest allow-list.
+  // Result: guests see only Story/Login/Signup, while logged-in users see Scam Weather in the navbar.
   if (open) return next();
   if (p.startsWith("/api/")) return res.status(401).json({ error: "Login required." });
   return res.redirect("/");
