@@ -205,12 +205,11 @@ console.log(`Email: ${provider} HTTP API configured (sender ${senderIdentity().e
 console.log(`Password reset email sent via ... (id ${info.messageId}) -> ${toEmail}`);
 ```
 
-**10. Reliability / provider failover** — HTTP email API with SMTP fallback. `src/services/mail.service.js:184`
+**10. Reliability** — HTTP email API (Mailjet) with SMTP fallback. `src/services/mail.service.js`
 ```js
-// [DevOps: Reliability / provider failover]
-if (process.env.RESEND_API_KEY) { /* Resend */ }
-if (process.env.BREVO_API_KEY) { /* Brevo */ }
-if (hasMailjet()) { /* Mailjet */ }
+// [DevOps: Reliability]
+if (hasMailjet()) { /* Mailjet HTTPS API — port 443, works even where SMTP is blocked */ }
+// else fall back to plain SMTP
 ```
 
 **11. Security by default (DevSecOps)**

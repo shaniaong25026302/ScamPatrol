@@ -65,11 +65,9 @@ GEMINI_MODEL=gemini-2.5-flash
 # Email — sender identity
 MAIL_FROM=Scam Patrol <your-verified-sender@gmail.com>
 
-# Email — HTTP API (REQUIRED on hosts that block SMTP, e.g. Render). Use ONE:
+# Email — HTTP API (REQUIRED on hosts that block SMTP, e.g. Render):
 MAILJET_API_KEY=your-mailjet-api-key
 MAILJET_SECRET_KEY=your-mailjet-secret-key
-# RESEND_API_KEY=re_xxx          # alternative
-# BREVO_API_KEY=xkeysib-xxx      # alternative
 
 # Email — SMTP fallback (works locally; blocked on Render free tier)
 SMTP_HOST=smtp.gmail.com
@@ -355,7 +353,7 @@ app.use("/cases", require("./routes/cases.pages.routes"));     // pages
 
 **Important platform notes:**
 - Render's free tier **blocks outbound SMTP** (ports 25/465/587). Email must go through an
-  **HTTP API** (Mailjet / Resend / Brevo) — that's why `MAILJET_API_KEY` is required on Render.
+  **HTTP API** (Mailjet) — that's why `MAILJET_API_KEY` is required on Render.
 - Render has **no outbound IPv6**; the app forces IPv4 DNS in `server.js` so email/DB connect.
 - Free tier **sleeps after ~15 min** of no traffic (slow first request). To keep it awake, point a
   free uptime monitor (cron-job.org / UptimeRobot) at `/api/health` every ~10 minutes.
