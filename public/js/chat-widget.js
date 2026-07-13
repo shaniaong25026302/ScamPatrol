@@ -15,6 +15,7 @@
   const historyList = document.getElementById("chat-history-list");
   //Shawn End
 
+
   if (!launcher || !panel || !box || !form || !input) return;
 
   const esc = (s) =>
@@ -30,100 +31,175 @@
 
   // <Rebecca Feature 3 Start>
   // Voice Input / Output: hold mic to transcribe speech into the textbox, and read Hoot's replies aloud.
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const canUseSpeechRecognition = Boolean(SpeechRecognition);
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const canUseSpeechRecognition = Boolean(SpeechRecognitionCtor);
   const canUseSpeechSynthesis = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  const speechSafeHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  const speechAllowedContext = window.isSecureContext || speechSafeHost;
+
   let recognition = null;
   let isListening = false;
   let baseVoiceText = "";
   let finalTranscript = "";
+  let lastInterimTranscript = "";
 
   function voiceLang() {
-    return document.documentElement.lang || "en-SG";
+    const rawLang = (document.documentElement.lang || navigator.language || "en-US").toLowerCase();
+
+    // Chrome/Edge speech recognition is picky with some locale codes. These defaults are safer for demo.
+    if (rawLang.startsWith("ms") || rawLang.startsWith("ms-my")) return "ms-MY";
+    if (rawLang.startsWith("zh")) return "zh-CN";
+    if (rawLang.startsWith("ta")) return "ta-IN";
+    if (rawLang.startsWith("ja")) return "ja-JP";
+    if (rawLang.startsWith("ko")) return "ko-KR";
+    if (rawLang.startsWith("es")) return "es-ES";
+    return "en-US";
   }
 
   function setVoiceStatus(message) {
     if (voiceStatus) voiceStatus.textContent = message || "";
   }
 
-  function updateVoiceInput(interimTranscript) {
-    const pieces = [];
-    if (baseVoiceText) pieces.push(baseVoiceText);
-    if (finalTranscript.trim()) pieces.push(finalTranscript.trim());
-    if (interimTranscript && interimTranscript.trim()) pieces.push(interimTranscript.trim());
-    input.value = pieces.join(" ").replace(/\s+/g, " ").trimStart();
+  function placeCursorAtEnd() {
+    const end = input.value.length;
+    input.focus();
+    input.setSelectionRange?.(end, end);
+  }
+
+  function updateVoiceInput(interimTranscript = "") {
+    const parts = [];
+    if (baseVoiceText) parts.push(baseVoiceText);
+    if (finalTranscript.trim()) parts.push(finalTranscript.trim());
+    if (interimTranscript.trim()) parts.push(interimTranscript.trim());
+
+    input.value = parts.join(" ").replace(/\s+/g, " ").trimStart();
+    placeCursorAtEnd();
+  }
+
+  function resetMicButton() {
+    if (!micBtn) return;
+    micBtn.classList.remove("listening");
+    micBtn.textContent = "🎙️";
+    micBtn.setAttribute("aria-label", "Hold to speak");
+    micBtn.setAttribute("title", "Hold to speak");
+  }
+
+  function markMicListening() {
+    if (!micBtn) return;
+    micBtn.classList.add("listening");
+    micBtn.textContent = "🛑";
+    micBtn.setAttribute("aria-label", "Release to stop speaking");
+    micBtn.setAttribute("title", "Release to stop speaking");
   }
 
   function buildRecognition() {
     if (!canUseSpeechRecognition) return null;
-    const r = new SpeechRecognition();
+
+    const r = new SpeechRecognitionCtor();
     r.continuous = true;
     r.interimResults = true;
+    r.maxAlternatives = 1;
     r.lang = voiceLang();
 
     r.onstart = () => {
       isListening = true;
       finalTranscript = "";
+      lastInterimTranscript = "";
       baseVoiceText = input.value.trim();
-      if (micBtn) {
-        micBtn.classList.add("listening");
-        micBtn.textContent = "🛑";
-        micBtn.setAttribute("aria-label", "Release to stop speaking");
-        micBtn.setAttribute("title", "Release to stop speaking");
-      }
+      markMicListening();
       setVoiceStatus("Listening… release to stop");
     };
 
     r.onresult = (event) => {
       let interimTranscript = "";
+
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) finalTranscript += transcript + " ";
-        else interimTranscript += transcript;
+        const transcript = event.results[i][0]?.transcript || "";
+
+        if (event.results[i].isFinal) {
+          finalTranscript += `${transcript} `;
+        } else {
+          interimTranscript += transcript;
+        }
       }
+
+      lastInterimTranscript = interimTranscript;
       updateVoiceInput(interimTranscript);
     };
 
     r.onerror = (event) => {
-      const reason = event.error === "not-allowed"
-        ? "Mic permission blocked"
-        : event.error === "no-speech"
-          ? "No speech detected"
-          : "Voice input unavailable";
-      setVoiceStatus(reason);
+      const error = event.error || "unknown";
+      const messages = {
+        "not-allowed": "Mic permission blocked. Allow microphone access.",
+        "service-not-allowed": "Voice input needs Chrome/Edge on localhost or HTTPS.",
+        "audio-capture": "No microphone found or mic is disabled.",
+        network: "Voice input needs internet/browser speech service.",
+        "no-speech": "No speech detected. Hold mic and speak clearly.",
+        aborted: "Voice input stopped.",
+        "language-not-supported": "Voice language not supported. Using English may help.",
+      };
+
+      setVoiceStatus(messages[error] || `Voice input unavailable: ${error}`);
     };
 
     r.onend = () => {
       isListening = false;
-      if (micBtn) {
-        micBtn.classList.remove("listening");
-        micBtn.textContent = "🎙️";
-        micBtn.setAttribute("aria-label", "Hold to speak");
-        micBtn.setAttribute("title", "Hold to speak");
+
+      // Some browsers only return interim text before the user releases the mic.
+      if (!finalTranscript.trim() && lastInterimTranscript.trim()) {
+        finalTranscript = `${lastInterimTranscript.trim()} `;
+        updateVoiceInput("");
       }
-      if (input.value.trim()) setVoiceStatus("Speech added to text box");
-      setTimeout(() => setVoiceStatus(""), 2500);
-      input.focus();
+
+      resetMicButton();
+
+      if (input.value.trim()) {
+        setVoiceStatus("Speech added to text box. Edit before sending.");
+      }
+
+      setTimeout(() => setVoiceStatus(""), 3500);
+      placeCursorAtEnd();
     };
 
     return r;
   }
 
   function startVoiceInput() {
-    if (!micBtn || !canUseSpeechRecognition || busy || isListening) return;
+    if (!micBtn || busy || isListening) return;
+
+    if (!speechAllowedContext) {
+      setVoiceStatus("Use localhost or HTTPS for voice input.");
+      return;
+    }
+
+    if (!canUseSpeechRecognition) {
+      setVoiceStatus("Voice input works on Chrome/Edge only.");
+      return;
+    }
+
     try {
+      if (recognition) {
+        recognition.onend = null;
+        try { recognition.abort(); } catch (_) {}
+      }
+
       recognition = buildRecognition();
       recognition.start();
-    } catch (_) {
-      setVoiceStatus("Voice input could not start");
+    } catch (error) {
+      resetMicButton();
+      isListening = false;
+      setVoiceStatus(`Voice input could not start: ${error.name || "browser error"}`);
     }
   }
 
   function stopVoiceInput() {
     if (!recognition || !isListening) return;
+
     try {
       recognition.stop();
     } catch (_) {
+      resetMicButton();
+      isListening = false;
       setVoiceStatus("Voice input stopped");
     }
   }
@@ -174,25 +250,35 @@
   }
 
   if (micBtn) {
-    if (!canUseSpeechRecognition) {
-      micBtn.disabled = true;
-      micBtn.title = "Voice input is not supported in this browser";
-      micBtn.setAttribute("aria-label", "Voice input not supported");
-      setVoiceStatus("Voice input not supported in this browser");
-      setTimeout(() => setVoiceStatus(""), 3000);
-    } else {
-      micBtn.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        micBtn.setPointerCapture?.(e.pointerId);
-        startVoiceInput();
-      });
-      micBtn.addEventListener("pointerup", (e) => {
-        e.preventDefault();
-        stopVoiceInput();
-      });
-      micBtn.addEventListener("pointercancel", stopVoiceInput);
-      micBtn.addEventListener("pointerleave", stopVoiceInput);
+    if (!speechAllowedContext) {
+      micBtn.title = "Voice input needs localhost or HTTPS";
+      micBtn.setAttribute("aria-label", "Voice input needs localhost or HTTPS");
+    } else if (!canUseSpeechRecognition) {
+      micBtn.title = "Voice input works on Chrome or Edge";
+      micBtn.setAttribute("aria-label", "Voice input works on Chrome or Edge");
     }
+
+    const holdStart = (e) => {
+      e.preventDefault();
+      startVoiceInput();
+    };
+    const holdStop = (e) => {
+      e?.preventDefault?.();
+      stopVoiceInput();
+    };
+
+    // Support mouse, touch, stylus, and keyboard so the demo works across more devices.
+    micBtn.addEventListener("pointerdown", holdStart);
+    window.addEventListener("pointerup", holdStop);
+    window.addEventListener("pointercancel", holdStop);
+    micBtn.addEventListener("touchstart", holdStart, { passive: false });
+    window.addEventListener("touchend", holdStop, { passive: false });
+    micBtn.addEventListener("keydown", (e) => {
+      if (e.code === "Space" || e.code === "Enter") holdStart(e);
+    });
+    micBtn.addEventListener("keyup", (e) => {
+      if (e.code === "Space" || e.code === "Enter") holdStop(e);
+    });
   }
   // <Rebecca Feature 3 End>
 
@@ -285,91 +371,65 @@
   async function loadSessions() {
 
       const r = await fetch("/api/chat/sessions");
+
       if (!r.ok) return;
+
       sessions = await r.json();
+
       const list = document.getElementById("chat-history-list");
+
       list.innerHTML = "";
+
       sessions.forEach(session => {
+
           const div = document.createElement("div");
+
           div.className = "chat-history-item";
+
           div.textContent = session.title;
+
           div.onclick = () => {
               loadConversation(session.id);
           };
+
           // loadConversation
           async function loadConversation(id) {
+
               const r = await fetch("/api/chat/" + id);
+
               if (!r.ok) return;
+
               const messages = await r.json();
+
               sessionId = id;
+
               history.length = 0;
+
               box.innerHTML = "";
+
               messages.forEach(msg => {
+
                   history.push({
                       role: msg.role,
                       text: msg.message
                   });
+
                   addBubble(
                       msg.role,
                       msg.message
                   );
+
               });
-          }  
+
+          }
+          // Shawn End
+
           list.appendChild(div);
+
       });
+
   }
   // Shawn End
-
-  // CG Start
-  const langSelect = document.getElementById("chatbot-language");
-  let chatLang = "en"; // default language
-
-    if (langSelect) {
-    langSelect.addEventListener("change", () => {
-      chatLang = langSelect.value;
-    });
-  }
-
-  async function send(text) {
-    const msg = String(text || "").trim();
-    if (!msg || busy) return;
-    stopVoiceInput();
-    busy = true;
-    input.value = "";
-    addBubble("user", msg);
-    history.push({ role: "user", text: msg });
-    showTyping();
-    if (window.SOUND) window.SOUND.sfx.click();
-    try {
-      const r = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: history,
-          sessionId, // Shawn’s feature
-          language: chatLang // Erlisya’s feature
-        }),
-      });
-      const d = await r.json().catch(() => ({}));
-      hideTyping();
-      const reply = r.ok && d.reply ? d.reply : d.error || "Inspector Hoot is unavailable right now — try again shortly.";
-      addBubble("assistant", reply);
-      if (r.ok && d.reply) {
-        history.push({ role: "assistant", text: d.reply });
-        if (d.sessionId) {
-          sessionId = d.sessionId;
-        }
-        if (window.SOUND) window.SOUND.sfx.hoot();
-      }
-    } catch (_) {
-      hideTyping();
-      addBubble("assistant", "Something went wrong — please try again.");
-    } finally {
-      busy = false;
-      input.focus();
-    }
-  }
-  // CG End
 
   function open() {
     panel.hidden = false;
