@@ -1,0 +1,192 @@
+{
+  "quizzes": {
+    "2026-07-13": {
+      "date": "2026-07-13",
+      "generatedAt": "2026-07-13T13:02:15.481Z",
+      "sourcePolicy": "Generated automatically from Scam Weather Scam News trusted articles.",
+      "totalQuestions": 10,
+      "questions": [
+        {
+          "id": "dq-2026-07-13-1-86f32ce9",
+          "kind": "statistic",
+          "prompt": "According to today's Scam News article pool, which scam type appears most often?",
+          "articleTitle": "Scam Weather data signal",
+          "articleSnippet": "Daily Quiz counted scam-type labels across 56 trusted articles cached by Scam Weather.",
+          "articleLink": "/scam-weather",
+          "sourceName": "Scam Weather automation",
+          "publishedAt": "2026-07-13T13:02:15.459Z",
+          "options": [
+            "Botnet",
+            "Phishing",
+            "Zero Day",
+            "Baiting"
+          ],
+          "correctIndex": 1,
+          "explanation": "Phishing appeared 43 time(s) in the current trusted article pool used by Scam Weather."
+        },
+        {
+          "id": "dq-2026-07-13-2-2e7761cb",
+          "kind": "statistic",
+          "prompt": "How many articles in today's Scam News pool were published within the last 24 hours?",
+          "articleTitle": "Scam Weather freshness policy",
+          "articleSnippet": "Scam Weather prefers 24-hour articles, then backfills with the latest older trusted articles so the page never looks empty.",
+          "articleLink": "/scam-weather",
+          "sourceName": "Scam Weather automation",
+          "publishedAt": "2026-07-13T13:02:15.459Z",
+          "options": [
+            "4",
+            "7",
+            "2",
+            "5"
+          ],
+          "correctIndex": 1,
+          "explanation": "7 article(s) in the current quiz pool are within the last 24 hours. Older trusted items are allowed as fallback."
+        },
+        {
+          "id": "dq-2026-07-13-3-ce72178d",
+          "kind": "source",
+          "prompt": "Which trusted source did Scam Weather use for this article?",
+          "articleTitle": "Hackers Use Fake Microsoft Entra Passkey Enrollment to Gain Microsoft 365 Access",
+          "articleSnippet": "A threat actor has been targeting organizations spanning multiple sectors with voice-based fake security requests that prompt Microsoft 365 users to enroll a new Entra passkey with an aim to carry out data ext…",
+          "articleLink": "https://thehackernews.com/2026/07/hackers-use-fake-microsoft-entra.html",
+          "sourceName": "The Hacker News",
+          "publishedAt": "2026-07-10T10:30:20.000Z",
+          "options": [
+            "Singapore Police Force — Scams",
+            "FTC Consumer Advice — Scams",
+            "The Hacker News",
+            "Help Net Security"
+          ],
+          "correctIndex": 2,
+          "explanation": "The article card in Scam News traces this item back to The Hacker News. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "id": "dq-2026-07-13-4-a8278518",
+          "kind": "scam-type",
+          "prompt": "Based on this Scam News article, which scam/cyber threat type fits best?",
+          "articleTitle": "SCMBANKER Malware Uses ClickFix Lures to Target Mexican Banking Users",
+          "articleSnippet": "A new banking fraudulent operation is targeting customers of Mexican banks, fintech, payment processors, and cryptocurrency exchanges using ClickFix lures. The activity cluster, tracked by Elastic Security Lab…",
+          "articleLink": "https://thehackernews.com/2026/07/scmbanker-malware-uses-clickfix-lures.html",
+          "sourceName": "The Hacker News",
+          "publishedAt": "2026-07-08T12:52:15.000Z",
+          "options": [
+            "Baiting",
+            "Identity Theft",
+            "Trojan",
+            "Phishing"
+          ],
+          "correctIndex": 3,
+          "explanation": "This article was classified as Phishing by the same keyword-scoring logic used by Scam Weather. Source: The Hacker News."
+        },
+        {
+          "id": "dq-2026-07-13-5-90c3159e",
+          "kind": "precaution",
+          "prompt": "Which precaution best matches the Phishing risk described in this article?",
+          "articleTitle": "Siemens SINEC OS",
+          "articleSnippet": "View CSAF Summary SINEC OS before V4.0 contains multiple vulnerabilities. Siemens has released a new version for RUGGEDCOM RST2428P and recommends to update to the latest version. The following versions of Sie…",
+          "articleLink": "https://www.cisa.gov/news-events/ics-advisories/icsa-26-188-05",
+          "sourceName": "CISA Cybersecurity Advisories",
+          "publishedAt": "2026-07-07T12:00:00.000Z",
+          "options": [
+            "Never share NRIC, passport, Singpass, OTP, or card details through unsolicited messages.",
+            "Verify the sender and type the official website manually instead of clicking message links.",
+            "Keep offline backups, patch quickly, and do not open suspicious attachments.",
+            "Review app permissions and avoid installing tools that ask for unnecessary access."
+          ],
+          "correctIndex": 1,
+          "explanation": "Phishing is best handled by this precaution because it reduces the chance of trusting fake links, identities, files, or urgent requests."
+        },
+        {
+          "id": "dq-2026-07-13-6-fbfb6151",
+          "kind": "source",
+          "prompt": "Which trusted source did Scam Weather use for this article?",
+          "articleTitle": "Hackers exploit critical auth bypass in Gitea Docker image",
+          "articleSnippet": "Hackers are actively exploiting a critical vulnerability in the official Docker image for the Gitea self-hosted Git service that allows attackers to impersonate any user, including administrators. [...]",
+          "articleLink": "https://www.bleepingcomputer.com/news/security/hackers-exploit-critical-auth-bypass-in-gitea-docker-image/",
+          "sourceName": "BleepingComputer",
+          "publishedAt": "2026-07-10T15:48:38.000Z",
+          "options": [
+            "Singapore Police Force — Scams",
+            "BleepingComputer",
+            "Singapore ScamShield",
+            "FTC Consumer Advice — Scams"
+          ],
+          "correctIndex": 1,
+          "explanation": "The article card in Scam News traces this item back to BleepingComputer. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "id": "dq-2026-07-13-7-ff8089e6",
+          "kind": "scam-type",
+          "prompt": "Based on this Scam News article, which scam/cyber threat type fits best?",
+          "articleTitle": "Ryuk ransomware member pleads guilty in the US, faces 15 years in prison",
+          "articleSnippet": "A 34-year-old Armenian man has pleaded guilty to hacking U.S. companies and deploying the infamous Ryuk ransomware to encrypt their systems. [...]",
+          "articleLink": "https://www.bleepingcomputer.com/news/security/ryuk-ransomware-member-pleads-guilty-in-the-us-faces-15-years-in-prison/",
+          "sourceName": "BleepingComputer",
+          "publishedAt": "2026-07-10T17:46:10.000Z",
+          "options": [
+            "Ransomware",
+            "Pretext",
+            "Spear-Phishing",
+            "Trojan"
+          ],
+          "correctIndex": 0,
+          "explanation": "This article was classified as Ransomware by the same keyword-scoring logic used by Scam Weather. Source: BleepingComputer."
+        },
+        {
+          "id": "dq-2026-07-13-8-465bfb2d",
+          "kind": "precaution",
+          "prompt": "Which precaution best matches the Phishing risk described in this article?",
+          "articleTitle": "OFFIS DCMTK Toolkit",
+          "articleSnippet": "View CSAF Summary Successful exploitation of these vulnerabilities could allow an attacker to write files, access unauthorized information, exhaust memory, or crash affected DCMTK client or server processes. T…",
+          "articleLink": "https://www.cisa.gov/news-events/ics-medical-advisories/icsma-26-181-01",
+          "sourceName": "CISA Cybersecurity Advisories",
+          "publishedAt": "2026-06-30T12:00:00.000Z",
+          "options": [
+            "Review app permissions and avoid installing tools that ask for unnecessary access.",
+            "Verify the sender and type the official website manually instead of clicking message links.",
+            "Reply quickly with your OTP so the request does not expire.",
+            "Apply vendor mitigations quickly and watch official advisories until a patch is available."
+          ],
+          "correctIndex": 1,
+          "explanation": "Phishing is best handled by this precaution because it reduces the chance of trusting fake links, identities, files, or urgent requests."
+        },
+        {
+          "id": "dq-2026-07-13-9-0d96392c",
+          "kind": "source",
+          "prompt": "Which trusted source did Scam Weather use for this article?",
+          "articleTitle": "Ryuk ransomware member pleads guilty in the US, faces 15 years in prison",
+          "articleSnippet": "A 34-year-old Armenian man has pleaded guilty to hacking U.S. companies and deploying the infamous Ryuk ransomware to encrypt their systems. [...]",
+          "articleLink": "https://www.bleepingcomputer.com/news/security/ryuk-ransomware-member-pleads-guilty-in-the-us-faces-15-years-in-prison/",
+          "sourceName": "BleepingComputer",
+          "publishedAt": "2026-07-10T17:46:10.000Z",
+          "options": [
+            "FTC Consumer Advice — Scams",
+            "BleepingComputer",
+            "KrebsOnSecurity",
+            "Singapore ScamShield"
+          ],
+          "correctIndex": 1,
+          "explanation": "The article card in Scam News traces this item back to BleepingComputer. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "id": "dq-2026-07-13-10-1bf379d5",
+          "kind": "scam-type",
+          "prompt": "Based on this Scam News article, which scam/cyber threat type fits best?",
+          "articleTitle": "Siemens SINEC OS",
+          "articleSnippet": "View CSAF Summary SINEC OS before V4.0 contains multiple vulnerabilities. Siemens has released a new version for RUGGEDCOM RST2428P and recommends to update to the latest version. The following versions of Sie…",
+          "articleLink": "https://www.cisa.gov/news-events/ics-advisories/icsa-26-188-05",
+          "sourceName": "CISA Cybersecurity Advisories",
+          "publishedAt": "2026-07-07T12:00:00.000Z",
+          "options": [
+            "Tailgate",
+            "Virus",
+            "Phishing",
+            "Botnet"
+          ],
+          "correctIndex": 2,
+          "explanation": "This article was classified as Phishing by the same keyword-scoring logic used by Scam Weather. Source: CISA Cybersecurity Advisories."
+        }
+      ]
+    }
+  }
+}

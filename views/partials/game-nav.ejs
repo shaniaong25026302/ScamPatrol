@@ -23,6 +23,8 @@
       <% } %>
       <%# <Shawn Member 6 End> %>
       <a href="/scam-weather" class="<%= gp === 'scam-weather' ? 'active' : '' %>">Scam Weather</a>
+      <%# Daily Quiz status is filled by /js/daily-quiz-nav.js after each page load. %>
+      <a href="/daily-quiz" id="daily-quiz-nav-link" class="<%= gp === 'daily-quiz' ? 'active' : '' %> dq-nav-link">Daily Quiz</a>
       <a href="/leaderboard" class="<%= gp === 'leaderboard' ? 'active' : '' %>">Ranks</a>
     <% } else { %>
       <%# Guests should only see Story. Scam Weather appears only after login. %>

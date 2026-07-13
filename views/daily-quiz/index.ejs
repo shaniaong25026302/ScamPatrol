@@ -1,0 +1,108 @@
+<%# <Liam Member 5 Daily Quiz Start> %>
+<%
+// views/daily-quiz/index.ejs
+// -----------------------------------------------------------------------------
+// Daily Quiz page shell.
+// The actual questions are loaded from /api/daily-quiz/today so the user's
+// saved progress can be restored even after refreshing or switching pages.
+// -----------------------------------------------------------------------------
+const status = typeof initialStatus !== 'undefined' ? initialStatus : null;
+%>
+
+<section class="gw-hero dq-hero">
+  <div class="dq-hero-copy">
+    <p class="muted">Automated Scam News challenge</p>
+    <h1>🧠 Daily Quiz</h1>
+    <p>
+      Answer 10 scam-awareness questions generated from today’s Scam Weather article pool.
+      Your progress is saved, and your final score decides how much EXP and coins you earn.
+    </p>
+    <div class="dq-hero-actions">
+      <button class="gw-btn gold" id="dq-start-btn" type="button">Start / Continue</button>
+      <a href="/scam-weather" class="gw-btn ghost">View Scam Weather sources</a>
+    </div>
+  </div>
+
+  <div class="panel dq-status-card" id="dq-status-card" data-initial-state="<%= status ? status.state : 'ready' %>">
+    <p class="muted">Today’s status</p>
+    <h2 id="dq-status-title"><%= status ? status.navLabel : 'Daily Quiz ✨' %></h2>
+    <p id="dq-status-desc" class="muted">
+      <%= status ? status.navTitle : 'A new 10-question quiz is ready.' %>
+    </p>
+    <div class="dq-stat-row">
+      <span class="gw-chip">📌 <b id="dq-progress-chip"><%= status ? `${status.answeredCount}/${status.totalQuestions}` : '0/10' %></b></span>
+      <span class="gw-chip">🎯 Score <b id="dq-score-chip"><%= status ? status.score : 0 %></b></span>
+    </div>
+  </div>
+</section>
+
+<section class="gw-grid dq-grid">
+  <section class="panel col-8 dq-question-panel" id="dq-question-panel" aria-live="polite">
+    <div id="dq-loading" class="dq-loading">
+      <span class="dq-spinner">🌀</span>
+      <div>
+        <strong>Preparing today’s quiz…</strong>
+        <p class="muted">Scam Patrol is reading Scam Weather’s trusted article cache.</p>
+      </div>
+    </div>
+
+    <div id="dq-completed" class="dq-completed dq-hidden">
+      <h2>Quiz completed for today</h2>
+      <p class="muted">Come back tomorrow for a fresh set of Scam News questions.</p>
+      <div class="dq-final-score">
+        <span id="dq-final-score">0/10</span>
+        <small>final score</small>
+      </div>
+      <p id="dq-final-reward" class="muted"></p>
+      <a href="/hq" class="gw-btn gold">Return to HQ</a>
+    </div>
+
+    <div id="dq-question-wrap" class="dq-hidden">
+      <div class="dq-question-topline">
+        <span class="gw-chip" id="dq-question-count">Question 1/10</span>
+        <span class="gw-chip" id="dq-question-kind">Scam type</span>
+      </div>
+
+      <h2 id="dq-prompt">Loading question…</h2>
+
+      <article class="dq-article-box">
+        <p class="muted">Article clue</p>
+        <h3 id="dq-article-title"></h3>
+        <p id="dq-article-snippet"></p>
+        <p class="muted">
+          Source: <span id="dq-source-name"></span>
+          · <a id="dq-article-link" href="#" target="_blank" rel="noopener noreferrer">open source</a>
+        </p>
+      </article>
+
+      <form id="dq-answer-form" class="dq-options"></form>
+
+      <div id="dq-feedback" class="dq-feedback dq-hidden"></div>
+    </div>
+  </section>
+
+  <aside class="panel col-4 dq-side-panel">
+    <h2>How rewards work</h2>
+    <p class="muted">
+      Rewards are awarded once, after all 10 questions are answered.
+      Better score = more EXP and coins.
+    </p>
+    <ul class="dq-rules">
+      <li>✅ +10 EXP per correct answer</li>
+      <li>🪙 +5 coins per correct answer</li>
+      <li>🎁 Completion bonus: +20 EXP and +10 coins</li>
+      <li>🔒 One completed quiz per user per day</li>
+    </ul>
+
+    <details class="dq-source-note" open>
+      <summary>Why it is automatic</summary>
+      <p class="muted">
+        Daily Quiz reads Scam Weather’s Scam News cache, chooses article-based questions,
+        mixes in data-signal questions, and stores each user’s progress separately.
+      </p>
+    </details>
+  </aside>
+</section>
+
+<script src="/js/daily-quiz.js" defer></script>
+<%# <Liam Member 5 Daily Quiz End> %>

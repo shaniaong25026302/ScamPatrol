@@ -64,6 +64,10 @@ const BADGES = [
   { key: "chief", name: "Chief", icon: "⭐", desc: "Reach level 10", check: (s) => (s.profile.level || 1) >= 10 },
   { key: "guardian", name: "Community Guardian", icon: "🛡️", desc: "Report 5 scams", check: (s) => (s.counts.case_report || 0) >= 5 },
   { key: "second_chance", name: "Second Chance", icon: "⏳", desc: "Complete the origin story", check: (s) => (s.counts.story_win || 0) >= 1 },
+  // Liam Daily Quiz badges: these use xp_events logged by dailyquiz.service.js.
+  { key: "quiz_rookie", name: "Quiz Rookie", icon: "🧠", desc: "Complete your first Daily Quiz", check: (s) => (s.counts.daily_quiz_completed || 0) >= 1 },
+  { key: "scam_scholar", name: "Scam Scholar", icon: "📚", desc: "Complete 5 Daily Quizzes", check: (s) => (s.counts.daily_quiz_completed || 0) >= 5 },
+  { key: "perfect_patrol", name: "Perfect Patrol", icon: "💯", desc: "Score 10/10 on a Daily Quiz", check: (s) => (s.counts.daily_quiz_perfect || 0) >= 1 },
 ];
 
 // Format a date as YYYY-MM-DD using LOCAL components (avoids the UTC day-shift that

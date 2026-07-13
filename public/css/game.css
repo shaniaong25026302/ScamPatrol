@@ -908,3 +908,226 @@ img.owl { image-rendering: auto; }
 }
 
 /* Shawn End */
+/* <Liam Member 5 Daily Quiz Start> */
+/* =========================================================
+   DAILY QUIZ — automated Scam News challenge
+   Scoped with dq-* so it does not collide with teammates' CSS.
+   ========================================================= */
+.gw-nav a.dq-nav-link {
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.gw-nav a.dq-nav-ready {
+  color: #07140b;
+  background: linear-gradient(135deg, #5cff9d, var(--gw-green));
+  border-color: rgba(92, 255, 157, .8);
+  box-shadow: 0 0 16px rgba(46, 204, 113, .48);
+}
+
+.gw-nav a.dq-nav-ready.dq-nav-blink {
+  animation: dq-nav-blink 0.45s ease-in-out 4;
+}
+
+.gw-nav a.dq-nav-progress {
+  color: #2a1c00;
+  background: linear-gradient(135deg, #ffe08a, var(--gw-gold));
+  border-color: rgba(255, 194, 75, .8);
+  box-shadow: 0 0 14px rgba(255, 194, 75, .35);
+}
+
+.gw-nav a.dq-nav-completed {
+  color: #6e768d;
+  background: rgba(75, 83, 105, .45);
+  border-color: rgba(147, 160, 189, .25);
+  box-shadow: none;
+  filter: grayscale(.7);
+}
+
+@keyframes dq-nav-blink {
+  0%, 100% { filter: brightness(1); transform: translateY(0); }
+  50% { filter: brightness(1.7); transform: translateY(-1px); }
+}
+
+.dq-hero {
+  align-items: stretch;
+}
+
+.dq-hero-copy {
+  flex: 1 1 560px;
+}
+
+.dq-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-top: 1rem;
+}
+
+.dq-status-card {
+  flex: 0 1 340px;
+  border-color: rgba(46, 204, 113, .45);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.25), 0 0 24px rgba(46, 204, 113, .12);
+}
+
+.dq-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .8rem;
+}
+
+.dq-question-panel,
+.dq-side-panel {
+  min-height: 360px;
+}
+
+.dq-loading {
+  display: flex;
+  gap: .9rem;
+  align-items: center;
+  min-height: 260px;
+}
+
+.dq-spinner {
+  display: inline-block;
+  font-size: 2.2rem;
+  animation: spin 1s linear infinite;
+}
+
+.dq-hidden {
+  display: none !important;
+}
+
+.dq-question-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-bottom: .8rem;
+}
+
+.dq-article-box {
+  margin: 1rem 0;
+  padding: .9rem;
+  background: rgba(0,0,0,.18);
+  border: 2px dashed rgba(65, 208, 224, .35);
+  border-radius: 6px;
+}
+
+.dq-article-box h3 {
+  color: #fff;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: .4rem;
+}
+
+.dq-options {
+  display: grid;
+  gap: .7rem;
+}
+
+.dq-option {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--gw-text);
+  background: var(--gw-panel2);
+  border: 2px solid var(--gw-border);
+  border-radius: 6px;
+  padding: .75rem .85rem;
+  font-family: "VT323", monospace;
+  font-size: 1.12rem;
+}
+
+.dq-option:hover:not(:disabled),
+.dq-option.selected {
+  border-color: var(--gw-cyan);
+  box-shadow: 0 0 16px rgba(65, 208, 224, .22);
+}
+
+.dq-option:disabled {
+  opacity: .75;
+  cursor: not-allowed;
+}
+
+.dq-option-letter {
+  flex: 0 0 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  color: #07140b;
+  background: var(--gw-cyan);
+  border-radius: 4px;
+  font-weight: 900;
+}
+
+.dq-feedback {
+  margin-top: 1rem;
+  padding: .9rem;
+  border-radius: 6px;
+  border: 2px solid var(--gw-border);
+  background: rgba(0,0,0,.2);
+}
+
+.dq-feedback.correct {
+  border-color: var(--gw-green);
+  box-shadow: 0 0 20px rgba(46, 204, 113, .16);
+}
+
+.dq-feedback.wrong {
+  border-color: var(--gw-red);
+  box-shadow: 0 0 20px rgba(255, 77, 77, .14);
+}
+
+.dq-feedback .gw-btn {
+  margin-top: .65rem;
+}
+
+.dq-final-score {
+  display: inline-grid;
+  place-items: center;
+  min-width: 130px;
+  padding: 1rem;
+  margin: 1rem 0;
+  background: rgba(255, 194, 75, .12);
+  border: 2px solid rgba(255, 194, 75, .45);
+  border-radius: 6px;
+}
+
+.dq-final-score span {
+  color: var(--gw-gold);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.dq-final-score small {
+  color: var(--gw-muted);
+}
+
+.dq-rules {
+  margin: .8rem 0 1rem;
+  padding-left: 1.15rem;
+}
+
+.dq-rules li {
+  margin-bottom: .4rem;
+}
+
+.dq-source-note {
+  border-top: 2px solid var(--gw-border);
+  padding-top: .8rem;
+}
+
+.dq-source-note summary {
+  cursor: pointer;
+  color: var(--gw-cyan);
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .dq-status-card { flex-basis: 100%; }
+}
+/* <Liam Member 5 Daily Quiz End> */
