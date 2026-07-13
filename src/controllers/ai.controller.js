@@ -5,7 +5,7 @@
 //   relationship  → long-con / romance scam timeline mapper
 const Ai = require("../models/ai.model");
 // Shawn Start 
-const Chat = require("../models/chat.model"); // for chat history
+const Chat = require("../models/chat-hist.model"); // for chat history
 // Shawn End
 const { analyzeText, analyzeRelationship, chatReply } = require("../services/gemini.service");
 const gamify = require("../services/gamification.service");
@@ -92,6 +92,7 @@ async function relationship(req, res) {
 // Body: { messages: [{ role: 'user'|'assistant', text }] } — the whole conversation.
 const MAX_CHAT_MSGS = 20;
 async function chat(req, res) {
+
   const raw = Array.isArray((req.body || {}).messages) ? req.body.messages : null;
   if (!raw || !raw.length) return res.status(400).json({ error: "Send a message." });
 
@@ -117,7 +118,9 @@ async function chat(req, res) {
         ? messages[0].text.substring(0, 40) + "..."
         : messages[0].text;
 
+    console.log("Creating session...");
     sessionId = await Chat.createSession(req.user.id, title);
+    console.log("Created session:", sessionId);
 
   }
 

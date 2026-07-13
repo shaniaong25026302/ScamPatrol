@@ -18,6 +18,7 @@
   const history = [];
   // <Shawn Feature Start>
   let sessionId = null;
+  let sessions = [];
   // <Shawn Feature End>
   let busy = false;
   let greeted = false;
@@ -275,8 +276,73 @@
     }
   }
 
+  // Shawn Start
+  async function loadSessions() {
+
+      const r = await fetch("/api/chat/sessions");
+
+      if (!r.ok) return;
+
+      sessions = await r.json();
+
+      const list = document.getElementById("chat-history-list");
+
+      list.innerHTML = "";
+
+      sessions.forEach(session => {
+
+          const div = document.createElement("div");
+
+          div.className = "chat-history-item";
+
+          div.textContent = session.title;
+
+          div.onclick = () => {
+              loadConversation(session.id);
+          };
+
+          // loadConversation
+          async function loadConversation(id) {
+
+              const r = await fetch("/api/chat/" + id);
+
+              if (!r.ok) return;
+
+              const messages = await r.json();
+
+              sessionId = id;
+
+              history.length = 0;
+
+              box.innerHTML = "";
+
+              messages.forEach(msg => {
+
+                  history.push({
+                      role: msg.role,
+                      text: msg.message
+                  });
+
+                  addBubble(
+                      msg.role,
+                      msg.message
+                  );
+
+              });
+
+          }
+          // Shawn End
+
+          list.appendChild(div);
+
+      });
+
+  }
+  // Shawn End
+
   function open() {
     panel.hidden = false;
+    loadSessions();// Shawn Start
     launcher.setAttribute("aria-expanded", "true");
     if (!greeted) {
       greeted = true;

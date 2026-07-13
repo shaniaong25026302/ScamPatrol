@@ -108,10 +108,13 @@ app.use("/cases", require("./routes/cases.pages.routes"));
 // M4 CG — comments + profile
 // M5 Liam — points/leaderboard
 // M6 Shawn — landing/glossary/admin
-// <Shawn Start>
+// Shawn Start
+// Chat History (Shawn)
+app.use("/api/chat", require("./routes/chat-hist.routes")); // Shawn
 app.use("/admin", require("./routes/admin.pages.routes")); //Shawn
 app.use("/glossary", require("./routes/glossary.pages.routes")); // added by M6 (Shawn)
-// <Shawn End>
+// Shawn End
+
 // <Shania End>
 // <Shania Start>
 

@@ -567,3 +567,35 @@ img.owl { image-rendering: auto; }
   .hoot-launcher, .hoot-panel { top: 70px; right: 10px; }
 }
 /* <Shania End> */
+
+/* Shawn Start */
+
+.chat-history-panel{
+  border-bottom:2px solid var(--gw-border);
+  padding:.6rem .7rem;
+  max-height:140px;
+  overflow-y:auto;
+}
+
+.chat-history-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:.5rem;
+}
+
+.chat-history-item{
+  padding:.45rem .6rem;
+  margin-bottom:.4rem;
+  border:1px solid var(--gw-border);
+  border-radius:8px;
+  cursor:pointer;
+  background:var(--gw-panel2);
+  transition:.2s;
+}
+
+.chat-history-item:hover{
+  background:var(--gw-purple);
+}
+
+/* Shawn End */
