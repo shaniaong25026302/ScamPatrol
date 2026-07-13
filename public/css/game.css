@@ -907,6 +907,56 @@ img.owl { image-rendering: auto; }
   background:var(--gw-purple);
 }
 
+.chat-history-toggle {
+    background: none;
+    border: none;
+    color: var(--gw-text);
+    font-family: "Press Start 2P", monospace;
+    font-size: .55rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.chat-history-toggle:hover {
+    color: var(--gw-gold);
+}
+
+.chat-history-item{
+
+    background: var(--gw-panel2);
+    border: 2px solid var(--gw-border);
+    border-radius: 10px;
+
+    padding: .6rem;
+    margin-bottom: .5rem;
+
+    cursor: pointer;
+    transition: .2s;
+}
+
+.chat-history-item:hover{
+
+    border-color: var(--gw-purple);
+    transform: translateY(-1px);
+
+}
+
+.chat-history-title{
+
+    font-family:"Press Start 2P", monospace;
+    font-size:.5rem;
+    color:var(--gw-text);
+    margin-bottom:.35rem;
+
+}
+
+.chat-history-date{
+
+    font-size:.7rem;
+    color:var(--gw-muted);
+
+}
+
 /* Shawn End */
 /* <Liam Member 5 Daily Quiz Start> */
 /* =========================================================

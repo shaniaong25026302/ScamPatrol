@@ -13,6 +13,7 @@
   //Shawn Start
   const toggleHistoryBtn = document.getElementById("toggle-history");
   const historyList = document.getElementById("chat-history-list");
+  const newChatBtn = document.getElementById("new-chat-btn");
   //Shawn End
 
 
@@ -382,11 +383,26 @@
 
       sessions.forEach(session => {
 
-          const div = document.createElement("div");
+      const div = document.createElement("div");
 
-          div.className = "chat-history-item";
+      div.className = "chat-history-item";
 
-          div.textContent = session.title;
+      const title =
+          session.title.length > 30
+              ? session.title.substring(0, 30) + "..."
+              : session.title;
+
+      const date = new Date(session.updated_at).toLocaleDateString();
+
+      div.innerHTML = `
+          <div class="chat-history-title">
+              🦉 ${title}
+          </div>
+
+          <div class="chat-history-date">
+              ${date}
+          </div>
+      `;
 
           div.onclick = () => {
               loadConversation(session.id);
@@ -471,6 +487,25 @@
   }
 
   // Shawn Start
+  if (newChatBtn) {
+
+      newChatBtn.addEventListener("click", () => {
+
+          sessionId = null;
+          history.length = 0;
+          box.innerHTML = "";
+
+          loadSessions();
+
+          historyList.style.display = "none";
+          toggleHistoryBtn.textContent = "📜 Previous Chats ▼";
+
+          input.focus();
+
+      });
+
+  }
+
   if (toggleHistoryBtn) {
 
       toggleHistoryBtn.addEventListener("click", () => {
