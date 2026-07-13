@@ -61,6 +61,8 @@ app.use((req, res, next) => {
     p.startsWith("/api/auth") ||
     p === "/api/health" ||
     p.startsWith("/api/game/story");
+  // Scam Weather is intentionally NOT in this guest allow-list.
+  // Result: guests see only Story/Login/Signup, while logged-in users see Scam Weather in the navbar.
   if (open) return next();
   if (p.startsWith("/api/")) return res.status(401).json({ error: "Login required." });
   return res.redirect("/");
@@ -106,7 +108,10 @@ app.use("/api/categories", require("./routes/categories.routes"));
 // M3 Nivi — case browse/vote/flag + shared case pages
 app.use("/cases", require("./routes/cases.pages.routes"));
 // M4 CG — comments + profile
-// M5 Liam — points/leaderboard
+// M5 Liam — Scam Weather (seasonal scam forecast + admin posts)
+// API first: browser JavaScript uses these endpoints for daily-report automation.
+app.use("/api/scam-weather", require("./routes/scamweather.api.routes"));
+app.use("/scam-weather", require("./routes/scamweather.pages.routes"));
 // M6 Shawn — landing/glossary/admin
 // Shawn Start
 // Chat History (Shawn)

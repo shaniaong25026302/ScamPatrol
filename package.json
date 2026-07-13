@@ -22,7 +22,7 @@
     "@google/genai": "^0.7.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.6.1",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
     "express-ejs-layouts": "^2.5.1",
@@ -36,5 +36,16 @@
     "eslint": "^9.13.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shaniaong25026302/ScamPatrol.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shaniaong25026302/ScamPatrol/issues"
+  },
+  "homepage": "https://github.com/shaniaong25026302/ScamPatrol#readme"
 }

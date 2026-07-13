@@ -1,0 +1,315 @@
+<%# <Liam Member 5 Start> %>
+<%
+// views/scam-weather/index.ejs
+// -----------------------------------------------------------------------------
+// Scam Weather page.
+// The top "Daily Report" intentionally loads through JavaScript so users can
+// immediately read Scam News while automation fetches/classifies articles.
+// -----------------------------------------------------------------------------
+const swNews = news && Array.isArray(news.articles) ? news.articles : [];
+const swCache = news && news.cacheMeta ? news.cacheMeta : {};
+%>
+
+<section class="gw-hero sw-hero">
+  <div class="sw-hero-copy">
+    <p class="muted">Automated seasonal scam forecast</p>
+    <h1>🌦️ Scam Weather</h1>
+    <p>
+      A live briefing board that pulls scam and cybersecurity articles from trusted sources,
+      classifies them by scam type, and turns them into daily safety advice.
+    </p>
+
+    <div class="sw-hero-actions">
+      <a href="#scam-news" class="gw-btn gold">Read Scam News</a>
+      <a href="#daily-report" class="gw-btn ghost">View Daily Report</a>
+      <a href="#monthly-report" class="gw-btn ghost">View Monthly Report</a>
+      <% if (currentUser && currentUser.isAdmin) { %>
+        <a href="/scam-weather/new" class="gw-btn safe">Admin: Add post</a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="sw-weather-card">
+    <span class="gw-risk <%= forecast.season.riskLevel.toLowerCase() %>">
+      <%= forecast.season.riskLevel %> risk
+    </span>
+    <h2><%= forecast.season.label %></h2>
+    <p><%= forecast.season.headline %></p>
+    <small class="muted">
+      Seasonal logic is centralised in <code>scamweather.service.js</code> so the forecast can be edited easily.
+    </small>
+  </div>
+</section>
+
+<section id="daily-report" class="panel sw-daily-report" aria-live="polite">
+  <div class="sw-section-head">
+    <div>
+      <p class="muted">Daily Report</p>
+      <h2>Today’s scam weather signal</h2>
+      <p class="muted">
+        This section prefers the current 24-hour window, then widens to 7 days and 30 days if trusted sources are quiet.
+      </p>
+    </div>
+    <button class="gw-btn ghost" id="sw-refresh-btn" type="button">Refresh report</button>
+  </div>
+
+  <div id="sw-daily-loading" class="sw-loading">
+    <span class="sw-spinner">🌀</span>
+    <div>
+      <strong>Scanning trusted sources…</strong>
+      <p class="muted">
+        The news list below is already available while Scam Patrol prepares the diagrams.
+      </p>
+    </div>
+  </div>
+
+  <div id="sw-daily-content" class="sw-hidden">
+    <div class="sw-report-summary">
+      <div class="sw-big-stat">
+        <span id="sw-total-articles">0</span>
+        <small>articles analysed</small>
+      </div>
+      <div>
+        <h3 id="sw-leading-type">Loading…</h3>
+        <p class="muted" id="sw-report-window">Daily window loading…</p>
+      </div>
+    </div>
+
+    <div class="sw-chart-grid">
+      <div class="sw-chart-card">
+        <h3>Scam types mentioned</h3>
+        <div id="sw-type-bars" class="sw-bars"></div>
+      </div>
+
+      <div class="sw-chart-card">
+        <h3>Source breakdown</h3>
+        <div id="sw-source-bars" class="sw-bars"></div>
+      </div>
+    </div>
+
+    <details class="sw-source-tray">
+      <summary>Show articles used to build this report</summary>
+      <div id="sw-used-articles" class="sw-used-articles"></div>
+    </details>
+  </div>
+</section>
+
+
+<section id="monthly-report" class="panel sw-daily-report" aria-live="polite">
+  <div class="sw-section-head">
+    <div>
+      <p class="muted">Monthly Report</p>
+      <h2>This month’s scam weather pattern</h2>
+      <p class="muted">
+        Monthly Reports do not depend on the last 24 hours. They use the current month first, then fall back to 30/90-day trusted-source windows plus seasonal advice.
+      </p>
+    </div>
+    <button class="gw-btn ghost" id="sw-monthly-refresh-btn" type="button">Refresh monthly report</button>
+  </div>
+
+  <div id="sw-monthly-loading" class="sw-loading">
+    <span class="sw-spinner">📊</span>
+    <div>
+      <strong>Preparing monthly pattern…</strong>
+      <p class="muted">
+        Scam Patrol is widening the source window so the report still works when daily news is quiet.
+      </p>
+    </div>
+  </div>
+
+  <div id="sw-monthly-content" class="sw-hidden">
+    <div class="sw-report-summary">
+      <div class="sw-big-stat">
+        <span id="sw-month-total-articles">0</span>
+        <small>articles analysed</small>
+      </div>
+      <div>
+        <h3 id="sw-month-leading-type">Loading…</h3>
+        <p class="muted" id="sw-month-report-window">Monthly window loading…</p>
+        <p class="muted sw-cache-note" id="sw-month-fallback-reason"></p>
+      </div>
+    </div>
+
+    <div class="sw-chart-grid">
+      <div class="sw-chart-card">
+        <h3>Monthly scam types</h3>
+        <div id="sw-month-type-bars" class="sw-bars"></div>
+      </div>
+
+      <div class="sw-chart-card">
+        <h3>Monthly source breakdown</h3>
+        <div id="sw-month-source-bars" class="sw-bars"></div>
+      </div>
+    </div>
+
+    <details class="sw-source-tray">
+      <summary>Show articles used to build this monthly report</summary>
+      <div id="sw-month-used-articles" class="sw-used-articles"></div>
+    </details>
+  </div>
+</section>
+
+<section class="gw-grid sw-season-grid">
+  <div class="panel col-6">
+    <h2>Seasonal advice</h2>
+    <ul class="sw-advice-list">
+      <% forecast.season.advice.forEach((item) => { %>
+        <li><%= item %></li>
+      <% }) %>
+    </ul>
+  </div>
+
+  <div class="panel col-6">
+    <h2>Trusted source policy</h2>
+    <p class="muted">
+      Scam Weather only uses the reputable sources listed in the project document and this codebase.
+      Every article card links back to its original source.
+    </p>
+    <details class="sw-source-tray compact">
+      <summary>View configured source list</summary>
+      <ul class="sw-source-list">
+        <% trustedSources.forEach((source) => { %>
+          <li>
+            <a href="<%= source.sourceUrl %>" target="_blank" rel="noopener noreferrer"><%= source.name %></a>
+            <span class="muted">· <%= source.region %> · <%= source.feedUrl ? 'RSS enabled' : 'manual/future feed' %></span>
+          </li>
+        <% }) %>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<section id="scam-news" class="panel sw-news-panel">
+  <div class="sw-section-head">
+    <div>
+      <p class="muted">Scam News</p>
+      <h2>Latest relevant articles</h2>
+      <p class="muted">
+        Always showing up to 6 trusted articles at a time. Scam Weather prefers the last 24 hours, then fills remaining slots with the most recent older articles from reputable sources.
+      </p>
+      <% if (swCache.note) { %>
+        <p class="muted sw-cache-note">Cache mode: <%= swCache.mode || 'cache' %> · <%= swCache.note %></p>
+      <% } %>
+    </div>
+
+    <form method="GET" action="/scam-weather" class="sw-filter-form">
+      <label>
+        Scam type
+        <select name="type">
+          <option value="all" <%= selectedScamType === 'all' ? 'selected' : '' %>>All types</option>
+          <% scamTypes.forEach((type) => { %>
+            <option value="<%= type %>" <%= selectedScamType === type ? 'selected' : '' %>><%= type %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>
+        Source
+        <select name="source">
+          <option value="all" <%= selectedSource === 'all' ? 'selected' : '' %>>All sources</option>
+          <% trustedSources.forEach((source) => { %>
+            <option value="<%= source.name %>" <%= selectedSource === source.name ? 'selected' : '' %>><%= source.name %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <button type="submit" class="gw-btn ghost">Apply</button>
+    </form>
+  </div>
+</section>
+
+<section class="sw-news-list" id="sw-news-list">
+  <% if (swNews.length) { %>
+    <% swNews.forEach((article) => { %>
+      <article class="panel sw-article-card">
+        <div class="sw-article-meta">
+          <span class="gw-chip"><%= article.sourceName %></span>
+          <span class="gw-risk <%= article.riskLevel %>"><%= article.riskLevel %></span>
+          <span class="muted"><%= new Date(article.publishedAt).toLocaleString() %></span>
+          <span class="gw-chip"><%= article.freshnessLabel || 'Trusted source' %></span>
+        </div>
+
+        <h2><a href="<%= article.link %>" target="_blank" rel="noopener noreferrer"><%= article.title %></a></h2>
+        <p><%= article.summary %></p>
+
+        <div class="sw-type-chip-row">
+          <% article.scamTypes.forEach((type) => { %>
+            <span class="sw-type-chip"><%= type %></span>
+          <% }) %>
+        </div>
+      </article>
+    <% }) %>
+  <% } else { %>
+    <article class="panel">
+      <p class="muted">No Scam Weather articles matched this filter yet.</p>
+    </article>
+  <% } %>
+</section>
+
+<div class="sw-load-row">
+  <button
+    id="sw-load-more"
+    class="gw-btn gold"
+    type="button"
+    data-next-page="2"
+    data-has-more="<%= news && news.hasMore ? 'true' : 'false' %>"
+    data-type="<%= selectedScamType %>"
+    data-source="<%= selectedSource %>"
+  >
+    View another 6 articles
+  </button>
+</div>
+
+<section class="panel sw-editorial-panel">
+  <div class="sw-section-head">
+    <div>
+      <p class="muted">Admin bulletin board</p>
+      <h2>Scam Weather posts</h2>
+      <p class="muted">
+        Optional manual posts for admins. These sit below the automated news feed.
+      </p>
+    </div>
+    <% if (currentUser && currentUser.isAdmin) { %>
+      <a href="/scam-weather/new" class="gw-btn safe">Create post</a>
+    <% } %>
+  </div>
+</section>
+
+<% if (editorialPosts.length) { %>
+  <% editorialPosts.forEach((post) => { %>
+    <article class="panel sw-editorial-card">
+      <div class="sw-article-meta">
+        <span class="gw-chip"><%= post.category %></span>
+        <span class="muted">By <%= post.authorName %> · <%= new Date(post.createdAt).toLocaleDateString() %></span>
+      </div>
+
+      <h2><%= post.title %></h2>
+
+      <% if (post.mediaType === 'image' && post.mediaUrl) { %>
+        <img class="sw-editorial-media" src="<%= post.mediaUrl %>" alt="<%= post.caption || post.title %>">
+      <% } else if (post.mediaType === 'video' && post.mediaUrl) { %>
+        <video class="sw-editorial-media" controls src="<%= post.mediaUrl %>"></video>
+      <% } %>
+
+      <% if (post.caption) { %>
+        <p class="muted"><%= post.caption %></p>
+      <% } %>
+
+      <p><%= post.body %></p>
+
+      <% if (post.canEdit) { %>
+        <div class="sw-card-actions">
+          <a href="/scam-weather/<%= post.id %>/edit" class="gw-btn ghost">Edit</a>
+          <form action="/scam-weather/<%= post.id %>/delete" method="POST" onsubmit="return confirm('Delete this Scam Weather post?')">
+            <button type="submit" class="gw-btn danger">Delete</button>
+          </form>
+        </div>
+      <% } %>
+    </article>
+  <% }) %>
+<% } else { %>
+  <section class="panel"><p class="muted">No manual Scam Weather posts yet.</p></section>
+<% } %>
+
+<script src="/js/scam-weather.js" defer></script>
+<%# <Liam Member 5 End> %>

@@ -1,10 +1,12 @@
 <%# <Shania Start> %>
 <% const gp = typeof activePage !== 'undefined' ? activePage : ''; %>
 <% const gu = typeof user !== 'undefined' ? user : null; %>
+
 <header class="gw-topbar">
   <a href="/" class="gw-brand">
     <img src="/img/logo-cropped.png?v=3" alt="Scam Patrol HQ" class="logo pixel" />
   </a>
+
   <nav class="gw-nav">
     <% if (gu) { %>
       <a href="/hq" class="<%= gp === 'hq' ? 'active' : '' %>">HQ</a>
@@ -14,22 +16,19 @@
       <a href="/dojo" class="<%= gp === 'dojo' ? 'active' : '' %>">Dojo</a>
       <a href="/shop" class="<%= gp === 'shop' ? 'active' : '' %>">Shop</a>
       <a href="/cases" class="<%= gp === 'cases' ? 'active' : '' %>">Community</a>
-      <%# <Shawn Member 6 Start> %>
       <a href="/glossary" class="<%= gp === 'glossary' ? 'active' : '' %>">Glossary</a>
-      <% if (gu && gu.role === "admin") { %>
-        <a href="/admin" class="<%= gp === 'admin' ? 'active' : '' %>">
-          Admin
-        </a>
-      <% } %>
-      <%# <Shawn Member 6 End> %>
+      <a href="/scam-weather" class="<%= gp === 'scam-weather' ? 'active' : '' %>">Scam Weather</a>
       <a href="/leaderboard" class="<%= gp === 'leaderboard' ? 'active' : '' %>">Ranks</a>
     <% } else { %>
+      <%# Guests should only see Story. Scam Weather appears only after login. %>
       <a href="/" class="<%= gp === 'story' ? 'active' : '' %>">Story</a>
     <% } %>
   </nav>
+
   <div class="gw-mini-hud" id="mini-hud">
     <a href="#" id="snd-sfx" class="gw-chip" title="Sound effects" style="cursor:pointer">🔊</a>
     <a href="#" id="snd-music" class="gw-chip" title="Music" style="cursor:pointer;opacity:.4">🎵</a>
+
     <% if (gu) { %>
       <img src="/img/avatars/recruit.png" class="hud-avatar" id="hud-avatar" alt="avatar" />
       <span class="gw-chip"><span class="lvl">Lv <b id="hud-level">–</b></span></span>

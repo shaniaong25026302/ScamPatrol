@@ -290,7 +290,7 @@
 .game-world .btn-danger { background: linear-gradient(135deg, #c0392b, var(--gw-red)); }
 .game-world .btn-ghost { background: var(--gw-panel); border-color: var(--gw-border); color: var(--gw-text); }
 .game-world input[type="email"], .game-world input[type="password"], .game-world input[type="number"],
-.game-world input[type="search"], .game-world input[type="date"], .game-world select {
+.game-world input[type="url"], .game-world input[type="search"], .game-world input[type="date"], .game-world select {
   width: 100%; background: #0e1426; border: 2px solid var(--gw-border); border-radius: 4px;
   color: var(--gw-text); padding: .7rem .8rem; font-family: "VT323", monospace; font-size: 1.15rem;
 }
@@ -567,6 +567,315 @@ img.owl { image-rendering: auto; }
   .hoot-launcher, .hoot-panel { top: 70px; right: 10px; }
 }
 /* <Shania End> */
+
+
+/* <Liam Member 5 Start> */
+/* =========================================================
+   Scam Weather — automated news dashboard
+   =========================================================
+   These classes are scoped with sw-* so they do not collide with teammates'
+   pages. They reuse the retro "game world" tokens already defined above.
+   ========================================================= */
+
+.sw-hero {
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+.sw-hero-copy {
+  flex: 1 1 520px;
+}
+
+.sw-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-top: 1rem;
+}
+
+.sw-weather-card {
+  flex: 0 1 360px;
+  background: linear-gradient(180deg, var(--gw-panel), var(--gw-bg2));
+  border: 2px solid var(--gw-border);
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.3), 0 6px 0 rgba(0,0,0,.25);
+}
+
+.sw-weather-card h2 {
+  color: #fff;
+  font-size: .82rem;
+  line-height: 1.6;
+  margin: .8rem 0 .5rem;
+}
+
+.sw-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sw-hidden {
+  display: none !important;
+}
+
+.sw-loading {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+  padding: 1rem;
+  margin-top: 1rem;
+  border: 2px dashed var(--gw-border);
+  background: rgba(14, 20, 38, .6);
+}
+
+.sw-spinner {
+  display: inline-block;
+  font-size: 2rem;
+  animation: spin 1s linear infinite;
+}
+
+.sw-report-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.sw-big-stat {
+  min-width: 150px;
+  padding: 1rem;
+  text-align: center;
+  background: #0e1426;
+  border: 2px solid var(--gw-border);
+  border-radius: 6px;
+}
+
+.sw-big-stat span {
+  display: block;
+  color: var(--gw-gold);
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sw-big-stat small {
+  color: var(--gw-muted);
+}
+
+.sw-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.sw-chart-card {
+  background: #0e1426;
+  border: 2px solid var(--gw-border);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.sw-bars {
+  display: grid;
+  gap: .75rem;
+}
+
+.sw-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+  color: var(--gw-text);
+  font-size: 1rem;
+}
+
+.sw-bar-label strong {
+  color: var(--gw-gold);
+}
+
+.sw-bar-track {
+  height: 12px;
+  margin-top: .25rem;
+  overflow: hidden;
+  background: #090d19;
+  border: 1px solid var(--gw-border);
+}
+
+.sw-bar-track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gw-purple), var(--gw-cyan));
+}
+
+.sw-source-tray {
+  margin-top: 1rem;
+  padding: .8rem;
+  background: rgba(14, 20, 38, .55);
+  border: 1px solid var(--gw-border);
+}
+
+.sw-source-tray summary {
+  cursor: pointer;
+  color: var(--gw-gold);
+  font-weight: 800;
+}
+
+.sw-source-tray.compact {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.sw-source-list {
+  margin: .75rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.sw-used-articles {
+  display: grid;
+  gap: .75rem;
+  margin-top: .75rem;
+}
+
+.sw-used-article {
+  padding: .75rem;
+  background: #0e1426;
+  border: 1px solid var(--gw-border);
+}
+
+.sw-season-grid {
+  margin: 1rem 0;
+}
+
+.sw-advice-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.sw-advice-list li {
+  margin-bottom: .5rem;
+}
+
+.sw-news-panel {
+  margin-top: 1rem;
+}
+
+.sw-cache-note {
+  max-width: 720px;
+}
+
+.sw-filter-form {
+  display: flex;
+  align-items: end;
+  gap: .7rem;
+  flex-wrap: wrap;
+}
+
+.game-world .sw-filter-form select {
+  min-width: 190px;
+  background: #0e1426;
+  border: 1px solid var(--gw-border);
+  border-radius: 4px;
+  color: var(--gw-text);
+  padding: .55rem;
+  font-family: "VT323", monospace;
+  font-size: 1.1rem;
+}
+
+.sw-news-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.sw-article-card h2,
+.sw-editorial-card h2 {
+  margin-top: .75rem;
+}
+
+.sw-article-card h2 a {
+  color: #fff;
+}
+
+.sw-article-meta {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.sw-type-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .75rem;
+}
+
+.sw-type-chip {
+  display: inline-flex;
+  padding: .25rem .55rem;
+  background: rgba(65, 208, 224, .13);
+  border: 1px solid rgba(65, 208, 224, .35);
+  color: var(--gw-cyan);
+  border-radius: 4px;
+  font-size: .95rem;
+  line-height: 1;
+}
+
+.sw-load-row {
+  text-align: center;
+  margin: 1rem 0 1.5rem;
+}
+
+.sw-editorial-panel {
+  margin-top: 1.5rem;
+}
+
+.sw-editorial-card {
+  margin-top: 1rem;
+}
+
+.sw-editorial-media {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  margin: 1rem 0;
+  border-radius: 6px;
+  border: 2px solid var(--gw-border);
+  object-fit: cover;
+}
+
+.sw-card-actions {
+  display: flex;
+  gap: .5rem;
+  margin-top: .8rem;
+  flex-wrap: wrap;
+}
+
+.game-world code {
+  color: var(--gw-gold);
+  background: rgba(0,0,0,.25);
+  padding: .1rem .25rem;
+  border-radius: 3px;
+}
+
+@media (max-width: 800px) {
+  .sw-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sw-filter-form {
+    width: 100%;
+  }
+
+  .sw-filter-form label,
+  .sw-filter-form select {
+    width: 100%;
+  }
+}
+/* <Liam Member 5 End> */
 
 /* Shawn Start */
 
