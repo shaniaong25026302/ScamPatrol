@@ -10,6 +10,10 @@
   const input = document.getElementById("chatbot-text");
   const micBtn = document.getElementById("chatbot-mic");
   const voiceStatus = document.getElementById("chatbot-voice-status");
+  //Shawn Start
+  const toggleHistoryBtn = document.getElementById("toggle-history");
+  const historyList = document.getElementById("chat-history-list");
+  //Shawn End
 
   if (!launcher || !panel || !box || !form || !input) return;
 
@@ -405,5 +409,26 @@
       if (b) send(b.getAttribute("data-q"));
     });
   }
+
+  // Shawn Start
+  if (toggleHistoryBtn) {
+
+      toggleHistoryBtn.addEventListener("click", () => {
+
+          const isHidden =
+              historyList.style.display === "none";
+
+          historyList.style.display =
+              isHidden ? "block" : "none";
+
+          toggleHistoryBtn.textContent =
+              isHidden
+                  ? "📜 Previous Chats ▲"
+                  : "📜 Previous Chats ▼";
+
+      });
+
+  }
+  // Shawn End
 })();
 // <Shania End>
