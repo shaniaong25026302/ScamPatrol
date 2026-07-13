@@ -73,17 +73,7 @@ async function relationship(req, res) {
     return res.status(502).json({ error: "The detector is unavailable right now. Try again shortly." });
   }
 
-  try {
-    await Ai.createAnalysis({
-      userId: req.user.id,
-      inputText: text.slice(0, 5000),
-      riskLevel: result.risk_level,
-      explanation: result.summary || "Long-con analysis",
-    });
-  } catch (e) {
-    console.error("save relationship analysis failed:", e.message);
-  }
-
+  // Long-con results are intentionally not saved, so they never appear in the AI Checker history (like the roast).
   const reward = await gamify.award(req.user.id, "relationship_check");
   return res.json({ ...result, reward });
 }

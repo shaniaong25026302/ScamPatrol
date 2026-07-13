@@ -17,6 +17,11 @@
       <a href="/shop" class="<%= gp === 'shop' ? 'active' : '' %>">Shop</a>
       <a href="/cases" class="<%= gp === 'cases' ? 'active' : '' %>">Community</a>
       <a href="/glossary" class="<%= gp === 'glossary' ? 'active' : '' %>">Glossary</a>
+      <%# <Shawn Member 6 Start> %>
+      <% if (gu && gu.role === "admin") { %>
+        <a href="/admin" class="<%= gp === 'admin' ? 'active' : '' %>">Admin</a>
+      <% } %>
+      <%# <Shawn Member 6 End> %>
       <a href="/scam-weather" class="<%= gp === 'scam-weather' ? 'active' : '' %>">Scam Weather</a>
       <%# Daily Quiz status is filled by /js/daily-quiz-nav.js after each page load. %>
       <a href="/daily-quiz" id="daily-quiz-nav-link" class="<%= gp === 'daily-quiz' ? 'active' : '' %> dq-nav-link">Daily Quiz</a>
