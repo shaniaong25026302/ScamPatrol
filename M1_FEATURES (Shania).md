@@ -19,7 +19,7 @@ mount points; 404/error handling; guest-gating middleware (guests only see the h
 `views/partials/footer.ejs`
 
 ## 2. Authentication
-Register / login / logout / forgot-password / reset-password / refresh; bcrypt (12 rounds);
+Register / login / logout / forgot-password / reset-password; bcrypt (12 rounds);
 JWT in httpOnly cookie (24h) + refresh token (7d); `attachUser` / `requireAuth` / `requireAuthPage`
 / `requireRole` middleware; full server-side + inline validation; show/hide-password eye toggle;
 3 roles (Guest/User/Admin).
