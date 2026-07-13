@@ -36,5 +36,16 @@
     "eslint": "^9.13.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shaniaong25026302/ScamPatrol.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shaniaong25026302/ScamPatrol/issues"
+  },
+  "homepage": "https://github.com/shaniaong25026302/ScamPatrol#readme"
 }

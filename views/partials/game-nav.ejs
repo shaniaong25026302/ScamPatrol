@@ -19,6 +19,8 @@
       <a href="/leaderboard" class="<%= gp === 'leaderboard' ? 'active' : '' %>">Ranks</a>
     <% } else { %>
       <a href="/" class="<%= gp === 'story' ? 'active' : '' %>">Story</a>
+      <%# Scam Weather is intentionally visible to guests so public-safety news is accessible. %>
+      <a href="/scam-weather" class="<%= gp === 'scam-weather' ? 'active' : '' %>">Scam Weather</a>
     <% } %>
   </nav>
   <div class="gw-mini-hud" id="mini-hud">

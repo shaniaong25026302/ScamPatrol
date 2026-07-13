@@ -218,3 +218,54 @@ CREATE TABLE IF NOT EXISTS game_scores (
   CONSTRAINT fk_game_scores_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- <Shania Gamification End>
+
+
+-- <Liam Scam Weather Start>
+-- ============================================================
+-- Member 5 — Scam Weather future MySQL tables
+-- Current implementation uses JSON cache files so the feature works before
+-- final database integration. These tables are ready for the team to migrate
+-- the cache into MySQL later.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS scam_weather_sources (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name        VARCHAR(160) NOT NULL,
+  source_url  VARCHAR(512) NOT NULL,
+  feed_url    VARCHAR(512) DEFAULT NULL,
+  region      VARCHAR(40) DEFAULT NULL,
+  source_type VARCHAR(60) DEFAULT NULL,
+  is_active   TINYINT(1) NOT NULL DEFAULT 1,
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_scam_weather_sources_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS scam_weather_articles (
+  id            CHAR(16) NOT NULL,
+  source_name   VARCHAR(160) NOT NULL,
+  source_url    VARCHAR(512) NOT NULL,
+  title         VARCHAR(512) NOT NULL,
+  summary       TEXT,
+  link          VARCHAR(768) NOT NULL,
+  risk_level    ENUM('low', 'medium', 'high') NOT NULL DEFAULT 'medium',
+  scam_types    JSON NOT NULL,
+  published_at  TIMESTAMP NULL DEFAULT NULL,
+  fetched_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_scam_weather_articles_published (published_at),
+  KEY idx_scam_weather_articles_source (source_name),
+  KEY idx_scam_weather_articles_risk (risk_level)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS scam_weather_refresh_runs (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  started_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  completed_at  TIMESTAMP NULL DEFAULT NULL,
+  mode          VARCHAR(40) DEFAULT NULL,
+  articles_seen INT UNSIGNED NOT NULL DEFAULT 0,
+  notes         TEXT,
+  PRIMARY KEY (id),
+  KEY idx_scam_weather_runs_started (started_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- <Liam Scam Weather End>
