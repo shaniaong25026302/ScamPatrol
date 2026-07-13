@@ -1,0 +1,62 @@
+<%# <Shawn Start> %>
+
+<h1>Scam Glossary</h1>
+
+<a href="/admin/glossary/new" class="btn btn-primary">
+    Add New Entry
+</a>
+
+<hr>
+
+<table class="table">
+
+<tr>
+    <th>Term</th>
+    <th>Description</th>
+    <th>Prevention</th>
+    <th>Action</th>
+</tr>
+
+<% glossary.forEach(item => { %>
+
+<tr>
+
+    <td><%= item.term %></td>
+
+    <td><%= item.description %></td>
+
+    <td><%= item.prevention %></td>
+
+    <td>
+
+        <a
+            href="/admin/glossary/edit/<%= item.id %>"
+            class="btn btn-warning btn-sm">
+            Edit
+        </a>
+
+        <form
+            action="/admin/glossary/delete/<%= item.id %>"
+            method="POST"
+            style="display:inline;">
+
+            <button
+                type="submit"
+                class="btn btn-danger btn-sm"
+                onclick="return confirm('Delete this glossary entry?')">
+
+                Delete
+
+            </button>
+
+        </form>
+
+    </td>
+
+</tr>
+
+<% }) %>
+
+</table>
+
+<%# <Shawn End> %>

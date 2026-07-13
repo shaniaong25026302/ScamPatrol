@@ -184,7 +184,7 @@ router.get("/glossary", async (req, res) => {
     try {
         const glossary = await glossaryModel.getAllGlossary();
 
-        res.render("admin/glossary", {
+        res.render("admin/glossary-admin", {
             title: "Scam Glossary",
             activePage: "admin",
             glossary

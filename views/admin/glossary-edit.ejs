@@ -1,14 +1,15 @@
 <%# <Shawn Start> %>
 
-<h1>Add Glossary Entry</h1>
+<h1>Edit Glossary Entry</h1>
 
-<form action="/admin/glossary/new" method="POST">
+<form action="/admin/glossary/edit/<%= glossary.id %>" method="POST">
 
     <label>Term</label><br>
     <input
         type="text"
         name="term"
         class="form-control"
+        value="<%= glossary.term %>"
         required>
 
     <br>
@@ -18,7 +19,7 @@
         name="description"
         class="form-control"
         rows="6"
-        required></textarea>
+        required><%= glossary.description %></textarea>
 
     <br>
 
@@ -27,12 +28,12 @@
         name="prevention"
         class="form-control"
         rows="6"
-        required></textarea>
+        required><%= glossary.prevention %></textarea>
 
     <br>
 
     <button class="btn btn-primary">
-        Create Entry
+        Save Changes
     </button>
 
 </form>

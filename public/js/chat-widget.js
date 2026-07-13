@@ -16,6 +16,9 @@
     String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   const history = [];
+  // <Shawn Feature Start>
+  let sessionId = null;
+  // <Shawn Feature End>
   let busy = false;
   let greeted = false;
 
@@ -248,7 +251,7 @@
       const r = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, sessionId }), // Shawn added sessionId to the request
       });
       const d = await r.json().catch(() => ({}));
       hideTyping();
@@ -256,6 +259,11 @@
       addBubble("assistant", reply);
       if (r.ok && d.reply) {
         history.push({ role: "assistant", text: d.reply });
+        // Shawn Start
+        if (d.sessionId) {
+            sessionId = d.sessionId;
+        }
+        // Shawn End
         if (window.SOUND) window.SOUND.sfx.hoot();
       }
     } catch (_) {

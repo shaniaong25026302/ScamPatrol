@@ -1,11 +1,42 @@
-<h1>Test</h1>
+<%# <Shawn Start> %>
 
-<%= glossary.length %>
+<div class="py-4">
 
-<hr>
+    <h1 class="mb-3">📖 Scam Glossary</h1>
 
-<% glossary.forEach(item => { %>
+    <p class="text-muted">
+        Learn about common scam types, how they work, and how you can protect yourself.
+    </p>
 
-    <p><%= item.term %></p>
+    <input
+        type="text"
+        class="form-control mb-4"
+        placeholder="Search scam types...">
 
-<% }) %>
+    <% glossary.forEach(item => { %>
+
+        <div class="card mb-3">
+
+            <div class="card-body">
+
+                <h4>📚 <%= item.term %></h4>
+
+                <p>
+                    <%= item.description %>
+                </p>
+
+                <strong>Prevention:</strong>
+
+                <ul>
+                    <li><%= item.prevention %></li>
+                </ul>
+
+            </div>
+
+        </div>
+
+    <% }) %>
+
+</div>
+
+<%# <Shawn End> %>

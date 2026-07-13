@@ -4,6 +4,9 @@
 //   history       → the user's past checks
 //   relationship  → long-con / romance scam timeline mapper
 const Ai = require("../models/ai.model");
+// Shawn Start 
+const Chat = require("../models/chat.model"); // for chat history
+// Shawn End
 const { analyzeText, analyzeRelationship, chatReply } = require("../services/gemini.service");
 const gamify = require("../services/gamification.service");
 
@@ -103,6 +106,29 @@ async function chat(req, res) {
   if (!messages.length || messages[messages.length - 1].role !== "user")
     return res.status(400).json({ error: "Send a message." });
 
+  // Shawn Start
+  // Create a new chat session if one doesn't exist
+  let sessionId = req.body.sessionId;
+
+  if (!sessionId) {
+
+    const title =
+      messages[0].text.length > 40
+        ? messages[0].text.substring(0, 40) + "..."
+        : messages[0].text;
+
+    sessionId = await Chat.createSession(req.user.id, title);
+
+  }
+
+  // Save the latest user message
+  await Chat.saveMessage(
+    sessionId,
+    "user",
+    messages[messages.length - 1].text
+  );
+  // Shawn End
+
   let reply;
   try {
     reply = await chatReply(messages);
@@ -110,7 +136,18 @@ async function chat(req, res) {
     console.error("chat failed:", e.message);
     return res.status(502).json({ error: "Inspector Hoot is unavailable right now. Try again shortly." });
   }
-  return res.json({ reply });
+  // <Shawn Start>
+  // Save AI reply
+  await Chat.saveMessage(
+    sessionId,
+    "assistant",
+    reply
+  );
+  return res.json({ // Shania wrote the return
+  reply,// Shawn added sessionId to the return
+  sessionId
+});
+  // Shawn End
 }
 
 module.exports = { analyze, history, relationship, chat };
