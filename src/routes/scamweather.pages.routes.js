@@ -8,7 +8,12 @@
 const express = require("express");
 const router = express.Router();
 
-const { requireAuthPage } = require("../middleware/auth.middleware");
+// Local page guard for Scam Weather edit/delete routes.
+// It redirects guests to login instead of returning JSON.
+function requireAuthPage(req, res, next) {
+  if (req.user) return next();
+  return res.redirect(`/auth/login?next=${encodeURIComponent(req.originalUrl)}`);
+}
 const scamWeatherService = require("../services/scamweather.service");
 
 // The service expects a user shaped as { id, username, isAdmin }. The main app
