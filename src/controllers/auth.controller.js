@@ -9,7 +9,6 @@ const { validateEmail, validateUsername, validatePassword } = require("../utils/
 const {
   signAccess,
   signRefresh,
-  verify,
   accessCookieOpts,
   refreshCookieOpts,
   clearCookieOpts,
@@ -158,25 +157,5 @@ async function resetPassword(req, res) {
   return res.json({ message: "Password updated. You can now log in." });
 }
 
-// POST /api/auth/refresh — mint a new access token from the refresh cookie.
-async function refresh(req, res) {
-  const token = req.cookies && req.cookies.refresh_token;
-  if (!token) return res.status(401).json({ error: "No refresh token." });
-  try {
-    const payload = verify(token);
-    if (payload.type !== "refresh") throw new Error("wrong token type");
-    const user = await User.findPublicById(payload.sub);
-    if (!user) return res.status(401).json({ error: "User no longer exists." });
-    res.cookie(
-      "token",
-      signAccess({ sub: user.id, username: user.username, role: user.role }),
-      accessCookieOpts(),
-    );
-    return res.json({ user });
-  } catch (_) {
-    return res.status(401).json({ error: "Invalid refresh token." });
-  }
-}
-
-module.exports = { register, login, me, logout, forgotPassword, resetPassword, refresh };
+module.exports = { register, login, me, logout, forgotPassword, resetPassword };
 // <Shania End>

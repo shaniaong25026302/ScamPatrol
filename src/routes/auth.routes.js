@@ -14,7 +14,6 @@ router.post("/login", h(c.login));
 router.post("/logout", h(c.logout));
 router.post("/forgot-password", h(c.forgotPassword));
 router.post("/reset-password", h(c.resetPassword));
-router.post("/refresh", h(c.refresh));
 router.get("/me", requireAuth, h(c.me));
 
 module.exports = router;
