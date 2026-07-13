@@ -10,6 +10,7 @@
   const input = document.getElementById("chatbot-text");
   const micBtn = document.getElementById("chatbot-mic");
   const voiceStatus = document.getElementById("chatbot-voice-status");
+
   if (!launcher || !panel || !box || !form || !input) return;
 
   const esc = (s) =>
@@ -280,65 +281,91 @@
   async function loadSessions() {
 
       const r = await fetch("/api/chat/sessions");
-
       if (!r.ok) return;
-
       sessions = await r.json();
-
       const list = document.getElementById("chat-history-list");
-
       list.innerHTML = "";
-
       sessions.forEach(session => {
-
           const div = document.createElement("div");
-
           div.className = "chat-history-item";
-
           div.textContent = session.title;
-
           div.onclick = () => {
               loadConversation(session.id);
           };
-
           // loadConversation
           async function loadConversation(id) {
-
               const r = await fetch("/api/chat/" + id);
-
               if (!r.ok) return;
-
               const messages = await r.json();
-
               sessionId = id;
-
               history.length = 0;
-
               box.innerHTML = "";
-
               messages.forEach(msg => {
-
                   history.push({
                       role: msg.role,
                       text: msg.message
                   });
-
                   addBubble(
                       msg.role,
                       msg.message
                   );
-
               });
-
-          }
-          // Shawn End
-
+          }  
           list.appendChild(div);
-
       });
-
   }
   // Shawn End
+
+  // CG Start
+  const langSelect = document.getElementById("chatbot-language");
+  let chatLang = "en"; // default language
+
+    if (langSelect) {
+    langSelect.addEventListener("change", () => {
+      chatLang = langSelect.value;
+    });
+  }
+
+  async function send(text) {
+    const msg = String(text || "").trim();
+    if (!msg || busy) return;
+    stopVoiceInput();
+    busy = true;
+    input.value = "";
+    addBubble("user", msg);
+    history.push({ role: "user", text: msg });
+    showTyping();
+    if (window.SOUND) window.SOUND.sfx.click();
+    try {
+      const r = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: history,
+          sessionId, // Shawn’s feature
+          language: chatLang // Erlisya’s feature
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      hideTyping();
+      const reply = r.ok && d.reply ? d.reply : d.error || "Inspector Hoot is unavailable right now — try again shortly.";
+      addBubble("assistant", reply);
+      if (r.ok && d.reply) {
+        history.push({ role: "assistant", text: d.reply });
+        if (d.sessionId) {
+          sessionId = d.sessionId;
+        }
+        if (window.SOUND) window.SOUND.sfx.hoot();
+      }
+    } catch (_) {
+      hideTyping();
+      addBubble("assistant", "Something went wrong — please try again.");
+    } finally {
+      busy = false;
+      input.focus();
+    }
+  }
+  // CG End
 
   function open() {
     panel.hidden = false;
