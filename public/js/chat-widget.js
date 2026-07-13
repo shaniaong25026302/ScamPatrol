@@ -500,8 +500,6 @@
           historyList.style.display = "none";
           toggleHistoryBtn.textContent = "📜 Previous Chats ▼";
 
-          input.focus();
-
       });
 
   }
