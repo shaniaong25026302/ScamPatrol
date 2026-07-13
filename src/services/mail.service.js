@@ -11,7 +11,7 @@ function hasMailjet() {
   return Boolean(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY);
 }
 function hasHttpApi() {
-  return Boolean(process.env.RESEND_API_KEY || process.env.BREVO_API_KEY) || hasMailjet();
+  return hasMailjet();
 }
 function hasSmtp() {
   return Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
@@ -27,52 +27,6 @@ function senderIdentity() {
   if (m) return { name: m[1].trim() || "Scam Patrol", email: m[2].trim() };
   if (raw.includes("@")) return { name: "Scam Patrol", email: raw.trim() };
   return { name: "Scam Patrol", email: process.env.SMTP_USER || "no-reply@scampatrol.app" };
-}
-
-// Send via Brevo's HTTPS API (port 443) — works on hosts that block SMTP (e.g. Render).
-async function sendViaBrevo({ to, subject, text, html }) {
-  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "api-key": process.env.BREVO_API_KEY,
-      "content-type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify({
-      sender: senderIdentity(),
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-      textContent: text,
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Brevo API ${res.status}: ${body.slice(0, 200)}`);
-  }
-  const data = await res.json().catch(() => ({}));
-  return { messageId: data.messageId || "(brevo)" };
-}
-
-// Send via Resend's HTTPS API (port 443). No phone needed to sign up. On the free tier
-// WITHOUT a verified domain you must send FROM onboarding@resend.dev and can only send
-// TO your own Resend account email — fine for a demo/reset of your own account.
-async function sendViaResend({ to, subject, text, html }) {
-  const from = process.env.RESEND_FROM || "Scam Patrol <onboarding@resend.dev>";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ from, to: [to], subject, html, text }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Resend API ${res.status}: ${body.slice(0, 200)}`);
-  }
-  const data = await res.json().catch(() => ({}));
-  return { messageId: data.id || "(resend)" };
 }
 
 // Send via Mailjet's HTTPS Send API v3.1 (port 443). Auth = Basic base64(apiKey:secretKey).
@@ -141,12 +95,11 @@ async function getTransporter() {
 // Non-throwing, but LOGS the outcome so the real SMTP problem is visible in Render logs.
 async function warmUp() {
   if (hasHttpApi()) {
-    const provider = process.env.RESEND_API_KEY ? "Resend" : process.env.BREVO_API_KEY ? "Brevo" : "Mailjet";
-    console.log(`Email: ${provider} HTTP API configured (sender ${senderIdentity().email}).`);
+    console.log(`Email: Mailjet HTTP API configured (sender ${senderIdentity().email}).`);
     return true;
   }
   if (!hasSmtp()) {
-    console.error("Email not configured (no BREVO_API_KEY and no SMTP_USER/PASS) — reset emails will fail.");
+    console.error("Email not configured (no MAILJET keys and no SMTP_USER/PASS) — reset emails will fail.");
     return false;
   }
   try {
@@ -181,19 +134,9 @@ function resetEmailContent(resetUrl) {
 async function sendPasswordReset(toEmail, resetUrl) {
   const { subject, text, html } = resetEmailContent(resetUrl);
 
-  // [DevOps: Reliability / provider failover] email is sent over an HTTP API (Mailjet/Resend/Brevo)
-  // which works where the host blocks SMTP, and falls back to SMTP — so a single provider or
-  // protocol being down doesn't take password reset down with it.
-  if (process.env.RESEND_API_KEY) {
-    const info = await sendViaResend({ to: toEmail, subject, text, html });
-    console.log(`Password reset email sent via Resend (id ${info.messageId}) -> ${toEmail}`);
-    return info;
-  }
-  if (process.env.BREVO_API_KEY) {
-    const info = await sendViaBrevo({ to: toEmail, subject, text, html });
-    console.log(`Password reset email sent via Brevo (id ${info.messageId}) -> ${toEmail}`);
-    return info;
-  }
+  // [DevOps: Reliability] email is sent over Mailjet's HTTP API (which works where the host blocks
+  // SMTP), and falls back to plain SMTP — so the SMTP protocol being blocked doesn't take password
+  // reset down with it.
   if (hasMailjet()) {
     const info = await sendViaMailjet({ to: toEmail, subject, text, html });
     console.log(`Password reset email sent via Mailjet (id ${info.messageId}) -> ${toEmail}`);
