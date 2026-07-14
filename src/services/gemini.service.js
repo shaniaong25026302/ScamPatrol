@@ -62,7 +62,7 @@ function safeParse(raw) {
   }
 }
 
-// Deterministic offline analysis for tests/CI (set AI_FAKE=1). Avoids real API
+// Deterministic offline analysis (set AI_FAKE=1) so the app can run/demo with no Gemini key. Avoids real API
 // calls + cost while exercising the full request path. Never used in normal runs.
 function fakeAnalyze(text) {
   const t = String(text).toLowerCase();

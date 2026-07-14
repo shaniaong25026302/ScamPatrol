@@ -6,7 +6,7 @@ app into a retro-pixel game, **"Scam Patrol HQ."**
 
 **Stack:** Node.js · Express 5 · EJS (server-rendered) · MySQL (`mysql2`, filess.io) ·
 Google Gemini (`@google/genai`) · Nodemailer · `bcrypt` · `jsonwebtoken` · vanilla JS + Web Audio ·
-plain CSS (retro/pixel theme) · ESLint + Prettier · `node --test`.
+plain CSS (retro/pixel theme) · ESLint + Prettier.
 
 > Every feature below lists the **file path(s)** that implement it.
 
@@ -20,7 +20,7 @@ mount points; 404/error handling; guest-gating middleware (guests only see the h
 
 ## 2. Authentication
 Register / login / logout / forgot-password / reset-password; bcrypt (12 rounds);
-JWT in httpOnly cookie (24h) + refresh token (7d); `attachUser` / `requireAuth` / `requireAuthPage`
+JWT in httpOnly cookie (24h) + refresh token (7d); `attachUser` / `requireAuth`
 / `requireRole` middleware; full server-side + inline validation; show/hide-password eye toggle;
 3 roles (Guest/User/Admin).
 **Files:** `src/controllers/auth.controller.js` · `src/routes/auth.routes.js` ·
@@ -35,7 +35,7 @@ Sends real reset links via Nodemailer; falls back to an on-screen link in dev.
 
 ## 4. AI Scam Checker
 Paste a message → Gemini returns risk level (low/medium/high) + explanation + red-flag signals;
-saved history for users; `AI_FAKE` offline test mode.
+saved history for users; `AI_FAKE` offline mode (runs without a Gemini key, for demos).
 **Files:** `src/controllers/ai.controller.js` · `src/routes/ai.routes.js` ·
 `src/routes/ai.pages.routes.js` · `src/services/gemini.service.js` · `src/models/ai.model.js` ·
 `views/ai-checker.ejs` · `public/js/ai-checker.js`
@@ -132,10 +132,9 @@ Logo, owl mentor, 4 villain portraits, character avatars.
 Logged-out users can only see the gamified homepage; everything else requires login.
 **Files:** `src/server.js` (guest-gate middleware)
 
-## 20. ✅ Tests & tooling
-`node --test` suite (unit + integration, self-cleaning, DB-skip-safe, `AI_FAKE`).
-**Files:** `tests/api.test.js` · `tests/validate.test.js` · `tests/jwt.test.js` · `tests/helpers.js` ·
-`eslint.config.js` · `.prettierrc.json` · `package.json`
+## 20. ✅ Tooling
+ESLint + Prettier as a code-quality gate; npm scripts for dev / start / lint / format.
+**Files:** `eslint.config.js` · `.prettierrc.json` · `package.json`
 
 ---
 
@@ -156,18 +155,13 @@ require("dotenv").config();
 "engines": { "node": ">=18" }
 ```
 
-**3. Automated testing** — a `node --test` suite (38 tests). `package.json:15` · `tests/api.test.js` · `tests/jwt.test.js` · `tests/validate.test.js`
-```json
-"test": "node --test"
-```
-
-**4. Static analysis & formatting (quality gate)** — `package.json:13-14` · `eslint.config.js` · `.prettierrc.json`
+**3. Static analysis & formatting (quality gate)** — `package.json:13-14` · `eslint.config.js` · `.prettierrc.json`
 ```json
 "lint": "eslint .",
 "format": "prettier --write ."
 ```
 
-**5. Monitoring / health check** — `src/server.js:68`
+**4. Monitoring / health check** — `src/server.js:68`
 ```js
 // [DevOps: Monitoring / health check] liveness+readiness endpoint that also probes the DB
 app.get("/api/health", async (req, res) => {
@@ -176,14 +170,14 @@ app.get("/api/health", async (req, res) => {
 });
 ```
 
-**6. Centralized error handling + async wrappers** — one handler catches every fault so the process
+**5. Centralized error handling + async wrappers** — one handler catches every fault so the process
 never crashes. `src/server.js:123` · `src/routes/ai.routes.js:7`
 ```js
 app.use((err, req, res, next) => { console.error(err); res.status(500).json({ error: "Internal server error" }); });
 const h = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 ```
 
-**7. Graceful shutdown** — `src/server.js:143`
+**6. Graceful shutdown** — `src/server.js:143`
 ```js
 // [DevOps: Graceful shutdown] close server + DB pool cleanly on termination signals
 const shutdown = (sig) => { server.close(() => require("./db").pool.end().finally(() => process.exit(0))); };
@@ -191,7 +185,7 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 ```
 
-**8. Resource management (tuned connection pool)** — `src/db.js:13`
+**7. Resource management (tuned connection pool)** — `src/db.js:13`
 ```js
 // [DevOps: Resource management] tuned pool (filess.io caps at 5 connections)
 connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 4,
@@ -199,26 +193,26 @@ maxIdle: 2,
 idleTimeout: 30000,
 ```
 
-**9. Observability / structured logging** — `src/services/mail.service.js:145,189`
+**8. Observability / structured logging** — `src/services/mail.service.js:145,189`
 ```js
 console.log(`Email: ${provider} HTTP API configured (sender ${senderIdentity().email}).`);
 console.log(`Password reset email sent via ... (id ${info.messageId}) -> ${toEmail}`);
 ```
 
-**10. Reliability** — HTTP email API (Mailjet) with SMTP fallback. `src/services/mail.service.js`
+**9. Reliability** — HTTP email API (Mailjet) with SMTP fallback. `src/services/mail.service.js`
 ```js
 // [DevOps: Reliability]
 if (hasMailjet()) { /* Mailjet HTTPS API — port 443, works even where SMTP is blocked */ }
 // else fall back to plain SMTP
 ```
 
-**11. Security by default (DevSecOps)**
+**10. Security by default (DevSecOps)**
 - httpOnly + secure cookies — `src/utils/jwt.js:25` → `return { httpOnly: true, sameSite: "lax", secure: isProd(), maxAge: DAY };`
 - password hashing — `src/controllers/auth.controller.js:18` → `const SALT_ROUNDS = 12;`
 - server-side input validation — `src/utils/validate.js:5`
 - auth guard / guest-gating — `src/server.js:64` → `return res.status(401).json({ error: "Login required." });`
 
-**12. Config-driven deployment** — `src/server.js:21,25`
+**11. Config-driven deployment** — `src/server.js:21,25`
 ```js
 const PORT = process.env.PORT || 3000;   // [12-factor] bind to the port the platform injects
 app.set("trust proxy", 1);               // trust the platform's proxy (correct https + host)
@@ -234,7 +228,6 @@ app.set("trust proxy", 1);               // trust the platform's proxy (correct 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # automated tests
 npm run lint
 ```
 

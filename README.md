@@ -17,7 +17,7 @@ There is **no separate frontend build** — client interactivity is small `fetch
 - **AI:** Google Gemini (`@google/genai`)
 - **Email:** Mailjet HTTP API (primary) / Gmail SMTP (fallback) via Nodemailer
 - **Auth:** `bcrypt` + JWT in httpOnly cookies
-- **Tooling:** ESLint + Prettier, `node --test`, nodemon
+- **Tooling:** ESLint + Prettier, nodemon
 
 ---
 
@@ -85,7 +85,6 @@ APP_BASE_URL=http://localhost:3000
 ```bash
 npm run dev     # development with auto-reload (nodemon) → http://localhost:3000
 npm start       # production (node src/server.js)
-npm test        # automated tests (node --test)
 npm run lint    # ESLint
 ```
 
@@ -133,7 +132,6 @@ ScamPatrol/
     js/                  small fetch() client scripts
     img/ audio/          assets
   db/schema.sql          database schema
-  tests/                 node --test suite
 ```
 
 ---
@@ -379,6 +377,5 @@ app.use("/cases", require("./routes/cases.pages.routes"));     // pages
 |---|---|
 | `npm run dev` | Run with nodemon (auto-reload) |
 | `npm start` | Run once (production) |
-| `npm test` | Run the test suite |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier |
