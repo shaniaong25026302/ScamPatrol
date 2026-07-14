@@ -187,6 +187,194 @@
           "explanation": "This article was classified as Phishing by the same keyword-scoring logic used by Scam Weather. Source: CISA Cybersecurity Advisories."
         }
       ]
+    },
+    "2026-07-14": {
+      "date": "2026-07-14",
+      "generatedAt": "2026-07-14T04:11:36.135Z",
+      "sourcePolicy": "Generated automatically from Scam Weather Scam News trusted articles.",
+      "totalQuestions": 10,
+      "questions": [
+        {
+          "id": "dq-2026-07-14-1-86f32ce9",
+          "kind": "statistic",
+          "prompt": "According to today's Scam News article pool, which scam type appears most often?",
+          "articleTitle": "Scam Weather data signal",
+          "articleSnippet": "Daily Quiz counted scam-type labels across 5 trusted articles cached by Scam Weather.",
+          "articleLink": "/scam-weather",
+          "sourceName": "Scam Weather automation",
+          "publishedAt": "2026-07-14T04:11:36.132Z",
+          "options": [
+            "Phishing",
+            "Pretext",
+            "Trojan",
+            "Spyware"
+          ],
+          "correctIndex": 0,
+          "explanation": "Phishing appeared 4 time(s) in the current trusted article pool used by Scam Weather."
+        },
+        {
+          "id": "dq-2026-07-14-2-4dca176b",
+          "kind": "statistic",
+          "prompt": "How many articles in today's Scam News pool were published within the last 24 hours?",
+          "articleTitle": "Scam Weather freshness policy",
+          "articleSnippet": "Scam Weather prefers 24-hour articles, then backfills with the latest older trusted articles so the page never looks empty.",
+          "articleLink": "/scam-weather",
+          "sourceName": "Scam Weather automation",
+          "publishedAt": "2026-07-14T04:11:36.133Z",
+          "options": [
+            "1",
+            "5",
+            "0",
+            "3"
+          ],
+          "correctIndex": 1,
+          "explanation": "5 article(s) in the current quiz pool are within the last 24 hours. Older trusted items are allowed as fallback."
+        },
+        {
+          "id": "dq-2026-07-14-3-b38892cc",
+          "kind": "source",
+          "prompt": "Which trusted source did Scam Weather use for this article?",
+          "articleTitle": "Police warn of parcel delivery phishing links during shopping season",
+          "articleSnippet": "Public advisories warn that scammers are sending fake parcel fee messages that lead victims to spoofed payment pages.",
+          "articleLink": "https://www.police.gov.sg/Advisories/Scams",
+          "sourceName": "Singapore Police Force — Scams",
+          "publishedAt": "2026-07-14T02:11:36.115Z",
+          "options": [
+            "Singapore Police Force — Scams",
+            "FTC Consumer Advice — Scams",
+            "BleepingComputer",
+            "The Hacker News"
+          ],
+          "correctIndex": 0,
+          "explanation": "The article card in Scam News traces this item back to Singapore Police Force — Scams. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "id": "dq-2026-07-14-4-7a4d06ff",
+          "kind": "scam-type",
+          "prompt": "Based on this Scam News article, which scam/cyber threat type fits best?",
+          "articleTitle": "Police warn of parcel delivery phishing links during shopping season",
+          "articleSnippet": "Public advisories warn that scammers are sending fake parcel fee messages that lead victims to spoofed payment pages.",
+          "articleLink": "https://www.police.gov.sg/Advisories/Scams",
+          "sourceName": "Singapore Police Force — Scams",
+          "publishedAt": "2026-07-14T02:11:36.115Z",
+          "options": [
+            "Baiting",
+            "Trojan",
+            "Pretext",
+            "Phishing"
+          ],
+          "correctIndex": 3,
+          "explanation": "This article was classified as Phishing by the same keyword-scoring logic used by Scam Weather. Source: Singapore Police Force — Scams."
+        },
+        {
+          "id": "dq-2026-07-14-5-d5599c0c",
+          "kind": "precaution",
+          "prompt": "Which precaution best matches the Pretext risk described in this article?",
+          "articleTitle": "FTC warns consumers about impersonation and fake bank alerts",
+          "articleSnippet": "Consumers are told to verify suspicious bank messages directly through official channels instead of clicking links.",
+          "articleLink": "https://consumer.ftc.gov/scams",
+          "sourceName": "FTC Consumer Advice — Scams",
+          "publishedAt": "2026-07-13T12:11:36.115Z",
+          "options": [
+            "Pause and verify the caller or sender through an official channel before giving information.",
+            "Hang up and call the organisation using the official phone number from its website or app.",
+            "Never share NRIC, passport, Singpass, OTP, or card details through unsolicited messages.",
+            "Forward the suspicious link to more friends so they can judge whether it is real."
+          ],
+          "correctIndex": 0,
+          "explanation": "Pretext is best handled by this precaution because it reduces the chance of trusting fake links, identities, files, or urgent requests."
+        },
+        {
+          "id": "dq-2026-07-14-6-6b9682b2",
+          "kind": "source",
+          "prompt": "Which trusted source did Scam Weather use for this article?",
+          "articleTitle": "FTC warns consumers about impersonation and fake bank alerts",
+          "articleSnippet": "Consumers are told to verify suspicious bank messages directly through official channels instead of clicking links.",
+          "articleLink": "https://consumer.ftc.gov/scams",
+          "sourceName": "FTC Consumer Advice — Scams",
+          "publishedAt": "2026-07-13T12:11:36.115Z",
+          "options": [
+            "The Hacker News",
+            "Singapore ScamShield",
+            "BleepingComputer",
+            "FTC Consumer Advice — Scams"
+          ],
+          "correctIndex": 3,
+          "explanation": "The article card in Scam News traces this item back to FTC Consumer Advice — Scams. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "id": "dq-2026-07-14-7-a2a261f7",
+          "kind": "scam-type",
+          "prompt": "Based on this Scam News article, which scam/cyber threat type fits best?",
+          "articleTitle": "FTC warns consumers about impersonation and fake bank alerts",
+          "articleSnippet": "Consumers are told to verify suspicious bank messages directly through official channels instead of clicking links.",
+          "articleLink": "https://consumer.ftc.gov/scams",
+          "sourceName": "FTC Consumer Advice — Scams",
+          "publishedAt": "2026-07-13T12:11:36.115Z",
+          "options": [
+            "Pretext",
+            "Zero Day",
+            "Identity Theft",
+            "Spyware"
+          ],
+          "correctIndex": 0,
+          "explanation": "This article was classified as Pretext by the same keyword-scoring logic used by Scam Weather. Source: FTC Consumer Advice — Scams."
+        },
+        {
+          "id": "dq-2026-07-14-8-20ad935c",
+          "kind": "precaution",
+          "prompt": "Which precaution best matches the Pretext risk described in this article?",
+          "articleTitle": "FTC warns consumers about impersonation and fake bank alerts",
+          "articleSnippet": "Consumers are told to verify suspicious bank messages directly through official channels instead of clicking links.",
+          "articleLink": "https://consumer.ftc.gov/scams",
+          "sourceName": "FTC Consumer Advice — Scams",
+          "publishedAt": "2026-07-13T12:11:36.115Z",
+          "options": [
+            "Be extra careful with targeted messages that mention your school, workplace, role, or recent activity.",
+            "Use trusted security tools and rebuild infected systems when deep system compromise is suspected.",
+            "Pause and verify the caller or sender through an official channel before giving information.",
+            "Install the unknown attachment first and delete it later if it seems suspicious."
+          ],
+          "correctIndex": 2,
+          "explanation": "Pretext is best handled by this precaution because it reduces the chance of trusting fake links, identities, files, or urgent requests."
+        },
+        {
+          "id": "dq-2026-07-14-9-fb4da32e",
+          "kind": "source",
+          "prompt": "Which trusted source did Scam Weather use for this article?",
+          "articleTitle": "Police warn of parcel delivery phishing links during shopping season",
+          "articleSnippet": "Public advisories warn that scammers are sending fake parcel fee messages that lead victims to spoofed payment pages.",
+          "articleLink": "https://www.police.gov.sg/Advisories/Scams",
+          "sourceName": "Singapore Police Force — Scams",
+          "publishedAt": "2026-07-14T02:11:36.115Z",
+          "options": [
+            "Singapore ScamShield",
+            "The Hacker News",
+            "FTC Consumer Advice — Scams",
+            "Singapore Police Force — Scams"
+          ],
+          "correctIndex": 3,
+          "explanation": "The article card in Scam News traces this item back to Singapore Police Force — Scams. Daily Quiz keeps that source visible for trust and presentation transparency."
+        },
+        {
+          "id": "dq-2026-07-14-10-98131c44",
+          "kind": "scam-type",
+          "prompt": "Based on this Scam News article, which scam/cyber threat type fits best?",
+          "articleTitle": "ScamShield reminder: never share OTPs or Singpass details through message links",
+          "articleSnippet": "Users are reminded that banks and government agencies will not ask for OTPs, passwords, or Singpass details through unsolicited links.",
+          "articleLink": "https://www.scamshield.gov.sg/",
+          "sourceName": "Singapore ScamShield",
+          "publishedAt": "2026-07-14T00:11:36.115Z",
+          "options": [
+            "Trojan",
+            "Zero Day",
+            "Phishing",
+            "Baiting"
+          ],
+          "correctIndex": 2,
+          "explanation": "This article was classified as Phishing by the same keyword-scoring logic used by Scam Weather. Source: Singapore ScamShield."
+        }
+      ]
     }
   }
 }

@@ -105,6 +105,24 @@
           }
         ]
       }
+    },
+    "2026-07-14:37": {
+      "date": "2026-07-14",
+      "userId": "37",
+      "startedAt": "2026-07-14T04:11:36.137Z",
+      "completedAt": null,
+      "answers": [
+        {
+          "questionId": "dq-2026-07-14-1-86f32ce9",
+          "selectedIndex": 0,
+          "correctIndex": 0,
+          "correct": true,
+          "answeredAt": "2026-07-14T04:11:51.260Z",
+          "explanation": "Phishing appeared 4 time(s) in the current trusted article pool used by Scam Weather."
+        }
+      ],
+      "score": 1,
+      "reward": null
     }
   }
 }

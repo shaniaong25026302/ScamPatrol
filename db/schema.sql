@@ -347,3 +347,58 @@ CREATE TABLE IF NOT EXISTS daily_quiz_answers (
   CONSTRAINT fk_daily_quiz_answers_attempt FOREIGN KEY (attempt_id) REFERENCES daily_quiz_attempts (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- <Liam Daily Quiz End>
+
+-- <Shawn Glossary Start>
+-- ============================================================
+-- Member 6 — Scam Glossary tables
+-- Stores glossary terms, definitions, categories, and related
+-- metadata used by the Scam Glossary feature. Supports CRUD
+-- operations through the glossary management system.
+-- ============================================================
+
+CREATE TABLE glossary (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    term VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    prevention TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- <Shawn Chat History Start>
+-- ============================================================
+-- Member 6 — Chat History tables
+-- Stores Inspector Hoot chat sessions and messages, allowing
+-- users to revisit previous conversations and continue chats
+-- across multiple sessions.
+-- ============================================================
+
+-- CREATE TABLE chat_sessions ...
+-- CREATE TABLE chat_messages ...
+
+CREATE TABLE chat_sessions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    is_pinned BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE chat_messages (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    session_id INT UNSIGNED NOT NULL,
+    role ENUM('user', 'assistant') NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (session_id)
+        REFERENCES chat_sessions(id)
+        ON DELETE CASCADE
+);
