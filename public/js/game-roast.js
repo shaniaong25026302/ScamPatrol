@@ -7,7 +7,34 @@
   if (!submit) return;
 
   submit.addEventListener("click", async () => {
-    const text = $("roast-text").value;
+  const text = $("roast-text").value;
+
+  const patterns = [
+    /\b[SFTG]\d{7}[A-Z]\b/i, // NRIC
+    /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i, // Email
+    /\b\d{6}\b/, // OTP
+    /(?:\d[ -]?){13,16}/, // Card Number
+    /password/i // Password
+  ];
+
+  const found = patterns.some((pattern) => pattern.test(text));
+
+  if (found) {
+    const proceed = confirm(
+      "🛡 Scam Patrol Alert!\n\n" +
+      "We detected potentially sensitive information in your submission.\n\n" +
+      "Detected information may include:\n" +
+      "• NRIC\n" +
+      "• Email Address\n" +
+      "• OTP\n" +
+      "• Card Details\n" +
+      "• Password Information\n\n" +
+      "Sharing personal information may expose you to scams.\n\n" +
+      "Do you want to continue anyway?"
+    );
+
+    if (!proceed) return;
+  }
     $("roast-error").textContent = "";
     if (!text || text.trim().length < 10) { $("roast-error").textContent = "Paste at least 10 characters to roast."; return; }
     submit.disabled = true; submit.textContent = "🔥 Roasting…";
