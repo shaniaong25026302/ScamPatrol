@@ -10,7 +10,18 @@
     <div class="hoot-head">
       <img src="/img/owl-mentor.png?v=2" alt="" class="pixel" />
       <div><b>Inspector Hoot</b><small>Anti-scam helper</small></div>
-      <button id="hoot-close" class="hoot-close" aria-label="Close chat">✕</button>
+      <%# <Rebecca Member 2 Start> %>
+      <div class="hoot-window-controls" aria-label="Chat window controls">
+        <button
+          id="hoot-maximize"
+          class="hoot-window-btn"
+          type="button"
+          aria-label="Maximize chat"
+          title="Maximize chat"
+        >□</button>
+        <button id="hoot-close" class="hoot-close" type="button" aria-label="Close chat" title="Close chat">✕</button>
+      </div>
+      <%# <Rebecca Member 2 End> %>
     </div>
     <!-- Shawn Start -->
     <div class="chat-history-panel">
@@ -83,6 +94,15 @@
       <%# <Rebecca Feature 3 End> %>
       <button class="gw-btn gold" type="submit" aria-label="Send">➤</button>
     </form>
+    <%# <Rebecca Member 2 Start> %>
+    <button
+      id="hoot-resize-handle"
+      class="hoot-resize-handle"
+      type="button"
+      aria-label="Resize chat window"
+      title="Drag to resize chat"
+    ></button>
+    <%# <Rebecca Member 2 End> %>
   </div>
 </div>
 <script src="/js/chat-widget.js" defer></script>

@@ -1181,3 +1181,120 @@ img.owl { image-rendering: auto; }
   .dq-status-card { flex-basis: 100%; }
 }
 /* <Liam Member 5 Daily Quiz End> */
+
+
+/* <Rebecca Member 2 Start> */
+/* Ask Hoot window controls: users can maximize/restore or resize the chat widget. */
+.hoot-panel {
+  width: var(--hoot-panel-width, min(380px, calc(100vw - 32px)));
+  height: var(--hoot-panel-height, min(620px, calc(100vh - 104px)));
+  min-width: min(320px, calc(100vw - 32px));
+  min-height: min(420px, calc(100vh - 96px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 96px);
+}
+
+.hoot-panel.is-maximized {
+  top: 76px;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  width: auto !important;
+  height: auto !important;
+  max-width: none;
+  max-height: none;
+  border-radius: 12px;
+}
+
+.hoot-panel.is-resizing,
+.hoot-panel.is-resizing * {
+  user-select: none;
+}
+
+.hoot-window-controls {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.hoot-window-btn,
+.hoot-close {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--gw-border);
+  border-radius: 8px;
+  color: var(--gw-muted);
+  cursor: pointer;
+  font-size: .95rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.hoot-close {
+  margin-left: 0;
+}
+
+.hoot-window-btn:hover,
+.hoot-close:hover {
+  color: var(--gw-text);
+  border-color: var(--gw-cyan);
+  filter: brightness(1.08);
+}
+
+.hoot-panel .chatbot {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.hoot-panel .chatbot-input {
+  flex: 0 0 auto;
+}
+
+.hoot-resize-handle {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background:
+    linear-gradient(135deg, transparent 0 45%, rgba(255,255,255,.28) 45% 52%, transparent 52% 100%),
+    linear-gradient(135deg, transparent 0 62%, rgba(255,255,255,.18) 62% 69%, transparent 69% 100%);
+  cursor: nesw-resize;
+  opacity: .8;
+  z-index: 2;
+}
+
+.hoot-resize-handle:hover,
+.hoot-panel.is-resizing .hoot-resize-handle {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px rgba(116, 226, 255, .7));
+}
+
+.hoot-panel.is-maximized .hoot-resize-handle {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .hoot-panel {
+    width: var(--hoot-panel-width, calc(100vw - 20px));
+    height: var(--hoot-panel-height, min(560px, calc(100vh - 86px)));
+    min-width: calc(100vw - 20px);
+    min-height: min(380px, calc(100vh - 86px));
+  }
+
+  .hoot-panel.is-maximized {
+    top: 64px;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+  }
+}
+/* <Rebecca Member 2 End> */
+

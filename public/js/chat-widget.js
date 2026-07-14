@@ -5,6 +5,10 @@
   const launcher = document.getElementById("hoot-launcher");
   const panel = document.getElementById("hoot-panel");
   const closeBtn = document.getElementById("hoot-close");
+  // <Rebecca Member 2 Start>
+  const maximizeBtn = document.getElementById("hoot-maximize");
+  const resizeHandle = document.getElementById("hoot-resize-handle");
+  // <Rebecca Member 2 End>
   const box = document.getElementById("chatbot");
   const form = document.getElementById("chatbot-form");
   const input = document.getElementById("chatbot-text");
@@ -18,6 +22,152 @@
 
 
   if (!launcher || !panel || !box || !form || !input) return;
+
+  // <Rebecca Member 2 Start>
+  // Chat widget window controls: maximize/restore and drag-resize like a small app window.
+  const CHAT_SIZE_KEY = "scampatrolHootPanelSize";
+  const CHAT_MAXIMIZED_KEY = "scampatrolHootPanelMaximized";
+  let normalPanelSize = null;
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function getPanelLimits() {
+    const widthLimit = Math.max(320, window.innerWidth - 32);
+    const heightLimit = Math.max(420, window.innerHeight - 96);
+
+    return {
+      minWidth: Math.min(320, widthLimit),
+      minHeight: Math.min(420, heightLimit),
+      maxWidth: widthLimit,
+      maxHeight: heightLimit,
+    };
+  }
+
+  function setPanelSize(width, height, shouldSave = true) {
+    const limits = getPanelLimits();
+    const safeWidth = Math.round(clamp(width, limits.minWidth, limits.maxWidth));
+    const safeHeight = Math.round(clamp(height, limits.minHeight, limits.maxHeight));
+
+    panel.style.setProperty("--hoot-panel-width", `${safeWidth}px`);
+    panel.style.setProperty("--hoot-panel-height", `${safeHeight}px`);
+
+    if (shouldSave) {
+      localStorage.setItem(CHAT_SIZE_KEY, JSON.stringify({ width: safeWidth, height: safeHeight }));
+    }
+  }
+
+  function getCurrentPanelSize() {
+    const rect = panel.getBoundingClientRect();
+    return {
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+    };
+  }
+
+  function loadSavedPanelSize() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CHAT_SIZE_KEY) || "null");
+      if (saved && Number.isFinite(saved.width) && Number.isFinite(saved.height)) {
+        setPanelSize(saved.width, saved.height, false);
+      }
+    } catch (_) {
+      localStorage.removeItem(CHAT_SIZE_KEY);
+    }
+
+    if (localStorage.getItem(CHAT_MAXIMIZED_KEY) === "true") {
+      panel.classList.add("is-maximized");
+      updateMaximizeButton(true);
+    }
+  }
+
+  function updateMaximizeButton(isMaximized) {
+    if (!maximizeBtn) return;
+
+    maximizeBtn.textContent = isMaximized ? "❐" : "□";
+    maximizeBtn.setAttribute("aria-label", isMaximized ? "Restore chat size" : "Maximize chat");
+    maximizeBtn.setAttribute("title", isMaximized ? "Restore chat size" : "Maximize chat");
+  }
+
+  function maximizePanel(shouldSave = true) {
+    if (!panel.classList.contains("is-maximized")) {
+      normalPanelSize = getCurrentPanelSize();
+    }
+
+    panel.classList.add("is-maximized");
+    updateMaximizeButton(true);
+
+    if (shouldSave) {
+      localStorage.setItem(CHAT_MAXIMIZED_KEY, "true");
+    }
+  }
+
+  function restorePanel(shouldSave = true) {
+    panel.classList.remove("is-maximized");
+    updateMaximizeButton(false);
+
+    if (normalPanelSize) {
+      setPanelSize(normalPanelSize.width, normalPanelSize.height, shouldSave);
+    }
+
+    if (shouldSave) {
+      localStorage.setItem(CHAT_MAXIMIZED_KEY, "false");
+    }
+  }
+
+  function toggleMaximize() {
+    if (panel.classList.contains("is-maximized")) {
+      restorePanel();
+    } else {
+      maximizePanel();
+    }
+  }
+
+  function startResize(e) {
+    if (!resizeHandle || panel.classList.contains("is-maximized")) return;
+
+    e.preventDefault();
+    resizeHandle.setPointerCapture?.(e.pointerId);
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const start = getCurrentPanelSize();
+    panel.classList.add("is-resizing");
+
+    function onMove(moveEvent) {
+      const newWidth = start.width + (startX - moveEvent.clientX);
+      const newHeight = start.height + (moveEvent.clientY - startY);
+      setPanelSize(newWidth, newHeight, false);
+    }
+
+    function onStop() {
+      panel.classList.remove("is-resizing");
+      const current = getCurrentPanelSize();
+      setPanelSize(current.width, current.height, true);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onStop);
+      window.removeEventListener("pointercancel", onStop);
+    }
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onStop);
+    window.addEventListener("pointercancel", onStop);
+  }
+
+  function keepPanelInsideViewport() {
+    if (panel.classList.contains("is-maximized")) return;
+
+    const current = getCurrentPanelSize();
+    setPanelSize(current.width, current.height, false);
+  }
+
+  loadSavedPanelSize();
+
+  if (maximizeBtn) maximizeBtn.addEventListener("click", toggleMaximize);
+  if (resizeHandle) resizeHandle.addEventListener("pointerdown", startResize);
+  window.addEventListener("resize", keepPanelInsideViewport);
+  // <Rebecca Member 2 End>
 
   const esc = (s) =>
     String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

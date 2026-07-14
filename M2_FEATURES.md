@@ -63,3 +63,11 @@ This ZIP contains Rebecca's Member 2 work for scamlah.
 - Added `max` date protection on the Report Scam date input.
 - Added frontend validation in `public/js/case-form.js` and backend validation in `src/controllers/case.controller.js` so the rule cannot be bypassed by editing browser HTML.
 - The rule applies to creating reports, editing reports, saving drafts, submitting drafts, and auto-saving drafts.
+
+
+## Rebecca Add-on: Resizable / Maximizable Ask Hoot Widget
+
+- Added a maximize/restore control to the Ask Hoot chatbot widget so users can enlarge the chat panel when reading longer scam advice.
+- Added a drag-resize handle so users can adjust the chatbot window size like a small laptop app window.
+- Saved the user's preferred chatbot size using `localStorage`, so the widget remembers the chosen size on the same browser.
+- This improves accessibility and usability for the chatbot, especially for longer AI replies and users who need a larger reading area.
