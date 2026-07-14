@@ -545,14 +545,47 @@
       const date = new Date(session.updated_at).toLocaleDateString();
 
       div.innerHTML = `
+        <div class="chat-history-header">
+
           <div class="chat-history-title">
               🦉 ${title}
           </div>
+
+          <button
+              class="pin-btn"
+              data-id="${session.id}"
+          >
+              ${session.is_pinned ? "📌" : "📍"}
+          </button>
 
           <div class="chat-history-date">
               ${date}
           </div>
       `;
+
+      const pinBtn = div.querySelector(".pin-btn");
+
+      pinBtn.addEventListener("click", async (e) => {
+
+          e.stopPropagation();
+
+          await fetch("/api/chat/" + session.id + "/pin", {
+
+              method: "POST",
+
+              headers: {
+                  "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                  pinned: !session.is_pinned
+              })
+
+          });
+
+          loadSessions();
+
+      });
 
           div.onclick = () => {
               loadConversation(session.id);

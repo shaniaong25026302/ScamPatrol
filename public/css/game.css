@@ -893,6 +893,21 @@ img.owl { image-rendering: auto; }
   margin-bottom:.5rem;
 }
 
+.pin-btn{
+
+    border:none;
+    background:transparent;
+    cursor:pointer;
+    font-size:1rem;
+
+}
+
+.pin-btn:hover{
+
+    transform:scale(1.15);
+
+}
+
 .chat-history-item{
   padding:.45rem .6rem;
   margin-bottom:.4rem;

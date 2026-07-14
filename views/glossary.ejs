@@ -10,12 +10,21 @@
 
     <input
         type="text"
+        id="glossary-search"
         class="form-control mb-4"
         placeholder="Search scam types...">
 
+    <p id="no-results" class="text-muted" style="display:none;">
+        No matching scam types found.
+    </p>
+
     <% glossary.forEach(item => { %>
 
-        <div class="card mb-3">
+        <div 
+            class="card mb-3 glossary-card"
+            data-term="<%= item.term.toLowerCase() %>"
+            data-description="<%= item.description.toLowerCase() %>"
+        >
 
             <div class="card-body">
 
@@ -38,5 +47,37 @@
     <% }) %>
 
 </div>
+
+<script>
+const search = document.getElementById("glossary-search");
+const noResults = document.getElementById("no-results");
+
+search.addEventListener("input", () => {
+
+    const keyword = search.value.toLowerCase();
+
+    let found = false;
+
+    document.querySelectorAll(".glossary-card").forEach(card => {
+
+        const term = card.dataset.term;
+        const description = card.dataset.description;
+
+        if (
+            term.includes(keyword) ||
+            description.includes(keyword)
+        ) {
+            card.style.display = "";
+            found = true;
+        } else {
+            card.style.display = "none";
+        }
+
+    });
+
+    noResults.style.display = found ? "none" : "block";
+
+});
+</script>
 
 <%# <Shawn End> %>
