@@ -14,6 +14,57 @@
 
     <br>
 
+    <label>Category</label><br>
+
+    <select
+        name="category"
+        class="form-control"
+        required>
+
+        <option value="Phishing"
+            <%= glossary.category === "Phishing" ? "selected" : "" %>>
+            Phishing
+        </option>
+
+        <option value="Investment"
+            <%= glossary.category === "Investment" ? "selected" : "" %>>
+            Investment
+        </option>
+
+        <option value="Romance"
+            <%= glossary.category === "Romance" ? "selected" : "" %>>
+            Romance
+        </option>
+
+        <option value="Banking"
+            <%= glossary.category === "Banking" ? "selected" : "" %>>
+            Banking
+        </option>
+
+        <option value="Government"
+            <%= glossary.category === "Government" ? "selected" : "" %>>
+            Government
+        </option>
+
+        <option value="Job"
+            <%= glossary.category === "Job" ? "selected" : "" %>>
+            Job
+        </option>
+
+        <option value="E-Commerce"
+            <%= glossary.category === "E-Commerce" ? "selected" : "" %>>
+            E-Commerce
+        </option>
+
+        <option value="General"
+            <%= glossary.category === "General" ? "selected" : "" %>>
+            General
+        </option>
+
+    </select>
+
+    <br>
+
     <label>Description</label><br>
     <textarea
         name="description"

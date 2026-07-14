@@ -208,10 +208,11 @@ router.get("/glossary/new", (req, res) => {
 router.post("/glossary/new", async (req, res) => {
     try {
 
-        const { term, description, prevention } = req.body;
+        const { term, category, description, prevention } = req.body;
 
         await glossaryModel.createGlossary(
             term,
+            category,
             description,
             prevention
         );
@@ -246,11 +247,12 @@ router.get("/glossary/edit/:id", async (req, res) => {
 router.post("/glossary/edit/:id", async (req, res) => {
     try {
 
-        const { term, description, prevention } = req.body;
+        const { term, category, description, prevention } = req.body;
 
         await glossaryModel.updateGlossary(
             req.params.id,
             term,
+            category,
             description,
             prevention
         );

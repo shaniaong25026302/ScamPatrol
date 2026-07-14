@@ -23,25 +23,26 @@ async function getGlossaryById(id) {
 }
 
 // Create glossary entry
-async function createGlossary(term, description, prevention) {
+async function createGlossary(term, category, description, prevention) {
     await pool.query(
         `INSERT INTO glossary
-        (term, description, prevention)
-        VALUES (?, ?, ?)`,
-        [term, description, prevention]
+        (term, category, description, prevention)
+        VALUES (?, ?, ?, ?)`,
+        [term, category, description, prevention]
     );
 }
 
 // Update glossary entry
-async function updateGlossary(id, term, description, prevention) {
+async function updateGlossary(id, term, category, description, prevention) {
     await pool.query(
         `UPDATE glossary
         SET
             term=?,
+            category=?,
             description=?,
             prevention=?
         WHERE id=?`,
-        [term, description, prevention, id]
+        [term, category, description, prevention, id]
     );
 }
 

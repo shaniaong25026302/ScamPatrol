@@ -8,11 +8,39 @@
         Learn about common scam types, how they work, and how you can protect yourself.
     </p>
 
-    <input
-        type="text"
-        id="glossary-search"
-        class="form-control mb-4"
-        placeholder="Search scam types...">
+    <div class="row mb-4">
+
+        <div class="col-md-8">
+
+            <input
+                type="text"
+                id="glossary-search"
+                class="form-control"
+                placeholder="🔍 Search scam types...">
+
+        </div>
+
+        <div class="col-md-4">
+
+            <select
+                id="glossary-filter"
+                class="form-select">
+
+                <option value="all">📂 All Categories</option>
+                <option value="phishing">Phishing</option>
+                <option value="investment">Investment</option>
+                <option value="romance">Romance</option>
+                <option value="banking">Banking</option>
+                <option value="government">Government</option>
+                <option value="job">Job</option>
+                <option value="e-commerce">E-Commerce</option>
+                <option value="general">General</option>
+
+            </select>
+
+        </div>
+
+    </div>
 
     <p id="no-results" class="text-muted" style="display:none;">
         No matching scam types found.
@@ -20,13 +48,17 @@
 
     <% glossary.forEach(item => { %>
 
-        <div 
+        <div
             class="card mb-3 glossary-card"
             data-term="<%= item.term.toLowerCase() %>"
             data-description="<%= item.description.toLowerCase() %>"
-        >
+            data-category="<%= item.category.toLowerCase() %>">
 
             <div class="card-body">
+
+                <span class="badge bg-primary mb-2">
+                    <%= item.category %>
+                </span>
 
                 <h4>📚 <%= item.term %></h4>
 
@@ -49,12 +81,15 @@
 </div>
 
 <script>
+
 const search = document.getElementById("glossary-search");
+const filter = document.getElementById("glossary-filter");
 const noResults = document.getElementById("no-results");
 
-search.addEventListener("input", () => {
+function filterGlossary() {
 
     const keyword = search.value.toLowerCase();
+    const category = filter.value.toLowerCase();
 
     let found = false;
 
@@ -62,22 +97,36 @@ search.addEventListener("input", () => {
 
         const term = card.dataset.term;
         const description = card.dataset.description;
+        const cardCategory = card.dataset.category;
 
-        if (
+        const matchesSearch =
             term.includes(keyword) ||
-            description.includes(keyword)
-        ) {
+            description.includes(keyword);
+
+        const matchesCategory =
+            category === "all" ||
+            cardCategory === category;
+
+        if (matchesSearch && matchesCategory) {
+
             card.style.display = "";
             found = true;
+
         } else {
+
             card.style.display = "none";
+
         }
 
     });
 
     noResults.style.display = found ? "none" : "block";
 
-});
+}
+
+search.addEventListener("input", filterGlossary);
+filter.addEventListener("change", filterGlossary);
+
 </script>
 
 <%# <Shawn End> %>
