@@ -163,6 +163,41 @@ CREATE TABLE IF NOT EXISTS flags (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- <Nivi Member 3 Support End>
 
+-- <CG Member 4 Start>
+-- ============================================================
+-- Member 4 — Comments
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS comments (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    case_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    KEY idx_comments_case (case_id),
+    KEY idx_comments_user (user_id),
+
+    CONSTRAINT fk_comments_case
+        FOREIGN KEY (case_id)
+        REFERENCES scam_cases(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_comments_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+
+-- <CG Member 4 End>
+
 -- <Shania Gamification Start>
 -- ============================================================
 -- Scam Patrol HQ — gamification (M1, took over Leaderboard from M5)
