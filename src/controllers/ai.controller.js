@@ -84,6 +84,9 @@ const MAX_CHAT_MSGS = 20;
 async function chat(req, res) {
 
   const raw = Array.isArray((req.body || {}).messages) ? req.body.messages : null;
+  // <CG Member 4 Start>
+  const language = req.body.language || "en";
+  // <CG Member 4 End>
   if (!raw || !raw.length) return res.status(400).json({ error: "Send a message." });
 
   const messages = raw
@@ -124,7 +127,7 @@ async function chat(req, res) {
 
   let reply;
   try {
-    reply = await chatReply(messages);
+    reply = await chatReply(messages, language); //CG added language to the request
   } catch (e) {
     console.error("chat failed:", e.message);
     return res.status(502).json({ error: "Inspector Hoot is unavailable right now. Try again shortly." });
