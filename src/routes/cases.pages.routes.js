@@ -83,7 +83,8 @@ router.get("/:id", async (req, res, next) => {
       title: scam.title,
       activePage: "cases",
       scam,
-      success: req.query.success
+      success: req.query.success,
+      comments:[]
     });
   } catch (err) {
     next(err);
