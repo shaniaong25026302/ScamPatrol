@@ -12,6 +12,18 @@
   const box = document.getElementById("chatbot");
   const form = document.getElementById("chatbot-form");
   const input = document.getElementById("chatbot-text");
+  // <CG Member 4 Start>
+  const languageSelect = document.getElementById("chat-language");
+  let selectedLanguage = "en";
+
+  if (languageSelect) {
+    selectedLanguage = languageSelect.value;
+
+    languageSelect.addEventListener("change", () => {
+        selectedLanguage = languageSelect.value;
+    });
+  }
+  // <CG Member 4 End>
   const micBtn = document.getElementById("chatbot-mic");
   const voiceStatus = document.getElementById("chatbot-voice-status");
   //Shawn Start
@@ -494,7 +506,7 @@
       const r = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, sessionId }), // Shawn added sessionId to the request
+        body: JSON.stringify({ messages: history, sessionId, language: selectedLanguage }), // Shawn added sessionId to the request, CG added language to the request
       });
       const d = await r.json().catch(() => ({}));
       hideTyping();
