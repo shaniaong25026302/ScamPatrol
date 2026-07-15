@@ -82,6 +82,31 @@ async function updateRole(id, role) {
 }
 // <Shawn End>
 
+// <CG Start>
+async function getUserById(id) {
+  const [rows] = await pool.query(
+    `SELECT id, username, email, avatar_url, bio
+     FROM users
+     WHERE id = ?`,
+    [id]
+  );
+
+  return rows[0] || null;
+}
+
+async function updateUserProfile(id, { username, email, bio, avatar_url }) {
+  await pool.query(
+    `UPDATE users
+     SET username = ?,
+         email = ?,
+         bio = ?,
+         avatar_url = ?
+     WHERE id = ?`,
+    [username, email, bio, avatar_url, id]
+  );
+}
+// <CG End>
+
 
 module.exports = {
   findByEmail,
@@ -94,7 +119,11 @@ module.exports = {
   deleteResetsForUser,
   // <Shawn Start>
   getAllUsers, //Shawn Admin Panel for User Management
-  updateRole //Shawn Admin/User Panel for User Management
+  updateRole, //Shawn Admin/User Panel for User Management
   // <Shawn End>
+    // <CG Start>
+  getUserById,
+  updateUserProfile
+  // <CG End> 
 };
 // <Shania End>
