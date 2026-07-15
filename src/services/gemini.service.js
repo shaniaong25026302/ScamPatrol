@@ -247,6 +247,18 @@ const CHAT_SYSTEM = [
   "- Never ask the user for passwords, OTPs, card numbers or Singpass. Don't give financial or legal advice beyond general safety.",
 ].join("\n");
 
+// <CG Member 4 Start>
+const CHAT_LANGUAGES = {
+  en: "Reply ONLY in English.",
+  zh: "Reply ONLY in Simplified Chinese.",
+  ms: "Reply ONLY in Malay.",
+  ta: "Reply ONLY in Tamil.",
+  ja: "Reply ONLY in Japanese.",
+  ko: "Reply ONLY in Korean.",
+  es: "Reply ONLY in Spanish."
+};
+// <CG Member 4 End>
+
 function fakeChat(messages) {
   const last = String((messages[messages.length - 1] || {}).text || "").toLowerCase();
   if (/helpline|number|hotline|call|contact/.test(last))
