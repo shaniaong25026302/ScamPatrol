@@ -51,11 +51,21 @@ continuing. If a step needs nothing, say "no inputs needed". NEVER print a secre
 - Team integration + merge conflict resolution (same role as Phase 1).
 
 ## Do NOT touch (the other 5 own these — they build INTO my pipeline)
-- `Dockerfile` / `.dockerignore` / DATA_DIR wiring + volumes — **Rebecca (M2)**
-- `docker-compose.yml` / healthchecks / MySQL initdb wiring — **Liam (M5)**
-- `tests/*` + the npm `test` script + the CI test job's contents — **Shawn (M6)**
-- `ansible/` (site.yml, roles, inventory, .env.j2) — **Nivi (M3)**
-- `.github/dependabot.yml` + `.github/workflows/security.yml` — **CG (M4)**
+- `Dockerfile` / `.dockerignore` (hardening: non-root, HEALTHCHECK, layer caching, image size) — **Nivi (M3)**
+- `docker-compose.yml` / healthchecks / MySQL initdb / volumes + data persistence — **Shawn (M6)**
+- `tests/*` (the test CONTENT only) — **CG (M4)**
+- `ansible/` (site.yml, roles, inventory, .env.j2) — **Rebecca (M2)**
+- the CI validation job + schema gate, `.github/dependabot.yml`, `.github/workflows/security.yml` — **Liam (M5)**
+  (his validation job lands as a reviewed PR into MY `ci.yml` — keep it in its own job block)
+
+## My two day-2 floors (deliberate — they de-risk the two owners above)
+CG asked for testing and Nivi asked for Docker; both are delivery risks, so each component is split and I land the
+load-bearing floor myself on day 2. Do NOT skip these, and do NOT expand past them (the owners build on top):
+1. npm `test` script + ONE trivial smoke test -> the CI validation job exists and is green immediately, which alone
+   satisfies the core "pipeline includes validation" requirement regardless of what CG delivers. CG then restores the
+   real 382-line suite (`git show 904c104^:tests/api.test.js`) and extends coverage.
+2. A MINIMAL working `Dockerfile` (slim base, `npm ci --omit=dev`, COPY src/ views/ public/, CMD node src/server.js)
+   -> Compose and CD start immediately. Nivi then owns hardening/optimising it.
 Only edit shared files (`package.json`, `.env.example`, `README.md`) ADDITIVELY and flag the owner.
 
 ## Stack decisions (settled — do not re-litigate or "suggest alternatives")
