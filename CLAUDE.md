@@ -1,75 +1,96 @@
-# ScamGuard SG — Claude Code context. Express + EJS (server-rendered) + MySQL, SINGLE Node app. I am M1 (Auth + AI Checker + Team Lead).
+# Scam Patrol — Claude Code context. Express + EJS + MySQL, SINGLE Node app. I am M1 (CI/CD + Cloud Deployment + Team Lead).
 
-## Repo reality (important)
-The repo is ALREADY an EJS app (app.js + views/ + public/css/styles.css) — that IS our stack. Evolve it into the real
-skeleton; do NOT start a parallel React/frontend structure. There is NO separate frontend/ build. ONE Express app serves
-the JSON API (/api/*) AND renders the EJS pages (res.render). Client interactivity = small scripts in public/js using fetch().
+## Phase 2 reality (important)
+CA2 Phase 1 (the app) is DONE and graded. We are now in **Phase 2: DevOps Implementation (Week 11-13)**, assessed Week 13.
+**The app's FEATURES ARE FROZEN.** Do NOT add, redesign or "improve" app functionality, views, styling, game mechanics or
+AI features. Phase 2 work = Docker, CI/CD, deployment, IaC, testing in the pipeline, security scanning — infra files, not features.
+Graded repo = github.com/shaniaong25026302/scamlah-devops- (package.json's "ScamPatrol" name is stale metadata — ignore it).
+Starting point: the repo has ZERO DevOps infrastructure. No Dockerfile, no CI config, no YAML on any branch. This is greenfield.
+
+## The ONE exception to the app freeze (the Week 11 "prep PR" — mine, ask me first)
+Deploying the app as-is silently breaks it. These are DevOps CONFIG changes, not features. Nothing else in the app is in scope:
+- `src/utils/jwt.js` lines 41/48/53 — `secure: isProd()`. On a plain-HTTP EC2 with NODE_ENV=production the browser
+  SILENTLY DROPS the auth cookie -> login "succeeds" then every user is a guest, and jwt.verify failures are swallowed so
+  there is NO error anywhere. Works locally, breaks only on the demo box. Needs a COOKIE_SECURE override.
+- `src/server.js` — add `GET /api/health/live` (shallow) for the Docker HEALTHCHECK, and add it to the guest allow-list (:67).
+  `/api/health` (:77) deep-pings MySQL and 503s on a blip — as a HEALTHCHECK that restart-loops the container. Keep the deep
+  one for the post-deploy smoke gate; it is perfect for that and wrong for this.
+- `src/utils/jwt.js:10` — JWT_SECRET is read at MODULE LOAD and never validated. A missing secret = a guest-only app that
+  looks healthy. Fail fast at boot instead.
+- `src/services/dailyquiz.service.js:28` + `scamweather.service.js:27` — 4 JSON files in `src/data/` written via
+  `fs.writeFileSync`. Put their path behind a DATA_DIR env var so a volume can persist them (admin posts + quiz progress
+  currently vanish on every redeploy). Do NOT mount a volume at `src/data` — `missions.js`/`shop.js` are CODE in that folder.
+- `db/schema.sql:394,415,429` — glossary, chat_sessions, chat_messages are bare `CREATE TABLE` -> add `IF NOT EXISTS`.
+- `src/server.js:171-176` — graceful shutdown works but has no forced-exit timeout.
+Ask me before touching ANY of these. Nothing else in `src/` or `views/` is in scope.
 
 ## Before every change (always)
-- Inspect what exists first (git log, file tree, the file, db/schema.sql, .env.example, eslint/prettier, existing views/ + public/).
+- Inspect what exists first (git log, file tree, the file itself, package.json, db/schema.sql, .env.example).
 - If a file exists: read and update incrementally. NEVER overwrite or recreate from scratch.
 - If a teammate already added work in my area, reconcile and FLAG conflicts to me.
-- Match the existing stack/structure. Do NOT create or switch git branches. Do NOT auto-commit — I commit manually.
+- Do NOT create or switch git branches. Do NOT auto-commit or push — I commit manually, and I decide when.
 
 ## External inputs — teach then ask (after every step)
-When a step needs a value only I can provide — DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME, JWT_SECRET, GEMINI_API_KEY,
-GitHub secrets — do NOT invent it or bake a fake value into real code. Instead: (1) tell me what's needed and why;
-(2) teach me how to get it in 2-4 concrete steps (exact site/menu/command); (3) tell me the exact file + key it goes in
-(e.g. .env -> JWT_SECRET); (4) STOP and ask me to paste it before continuing. If a step needs nothing, say "no inputs needed".
+When a step needs a value only I can provide — AWS credentials / EC2 host / SSH key, GitHub repo secrets, DB_*, JWT_SECRET,
+GEMINI_API_KEY — do NOT invent it or bake a fake value into real code. Instead: (1) tell me what's needed and why;
+(2) teach me how to get it in 2-4 concrete steps (exact site/menu/command); (3) tell me the exact place + key it goes in
+(e.g. GitHub -> Settings -> Secrets and variables -> Actions -> `EC2_SSH_KEY`); (4) STOP and ask me to paste it before
+continuing. If a step needs nothing, say "no inputs needed". NEVER print a secret's value or echo it in a workflow step.
 
-## My scope (M1)
-Pages (EJS views my Express app renders): Login views/auth/login.ejs (/auth/login), Register views/auth/register.ejs
-  (/auth/register), Forgot views/auth/forgot-password.ejs (/auth/forgot-password), Reset views/auth/reset-password.ejs,
-  AI Checker views/ai-checker.ejs (/ai-checker).
-JSON API: POST /api/auth/register, /login, /forgot-password, /reset-password; GET /api/auth/me; POST /api/auth/logout;
-  POST /api/ai/analyze; GET /api/ai/history.
-Skeleton I OWN (Lead, Week 1 — so I'm never blocked):
-  - App skeleton: src/server.js (Express + EJS view engine + express.static('public') + cookie-parser + mysql2 pool in
-    src/db.js + GET /api/health + documented mount points for teammates' routes/views).
-  - Shared view shell: views/layout.ejs + views/partials/ (header/nav/footer) + public/css/styles.css (navy base theme).
-    Everyone renders their pages into my layout.
-  - Create db/schema.sql + seed the auth/AI tables; Rebecca (M2) extends it with case tables.
-Client JS (mine): public/js/auth.js, public/js/ai-checker.js — light fetch() to /api + inline validation. NO React/axios/build.
-Shared middleware: src/middleware/auth.middleware.js (requireAuth = API 401; attachUser = set req.user + res.locals.user,
-  never blocks; requireAuthPage = redirect guests to /auth/login) + role.middleware.js (requireRole). Others import these.
+## My scope (M1 — CI/CD Pipeline & Cloud Deployment, + integration)
+- `.github/workflows/ci.yml` — on PR: lint -> test (AI_FAKE=1 + a mysql service container) -> docker build + container smoke test.
+- `.github/workflows/cd.yml` — on push to main: build -> push `ghcr.io/shaniaong25026302/scamlah-devops-:sha-<short>` ->
+  scp compose + db/*.sql to EC2 -> ssh -> `docker compose pull && up -d` -> smoke `GET /api/health`. Deploy the immutable
+  `sha-` tag, NEVER `latest` (rollback = re-run workflow_dispatch with an older SHA).
+- Branch protection on main (require PR + 1 approval + the CI checks) so "only successful builds proceed" is demonstrable.
+- GitHub Actions secrets + variables. AWS EC2 (t3.micro, Ubuntu 24.04, ap-southeast-1, Elastic IP).
+- `docker-compose.prod.yml`, and the Week 11 prep PR above.
+- Team integration + merge conflict resolution (same role as Phase 1).
 
-## Do NOT touch (others build these INTO my skeleton)
-Case write + case tables (Rebecca/M2 — adds tables to the schema.sql I create; adds her routes + views),
-Case read/browse/vote/flag (Nivi/M3 — adds her routes + views into my layout),
-Comments + Profile (CG/M4), Points/Leaderboard + Docker (Liam/M5),
-Landing/Glossary/Admin + README (Shawn/M6 — mounts his routes + views on my server).
-Only edit shared files (db/schema.sql, views/layout.ejs, nav partial) ADDITIVELY and flag the owner.
+## Do NOT touch (the other 5 own these — they build INTO my pipeline)
+- `Dockerfile` / `.dockerignore` / DATA_DIR wiring + volumes — **Rebecca (M2)**
+- `docker-compose.yml` / healthchecks / MySQL initdb wiring — **Liam (M5)**
+- `tests/*` + the npm `test` script + the CI test job's contents — **Shawn (M6)**
+- `ansible/` (site.yml, roles, inventory, .env.j2) — **Nivi (M3)**
+- `.github/dependabot.yml` + `.github/workflows/security.yml` — **CG (M4)**
+Only edit shared files (`package.json`, `.env.example`, `README.md`) ADDITIVELY and flag the owner.
 
-## Auth rules (from the spec)
-- bcrypt salt rounds = 12. JWT issued on login, stored in an httpOnly cookie, 24h expiry + refresh token.
-- Middleware accepts the JWT from the cookie (or Authorization: Bearer). Protected API routes require it; protected PAGES redirect.
-- Roles: Guest (unauth — browse + LIMITED AI checker), User (default on register — full), Admin (set manually).
+## Stack decisions (settled — do not re-litigate or "suggest alternatives")
+- CI/CD = **GitHub Actions, NOT Jenkins.** The brief already requires the GitHub PR workflow, and "only successful builds
+  proceed" is a native, screenshot-able gate. Jenkins needs its own host (a 2nd EC2, or it fights MySQL for 1GB) and
+  rebuilds that gate via webhooks + the Checks API for zero extra marks. Jenkins = considered and rejected, on the record.
+- Registry = **GHCR** (GITHUB_TOKEN is auto-injected — no long-lived credential to leak; free; same platform as the code).
+  Set the PACKAGE visibility public even if the repo is private -> EC2 pulls with no credentials at all.
+- Base image = **node:22-bookworm-slim, NOT Alpine.** `bcrypt@5.1.1` is a NATIVE module with no musl prebuild, so Alpine
+  falls back to a node-gyp source build and needs python3/make/g++.
+- **SINGLE-stage Dockerfile.** There is no build step (runtime EJS, no bundler, no TS), so multi-stage would discard nothing.
+  Size/security wins come from `--omit=dev`, the slim base, `.dockerignore` and a non-root user.
+- COPY `src/ views/ public/` — views/, public/ and db/ live OUTSIDE src/, so copying only src/ yields a broken image.
+  Root `middleware/` is dead code (nothing requires it) — do NOT copy it.
+- `.dockerignore` MUST include `node_modules` (correctness, not size: the local `bcrypt_lib.node` is win32 and will not
+  load on Linux), plus `.env` and `.git`.
+- Ansible = **day-0 host provisioning** (install Docker, 2GB swapfile, template .env), NOT deployment. Actions owns the
+  continuous path and is the source of truth for prod secrets.
+- **AI_FAKE=1 in CI always** — needs no API key and burns no Gemini quota (free tier is 20 req/day/model, easily exhausted).
 
-## Validation (enforce server-side in the API AND inline in the views via public/js)
-- Email: valid format, unique, <=255.  Username: 3-30, [a-zA-Z0-9_], unique.
-- Password: >=8, >=1 uppercase, >=1 number, >=1 special.  Confirm password must match.
-- AI Checker input: >=10 and <=10000 chars, at least one non-whitespace char.
+## Env
+The app reads **24** env vars; `.env.example` lists only 11. Missing: PORT, APP_BASE_URL, DB_CONNECTION_LIMIT, GEMINI_API_KEY,
+GEMINI_MODEL, AI_FAKE, MAIL_FROM, MAILJET_API_KEY, MAILJET_SECRET_KEY, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.
+`.env.example` is the CONTRACT every teammate's component codes against — keep it complete and accurate.
+`.env` holds real secrets and is gitignored. NEVER commit it, NEVER print it, NEVER copy it into an image or a teammate's patch.
 
-## DB tables I create in db/schema.sql (M2 owns the file after; add additively + flag M2)
-users(id, username, email, password_hash, role, avatar_url, bio, created_at)
-password_resets(id, user_id, token, expires_at)
-ai_analyses(id, user_id, input_text, risk_level, explanation, created_at)
+## My local working tree (mine only)
+My local tree carries a beginner-comment layer over M1 files that is deliberately NOT committed — GitHub main stays
+comment-free for teammates. Never commit those comments. **Never `git add -A` / `-u`** (it would stage ~66 comment files and
+node_modules) — stage files BY NAME. Preserve teammates' attribution markers (`<Rebecca Member 2>`, `<Nivi>`, `<Shawn>`,
+`<CG Member 4>`, `<Liam>`) and my own `<Shania Start>` / `<Shania End>`.
+NOTE: my local `.gitignore`'s inline `#` comments break its patterns (git only strips FULL-LINE comments), so `node_modules/`
+is not ignored locally. `origin/main`'s .gitignore is correct. `.env` is safely ignored in both — verified.
 
-## AI Scam Checker provider
-Google Gemini via the Node SDK @google/genai (npm i @google/genai; import { GoogleGenAI } from "@google/genai").
-Key in env GEMINI_API_KEY. Model e.g. "gemini-2.5-flash". Do NOT use the deprecated google-generativeai.
-
-## Frontend styling (I own the base theme)
-Base theme in public/css/styles.css (source of truth): government-service look, navy #1E3A5F primary, white background,
-red for high-risk. Plain CSS with custom properties teammates reuse. Replace the prototype's red/green theme. No Tailwind/React.
-
-## Project structure (single app — NO separate frontend/)
-scamguard-sg/
-  src/        server.js, db.js, routes/, controllers/, middleware/, models/
-  views/      layout.ejs, partials/ (header,nav,footer), auth/ (login,register,...), ai-checker.ejs, + teammates' views
-  public/     css/styles.css, js/ (auth.js, ai-checker.js, + teammates' scripts)
-  db/         schema.sql
-  .env.example, package.json
+## Repo lives in OneDrive (accepted risk — my call)
+Set the folder to "Always keep on this device". OneDrive dehydrates files into 0-byte cloud placeholders that git and
+`docker build` read as EMPTY, and it has eaten files in this repo before. Sanity-check `git status` before any demo.
 
 ## Commits (Conventional Commits)
-<type>(<scope>): <desc>. Types: feat, fix, docs, style, refactor, test, chore. Scopes: auth, ai, env, ci, scaffold, db, views.
+`<type>(<scope>): <desc>`. Types: feat, fix, docs, style, refactor, test, chore, ci, build.
+Scopes: docker, compose, ci, cd, deploy, iac, sec, test, env, db, auth, ai. NO `Co-Authored-By` line.

@@ -141,7 +141,7 @@ ESLint + Prettier as a code-quality gate; npm scripts for dev / start / lint / f
 ## 🛠️ DevOps practices I applied (M1)
 This is a DevOps module, so I applied DevOps practices across my part of the codebase. Every one is
 commented in-place with a `[DevOps: …]` tag so it can be traced to the exact line. All files below are
-mine (M1). *(Docker + CI/CD are Final-Assessment scope, not CA2.)*
+mine (M1). *(Docker + CI/CD are Phase 2 scope - now underway; I own the CI/CD pipeline + cloud deployment.)*
 
 **1. Config & secrets management (12-factor)** — all config comes from environment variables; secrets
 are never committed. `src/server.js:5` · `.gitignore:4`
