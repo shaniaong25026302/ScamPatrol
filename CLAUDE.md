@@ -4,7 +4,10 @@
 CA2 Phase 1 (the app) is DONE and graded. We are now in **Phase 2: DevOps Implementation (Week 11-13)**, assessed Week 13.
 **The app's FEATURES ARE FROZEN.** Do NOT add, redesign or "improve" app functionality, views, styling, game mechanics or
 AI features. Phase 2 work = Docker, CI/CD, deployment, IaC, testing in the pipeline, security scanning — infra files, not features.
-Graded repo = github.com/shaniaong25026302/scamlah-devops- (package.json's "ScamPatrol" name is stale metadata — ignore it).
+Graded repo = **github.com/shaniaong25026302/ScamPatrol** and it is **PUBLIC**. The old name `scamlah-devops-` (still my git
+remote URL, still my local folder name) is an alias GitHub redirects — package.json's "ScamPatrol" is the correct name.
+Public repo ⇒ branch protection and unlimited Actions minutes are already free; no GitHub Pro / Student Pack needed for them.
+Public repo also ⇒ never commit `.env` (verified: it never has been, on any branch).
 Starting point: the repo has ZERO DevOps infrastructure. No Dockerfile, no CI config, no YAML on any branch. This is greenfield.
 
 ## The ONE exception to the app freeze (the Week 11 "prep PR" — mine, ask me first)
@@ -39,7 +42,7 @@ continuing. If a step needs nothing, say "no inputs needed". NEVER print a secre
 
 ## My scope (M1 — CI/CD Pipeline & Cloud Deployment, + integration)
 - `.github/workflows/ci.yml` — on PR: lint -> test (AI_FAKE=1 + a mysql service container) -> docker build + container smoke test.
-- `.github/workflows/cd.yml` — on push to main: build -> push `ghcr.io/shaniaong25026302/scamlah-devops-:sha-<short>` ->
+- `.github/workflows/cd.yml` — on push to main: build -> push `ghcr.io/shaniaong25026302/scampatrol:sha-<short>` (lowercased by `docker/metadata-action`) ->
   scp compose + db/*.sql to EC2 -> ssh -> `docker compose pull && up -d` -> smoke `GET /api/health`. Deploy the immutable
   `sha-` tag, NEVER `latest` (rollback = re-run workflow_dispatch with an older SHA).
 - Branch protection on main (require PR + 1 approval + the CI checks) so "only successful builds proceed" is demonstrable.
