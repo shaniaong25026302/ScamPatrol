@@ -109,6 +109,7 @@ app.use("/api/categories", require("./routes/categories.routes"));
 app.use("/cases", require("./routes/cases.pages.routes"));
 // M4 CG — comments + profile
 app.use("/profile", require("./routes/profile.routes"));
+app.use("/cases", require("./routes/comments"));
 // M5 Liam — Scam Weather (seasonal scam forecast + admin posts)
 // API first: browser JavaScript uses these endpoints for daily-report automation.
 app.use("/api/scam-weather", require("./routes/scamweather.api.routes"));
