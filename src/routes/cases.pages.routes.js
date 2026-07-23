@@ -14,6 +14,8 @@ const {
   addFlag
 } = require("../models/case.model");
 
+const { pool } = require("../db");   // <-- ADD THIS
+
 const router = express.Router();
 
 // Report Scam page + page form actions.
@@ -30,6 +32,7 @@ router.post("/", upload.array("images", 3), caseController.createCasePage);
 router.get("/:id/edit", caseController.showEditCaseForm);
 router.post("/:id/edit", upload.array("images", 3), caseController.updateCasePage);
 router.post("/:id/delete", caseController.deleteCasePage);
+
 // <Rebecca Member 2 End>
 
 // <Nivi Member 3 Start>
@@ -79,13 +82,31 @@ router.get("/:id", async (req, res, next) => {
       return res.status(404).send("Case not found.");
     }
 
+    // CG Start
+    const [comments] = await pool.query(
+      `
+      SELECT
+        comments.*,
+        users.username
+      FROM comments
+      JOIN users
+        ON comments.user_id = users.id
+      WHERE comments.case_id = ?
+      ORDER BY comments.created_at DESC
+      `,
+      [req.params.id]
+    );
+    // CG End
+
     res.render("cases/detail", {
       title: scam.title,
       activePage: "cases",
       scam,
-      success: req.query.success,
-      comments:[]
+      comments,
+      user: req.user,
+      success: req.query.success
     });
+
   } catch (err) {
     next(err);
   }
@@ -108,6 +129,7 @@ router.post("/:id/flag", async (req, res, next) => {
     next(err);
   }
 });
+
 // <Nivi Member 3 End>
 
 module.exports = router;

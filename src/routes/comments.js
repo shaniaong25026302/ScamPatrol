@@ -1,7 +1,7 @@
 // <CG Member 4 Start>
 const express = require("express");
 const router = express.Router();
-const db = require("../db");
+const { pool } = require("../db");
 
 // POST /cases/:caseId/comments
 router.post("/:caseId/comments", async (req, res) => {
@@ -14,7 +14,7 @@ router.post("/:caseId/comments", async (req, res) => {
   }
 
   try {
-    await db.query(
+    await pool.query(
       `
       INSERT INTO comments
       (case_id, user_id, content, created_at)
@@ -31,7 +31,7 @@ router.post("/:caseId/comments", async (req, res) => {
 });
 
 // POST /comments/:commentId/edit
-router.post("/comments/:commentId/edit", async (req, res) => {
+router.post("/:commentId/edit", async (req, res) => {
   const { content } = req.body;
   const commentId = req.params.commentId;
   const userId = req.user ? req.user.id : null;
@@ -41,7 +41,18 @@ router.post("/comments/:commentId/edit", async (req, res) => {
   }
 
   try {
-    await db.query(
+    const [rows] = await pool.query(
+      "SELECT case_id FROM comments WHERE id = ?",
+      [commentId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).send("Comment not found.");
+    }
+
+    const caseId = rows[0].case_id;
+
+    await pool.query(
       `
       UPDATE comments
       SET content = ?, updated_at = NOW()
@@ -50,7 +61,7 @@ router.post("/comments/:commentId/edit", async (req, res) => {
       [content, commentId, userId]
     );
 
-    return res.redirect("back");
+    return res.redirect(`/cases/${caseId}`);
   } catch (err) {
     console.error("Error editing comment:", err);
     return res.status(500).send("Error editing comment");
@@ -58,7 +69,7 @@ router.post("/comments/:commentId/edit", async (req, res) => {
 });
 
 // POST /comments/:commentId/delete
-router.post("/comments/:commentId/delete", async (req, res) => {
+router.post("/:commentId/delete", async (req, res) => {
   const commentId = req.params.commentId;
   const userId = req.user ? req.user.id : null;
 
@@ -67,7 +78,18 @@ router.post("/comments/:commentId/delete", async (req, res) => {
   }
 
   try {
-    await db.query(
+    const [rows] = await pool.query(
+      "SELECT case_id FROM comments WHERE id = ?",
+      [commentId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).send("Comment not found.");
+    }
+
+    const caseId = rows[0].case_id;
+
+    await pool.query(
       `
       DELETE FROM comments
       WHERE id = ? AND user_id = ?
@@ -75,7 +97,7 @@ router.post("/comments/:commentId/delete", async (req, res) => {
       [commentId, userId]
     );
 
-    return res.redirect("back");
+    return res.redirect(`/cases/${caseId}`);
   } catch (err) {
     console.error("Error deleting comment:", err);
     return res.status(500).send("Error deleting comment");

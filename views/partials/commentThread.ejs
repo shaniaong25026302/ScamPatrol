@@ -5,11 +5,13 @@
 
     <!-- New Comment Form -->
     <% if (user) { %>
+
         <form
             class="comment-form"
             action="/cases/<%= scam.id %>/comments"
             method="POST"
         >
+
             <div class="form-group">
                 <textarea
                     name="content"
@@ -25,11 +27,15 @@
             >
                 Post Comment
             </button>
+
         </form>
+
     <% } else { %>
+
         <p class="empty-state">
             Please log in to leave a comment.
         </p>
+
     <% } %>
 
     <hr>
@@ -41,49 +47,90 @@
 
             <div class="comment">
 
-                <p><%= comment.content %></p>
+                <!-- Normal Display -->
+                <div id="display-<%= comment.id %>">
 
-                <small>
-                    By User <%= comment.user_id %>
-                    ·
-                    <%= new Date(comment.created_at).toLocaleString("en-SG") %>
-                </small>
+                    <p>
+                        <%= comment.content %>
+                    </p>
+
+                    <small>
+                        By <strong><%= comment.username %></strong>
+                        ·
+                        <%= new Date(comment.created_at).toLocaleString("en-SG") %>
+                    </small>
+
+                </div>
 
                 <% if (user && comment.user_id === user.id) { %>
 
+                    <!-- Hidden Edit Form -->
                     <form
-                        class="inline-form"
+                        id="edit-form-<%= comment.id %>"
+                        class="comment-form"
                         action="/comments/<%= comment.id %>/edit"
                         method="POST"
+                        style="display:none;"
                     >
-                        <input
-                            type="text"
-                            name="content"
-                            value="<%= comment.content %>"
-                            required
-                        >
+
+                        <div class="form-group">
+
+                            <textarea
+                                name="content"
+                                rows="3"
+                                required
+                            ><%= comment.content %></textarea>
+
+                        </div>
 
                         <button
-                            class="btn btn-ghost"
+                            class="btn btn-primary"
                             type="submit"
+                        >
+                            Save
+                        </button>
+
+                        <button
+                            class="btn btn-ghost cancel-btn"
+                            type="button"
+                            data-id="<%= comment.id %>"
+                        >
+                            Cancel
+                        </button>
+
+                    </form>
+
+                    <!-- Buttons -->
+                    <div
+                        id="buttons-<%= comment.id %>"
+                        class="comment-actions"
+                    >
+
+                        <button
+                            class="btn btn-ghost edit-btn"
+                            type="button"
+                            data-id="<%= comment.id %>"
                         >
                             Edit
                         </button>
-                    </form>
 
-                    <form
-                        class="inline-form"
-                        action="/comments/<%= comment.id %>/delete"
-                        method="POST"
-                        onsubmit="return confirm('Delete this comment?');"
-                    >
-                        <button
-                            class="btn btn-danger"
-                            type="submit"
+                        <form
+                            action="/comments/<%= comment.id %>/delete"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Delete this comment?');"
                         >
-                            Delete
-                        </button>
-                    </form>
+
+                            <button
+                                class="btn btn-danger"
+                                type="submit"
+                            >
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </div>
 
                 <% } %>
 
@@ -102,5 +149,37 @@
     <% } %>
 
 </div>
+
+<script>
+
+document.querySelectorAll(".edit-btn").forEach(button => {
+
+    button.addEventListener("click", function () {
+
+        const id = this.dataset.id;
+
+        document.getElementById("display-" + id).style.display = "none";
+        document.getElementById("buttons-" + id).style.display = "none";
+        document.getElementById("edit-form-" + id).style.display = "block";
+
+    });
+
+});
+
+document.querySelectorAll(".cancel-btn").forEach(button => {
+
+    button.addEventListener("click", function () {
+
+        const id = this.dataset.id;
+
+        document.getElementById("display-" + id).style.display = "block";
+        document.getElementById("buttons-" + id).style.display = "block";
+        document.getElementById("edit-form-" + id).style.display = "none";
+
+    });
+
+});
+
+</script>
 
 <%# <CG Member 4 End> %>
