@@ -269,18 +269,35 @@ function fakeChat(messages) {
 }
 
 // messages: [{ role: 'user' | 'assistant', text }] — full conversation so far.
-async function chatReply(messages) {
+async function chatReply(messages,language = "en") {
   if (process.env.AI_FAKE === "1") return fakeChat(messages);
   const ai = getClient();
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: String(m.text || "") }],
   }));
+  //CG Start: Add language instruction to the system prompt
+  const languageInstruction =
+    CHAT_LANGUAGES[language] || CHAT_LANGUAGES.en;
+
   const res = await ai.models.generateContent({
     model: MODEL,
     contents,
-    config: { systemInstruction: CHAT_SYSTEM, temperature: 0.4, maxOutputTokens: 600 },
+    config: {
+        systemInstruction: `
+        ${CHAT_SYSTEM}
+
+        IMPORTANT:
+        ${languageInstruction}
+
+        DO NOT reply in any other language.
+        If the user's message is in another language, STILL answer in the selected language only.`,
+
+        temperature: 0.4,
+        maxOutputTokens: 600
+    },
   });
+  //CG End
   return String(res.text || "").trim() || "Sorry, I couldn't answer that — try rephrasing?";
 }
 

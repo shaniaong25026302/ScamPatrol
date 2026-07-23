@@ -86,6 +86,7 @@ async function chat(req, res) {
   const raw = Array.isArray((req.body || {}).messages) ? req.body.messages : null;
   // <CG Member 4 Start>
   const language = req.body.language || "en";
+  console.log("Language received:", language);
   // <CG Member 4 End>
   if (!raw || !raw.length) return res.status(400).json({ error: "Send a message." });
 
