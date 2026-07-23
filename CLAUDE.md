@@ -1,4 +1,4 @@
-# Scam Patrol — Claude Code context. Express + EJS + MySQL, SINGLE Node app. I am M1 (CI/CD + Cloud Deployment + Team Lead).
+# Scam Patrol — Claude Code context. Express + EJS + MySQL, SINGLE Node app. I am M1 (CI/CD Pipeline + Team Lead). Shawn owns the live app deployment (server + deploy).
 
 ## Phase 2 reality (important)
 CA2 Phase 1 (the app) is DONE and graded. We are now in **Phase 2: DevOps Implementation (Week 11-13)**, assessed Week 13.
@@ -10,8 +10,9 @@ Public repo ⇒ branch protection and unlimited Actions minutes are already free
 Public repo also ⇒ never commit `.env` (verified: it never has been, on any branch).
 Starting point: the repo has ZERO DevOps infrastructure. No Dockerfile, no CI config, no YAML on any branch. This is greenfield.
 
-## The ONE exception to the app freeze (the Week 11 "prep PR" — mine, ask me first)
-Deploying the app as-is silently breaks it. These are DevOps CONFIG changes, not features. Nothing else in the app is in scope:
+## The Week 11 "prep fixes" — SHAWN owns these now (they go with Cloud Deployment). I do NOT implement them.
+Deploying the app as-is silently breaks it. These are DevOps CONFIG changes, not features. Shawn makes these edits; I (lead)
+coordinate and know them cold, but as M1 I own NO app code. Listed here for reference:
 - `src/utils/jwt.js` lines 41/48/53 — `secure: isProd()`. On a plain-HTTP EC2 with NODE_ENV=production the browser
   SILENTLY DROPS the auth cookie -> login "succeeds" then every user is a guest, and jwt.verify failures are swallowed so
   there is NO error anywhere. Works locally, breaks only on the demo box. Needs a COOKIE_SECURE override.
@@ -25,7 +26,7 @@ Deploying the app as-is silently breaks it. These are DevOps CONFIG changes, not
   currently vanish on every redeploy). Do NOT mount a volume at `src/data` — `missions.js`/`shop.js` are CODE in that folder.
 - `db/schema.sql:394,415,429` — glossary, chat_sessions, chat_messages are bare `CREATE TABLE` -> add `IF NOT EXISTS`.
 - `src/server.js:171-176` — graceful shutdown works but has no forced-exit timeout.
-Ask me before touching ANY of these. Nothing else in `src/` or `views/` is in scope.
+These are Shawn's. I do NOT edit `src/` or `views/` — the app freeze is TOTAL for my own scope (I own `ci.yml` + branch rules only).
 
 ## Before every change (always)
 - Inspect what exists first (git log, file tree, the file itself, package.json, db/schema.sql, .env.example).
@@ -40,32 +41,38 @@ GEMINI_API_KEY — do NOT invent it or bake a fake value into real code. Instead
 (e.g. GitHub -> Settings -> Secrets and variables -> Actions -> `EC2_SSH_KEY`); (4) STOP and ask me to paste it before
 continuing. If a step needs nothing, say "no inputs needed". NEVER print a secret's value or echo it in a workflow step.
 
-## My scope (M1 — CI/CD Pipeline & Cloud Deployment, + integration)
-- `.github/workflows/ci.yml` — on PR: lint -> test (AI_FAKE=1 + a mysql service container) -> docker build + container smoke test.
-- `.github/workflows/cd.yml` — on push to main: build -> push `ghcr.io/shaniaong25026302/scampatrol:sha-<short>` (lowercased by `docker/metadata-action`) ->
-  scp compose + db/*.sql to EC2 -> ssh -> `docker compose pull && up -d` -> smoke `GET /api/health`. Deploy the immutable
-  `sha-` tag, NEVER `latest` (rollback = re-run workflow_dispatch with an older SHA).
-- Branch protection on main (require PR + 1 approval + the CI checks) so "only successful builds proceed" is demonstrable.
-- GitHub Actions secrets + variables. AWS EC2 (t3.micro, Ubuntu 24.04, ap-southeast-1, Elastic IP).
-- `docker-compose.prod.yml`, and the Week 11 prep PR above.
-- Team integration + merge conflict resolution (same role as Phase 1).
+## My scope (M1 — the whole CI/CD Pipeline + team lead/integration). Shawn owns the live app deployment (server + deploy).
+- `.github/workflows/ci.yml` — mine: the gate. On PR: lint -> test (AI_FAKE=1 + a mysql service container) -> docker build
+  + container smoke test. CG's tests are ARTIFACTS this job runs; no shared file.
+- `.github/workflows/cd.yml` — mine: on merge, build the image -> push `ghcr.io/shaniaong25026302/scampatrol:sha-<short>`
+  (lowercased by `docker/metadata-action`) -> smoke-test the image. My pipeline STOPS at "a verified image is published to
+  GHCR"; it does NOT ssh the live server. Shawn's deploy pulls the image from there. No shared file, no shared server.
+- Branch protection on main (require PR + 1 approval + the CI checks) so "only working code goes through" is demonstrable.
+- The GitHub Actions secrets/variables my pipeline needs (GITHUB_TOKEN is auto for GHCR; NOT the EC2/SSH deploy secrets — Shawn's).
+- The two day-2 floors below (minimal Dockerfile + smoke test) so my pipeline is green from day 2.
+- Team lead: review/approve PRs, resolve merge conflicts, keep the schedule (same integrator role as Phase 1).
 
-## Do NOT touch (the other 5 own these — they build INTO my pipeline)
-- `Dockerfile` / `.dockerignore` (hardening: non-root, HEALTHCHECK, layer caching, image size) — **Nivi (M3)**
-- `docker-compose.yml` / healthchecks / MySQL initdb / volumes + data persistence — **Shawn (M6)**
-- `tests/*` (the test CONTENT only) — **CG (M4)**
+## Do NOT touch (the other 5 own these — most feed INTO my gate or run alongside it)
+- ALL of Docker: `Dockerfile` / `.dockerignore` + `docker-compose.yml` (image + compose, non-root, HEALTHCHECK, volumes,
+  data persistence) — **Nivi (M3)**
+- App Deployment: the AWS EC2 box, `docker-compose.prod.yml` (prod config), the deploy step that pulls my published image
+  and runs it live + rollback, AND the Week 11 prep fixes (the app-config changes above) — **Shawn (M6)**. My cd.yml
+  publishes the image; his deploy runs it — no shared file.
+- `tests/*` + `eslint.config.js` + a test-plan doc — **CG (M4)** (Test Automation & Quality: unit + integration + e2e tests,
+  coverage %, lint rules; CONTENT only — CG NEVER edits `ci.yml` or `package.json`; my pipeline runs `npm test` / `npm run lint`)
 - `ansible/` (site.yml, roles, inventory, .env.j2) — **Rebecca (M2)**
-- the CI validation job + schema gate, `.github/dependabot.yml`, `.github/workflows/security.yml` — **Liam (M5)**
-  (his validation job lands as a reviewed PR into MY `ci.yml` — keep it in its own job block)
+- `.github/workflows/security.yml` (Trivy, npm audit, CodeQL/secret scan) + `.github/dependabot.yml` + live monitoring
+  (uptime/logs/alerts) — **Liam (M5)** (Security & Monitoring). Runs ALONGSIDE my gate, non-blocking (`continue-on-error`),
+  so a late scan can't stall a merge. No shared file with me.
 
-## My two day-2 floors (deliberate — they de-risk the two owners above)
-CG asked for testing and Nivi asked for Docker; both are delivery risks, so each component is split and I land the
-load-bearing floor myself on day 2. Do NOT skip these, and do NOT expand past them (the owners build on top):
-1. npm `test` script + ONE trivial smoke test -> the CI validation job exists and is green immediately, which alone
-   satisfies the core "pipeline includes validation" requirement regardless of what CG delivers. CG then restores the
-   real 382-line suite (`git show 904c104^:tests/api.test.js`) and extends coverage.
+## My two day-2 floors (deliberate — the team runs late, so I seed the load-bearing pieces myself)
+CG asked for testing and Nivi asked for Docker; both are delivery risks, and since the whole CI gate is now mine I seed
+its inputs on day 2 so nothing I own waits on a late teammate. Do NOT skip these, and do NOT expand past them (owners build on top):
+1. npm `test` script + ONE trivial smoke test -> MY CI gate is green from day 2, so "only successful builds proceed" is
+   demonstrable regardless of what CG delivers. CG then restores the real 382-line suite
+   (`git show 904c104^:tests/api.test.js`) and extends coverage INTO a gate that already runs.
 2. A MINIMAL working `Dockerfile` (slim base, `npm ci --omit=dev`, COPY src/ views/ public/, CMD node src/server.js)
-   -> Compose and CD start immediately. Nivi then owns hardening/optimising it.
+   -> my CI build step works, and Nivi's Docker + Shawn's deploy can start immediately. Nivi then owns ALL of Docker.
 Only edit shared files (`package.json`, `.env.example`, `README.md`) ADDITIVELY and flag the owner.
 
 ## Stack decisions (settled — do not re-litigate or "suggest alternatives")
