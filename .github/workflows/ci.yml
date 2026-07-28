@@ -1,18 +1,23 @@
-# CI — the validation gate. Runs on every pull request into main, so a change is
-# checked BEFORE it can be merged. Branch protection requires the job named below,
-# which is what makes "only successful builds proceed" enforceable rather than a promise.
+# CI — the validation gate. Runs ONLY on pull requests, so every change is checked
+# BEFORE it can be merged. Branch protection requires the job names below, which is
+# what makes "only successful builds proceed" enforceable rather than a promise.
 #
-# Deliberately minimal for now. Two stages are added as their inputs land:
-#   - lint          once eslint.config.js is confirmed green across the team
-#   - docker-build  once the Dockerfile is on main (Nivi, M3)
-# The job keeps the name "lint-and-test" from day one, because branch protection
-# requires checks BY NAME: renaming the job later would silently stop it gating.
+# Two jobs, in order:
+#   lint-and-test  — style check + unit tests. Fast, so it fails fast.
+#   docker-build   — builds the image AND boots it, because a built image is not a working image.
+#
+# Deliberately NOT triggered on push to main. CI guards the door; CD (cd.yml) runs
+# once you are through it. Re-running these checks on the merge commit would repeat
+# work that already passed on the pull request, for no extra information: nothing can
+# reach main without passing here first. That clean split is also what lets CD trust
+# its input and go straight to building.
+#
+# The job names are load-bearing: branch protection requires checks BY NAME, so
+# renaming a job would silently stop it gating.
 name: CI
 
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
   workflow_dispatch: # lets us run it by hand from the Actions tab
 
@@ -48,5 +53,59 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check code style
+        run: npm run lint
+
       - name: Run tests
         run: npm test
+
+  docker-build:
+    # `needs:` means this only starts if lint-and-test passed. No point building
+    # an image from code we already know is broken.
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # Buildx is Docker's newer builder. We want it for the GitHub Actions cache below.
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: . # build using the repo root, where the Dockerfile lives
+          push: false # a pull request must never publish anything
+          load: true # keep the built image on this runner so the next step can run it
+          tags: scampatrol:ci
+          cache-from: type=gha # reuse layers cached by previous runs
+          cache-to: type=gha,mode=max
+
+      # A built image is not a working image: a missing COPY or a bad CMD still builds
+      # fine and then crashes on start. So we boot it and ask it for a real page.
+      #
+      # We request "/" rather than "/api/health" on purpose. There is no database in
+      # this container, and /api/health deliberately pings MySQL, so it would report
+      # unhealthy for a perfectly good image. The deep check belongs after deployment,
+      # where a database actually exists.
+      - name: Boot the image and prove it serves traffic
+        run: |
+          docker run -d --name smoke -p 3000:3000 \
+            -e AI_FAKE=1 \
+            -e JWT_SECRET=ci-smoke-test-not-real \
+            scampatrol:ci
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/ > /dev/null 2>&1; then
+              echo "Container serves traffic."
+              docker rm -f smoke
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Container never became ready. Logs follow:"
+          docker logs smoke
+          docker rm -f smoke
+          exit 1
