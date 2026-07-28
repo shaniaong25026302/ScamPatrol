@@ -1,10 +1,16 @@
-# CI — the validation gate. Runs on every pull request into main, so a change is
-# checked BEFORE it can be merged. Branch protection requires the job named below,
-# which is what makes "only successful builds proceed" enforceable rather than a promise.
+# CI — the validation gate. Runs ONLY on pull requests, so every change is checked
+# BEFORE it can be merged. Branch protection requires the job names below, which is
+# what makes "only successful builds proceed" enforceable rather than a promise.
 #
 # Two jobs, in order:
 #   lint-and-test  — style check + unit tests. Fast, so it fails fast.
 #   docker-build   — builds the image AND boots it, because a built image is not a working image.
+#
+# Deliberately NOT triggered on push to main. CI guards the door; CD (cd.yml) runs
+# once you are through it. Re-running these checks on the merge commit would repeat
+# work that already passed on the pull request, for no extra information: nothing can
+# reach main without passing here first. That clean split is also what lets CD trust
+# its input and go straight to building.
 #
 # The job names are load-bearing: branch protection requires checks BY NAME, so
 # renaming a job would silently stop it gating.
@@ -12,8 +18,6 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
   workflow_dispatch: # lets us run it by hand from the Actions tab
 
