@@ -1,0 +1,52 @@
+# CI — the validation gate. Runs on every pull request into main, so a change is
+# checked BEFORE it can be merged. Branch protection requires the job named below,
+# which is what makes "only successful builds proceed" enforceable rather than a promise.
+#
+# Deliberately minimal for now. Two stages are added as their inputs land:
+#   - lint          once eslint.config.js is confirmed green across the team
+#   - docker-build  once the Dockerfile is on main (Nivi, M3)
+# The job keeps the name "lint-and-test" from day one, because branch protection
+# requires checks BY NAME: renaming the job later would silently stop it gating.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch: # lets us run it by hand from the Actions tab
+
+# If several pushes land quickly, cancel the older runs. Saves minutes and means
+# the tick on a PR always reflects the newest commit rather than a stale one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    env:
+      # AI_FAKE=1 makes the app answer every Gemini call from its own offline code.
+      # So CI needs no API key at all, and burns none of the free-tier quota.
+      AI_FAKE: "1"
+      # jwt.js reads JWT_SECRET when the module loads, so it must exist before the tests run.
+      # This value is fake and public on purpose: it never protects anything real.
+      JWT_SECRET: ci-test-secret-not-real
+      NODE_ENV: test
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm # reuses the npm download cache between runs
+
+      # `npm ci` (not `npm install`) installs the EXACT versions in package-lock.json
+      # and fails if the lockfile is out of step. That is what makes the build repeatable.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
