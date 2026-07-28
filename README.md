@@ -382,3 +382,25 @@ app.use("/cases", require("./routes/cases.pages.routes"));     // pages
 | `npm test` | Run the test suite |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier |
+
+---
+
+# Docker Containerisation
+
+## Build Docker Image
+
+docker build -t scampatrol .
+
+## Run Using Docker Compose
+
+docker compose up
+
+## Stop Docker Compose
+
+docker compose down
+
+## Docker Files
+
+Dockerfile
+.dockerignore
+docker-compose.yml
