@@ -5,7 +5,7 @@ analyze suspicious messages with AI, clear "spot-the-scam" field missions, earn 
 report scams to the community, and climb the leaderboard.
 
 **One single Express app** serves both the JSON API (`/api/*`) and the server-rendered EJS pages.
-There is **no separate frontend build** — client interactivity is small `fetch()` scripts in `public/js`
+There is **no separate frontend build** — client interactivity is small `fetch()` scripts in `public/js`.
 
 ---
 
