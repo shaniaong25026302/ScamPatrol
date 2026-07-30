@@ -16,6 +16,9 @@ resource "aws_instance" "scampatrol" {
   user_data = file("${path.module}/user_data.sh")
 
   tags = {
-    Name = "ScamPatrol"
+    Name        = "ScamPatrol"
+    Project     = "ScamPatrol"
+    Environment = "Production"
+    ManagedBy   = "Terraform"
   }
 }

@@ -12,3 +12,9 @@ public/uploads/*
 # <Rebecca Member 2 End>
 src/data/scamWeatherPosts.json
 src/data/scamWeatherArticles.json
+
+# <Shawn Member 6 Start>
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+# <Shawn Member 6 End>
