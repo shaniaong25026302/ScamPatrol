@@ -9,6 +9,7 @@ npm-debug.log*
 # <Rebecca Member 2 Start>
 public/uploads/*
 !public/uploads/.gitkeep
+*.pem
 # <Rebecca Member 2 End>
 src/data/scamWeatherPosts.json
 src/data/scamWeatherArticles.json

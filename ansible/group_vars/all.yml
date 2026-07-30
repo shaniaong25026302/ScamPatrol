@@ -1,0 +1,20 @@
+app_dir: /opt/scampatrol
+app_user: ubuntu
+
+swap_file: /swapfile
+swap_size_mb: 2048
+
+node_env: production
+app_port: 3000
+
+db_host: mysql
+db_port: 3306
+db_name: scampatrol
+db_user: scampatrol_user
+db_password: CHANGE_ME
+
+jwt_secret: CHANGE_ME_LONG_RANDOM_SECRET
+ai_fake: "1"
+
+data_dir: /opt/scampatrol/data
+upload_dir: /opt/scampatrol/uploads
