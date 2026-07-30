@@ -99,16 +99,31 @@ jobs:
           echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" \
             >> "$GITHUB_OUTPUT"
 
-      # Sign the provenance with a short-lived OIDC token minted for this run. No signing
-      # key is stored anywhere, so there is no key to leak or rotate, which is the same
-      # reasoning that put us on GHCR rather than Docker Hub.
-      #
-      # This is checkable by anyone, and worth actually running once:
+      # ALSO record the attestation with GitHub, on top of the one already inside the
+      # image. Signed with a short-lived OIDC token minted for this run, so no signing
+      # key is stored anywhere and there is nothing to leak or rotate. Once it works it
+      # is checkable by anyone:
       #   gh attestation verify oci://ghcr.io/shaniaong25026302/scampatrol:latest \
       #     --owner shaniaong25026302
       # A pass means the image was built by this repository's workflow from that commit,
       # and not by someone who simply had permission to push to the registry.
+      #
+      # continue-on-error, and the reason matters. GitHub's attestation API refuses
+      # user-owned PRIVATE repositories: "Feature not available for user-owned private
+      # repositories". This repository is currently private, so this step cannot succeed
+      # yet and it is not worth failing a release over.
+      #
+      # Losing this step does NOT lose the capability. The SBOM and the provenance are
+      # attached to the image itself by buildx above (--attest type=sbom and
+      # type=provenance,mode=max), which works regardless of visibility, and the image is
+      # where they actually need to live. This step only adds GitHub's own copy and the
+      # `gh attestation verify` convenience.
+      #
+      # It starts working the moment the repository is made public, with no change here.
+      # Do not make it public to switch this on until the leaked credentials from
+      # 30 July are rotated: publishing the repository also publishes that history.
       - name: Attest where this image came from
+        continue-on-error: true
         uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ steps.img.outputs.name }}
@@ -161,10 +176,11 @@ jobs:
             echo ""
             echo "Deploy it with the **Deploy** workflow, image_tag \`$(echo "$PINNED" | sed 's/.*://')\`."
             echo ""
-            echo "Anyone can check it was built here, from this commit:"
+            echo "Check what is inside it and where it came from, straight from the registry:"
             echo ""
             echo '```'
-            echo "gh attestation verify oci://$PINNED --owner ${{ github.repository_owner }}"
+            echo "docker buildx imagetools inspect $PINNED --format '{{ json .Provenance }}'"
+            echo "docker buildx imagetools inspect $PINNED --format '{{ json .SBOM }}'"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
