@@ -13,14 +13,21 @@ name: CD
 on:
   push:
     branches: [main] # i.e. after a pull request is merged
-  workflow_dispatch: # lets us re-run it by hand from the Actions tab
+  workflow_dispatch: # lets us run it by hand from the Actions tab
+    inputs:
+      verify_tag:
+        description: "Existing tag to re-verify before rolling back to it, e.g. sha-abc1234. Leave blank to build main."
+        required: false
+        default: ""
 
 concurrency:
   group: cd-main
   cancel-in-progress: false # never abandon a half-finished publish
 
 jobs:
+  # ── Normal release: build main, publish it, prove what we published works.
   publish:
+    if: github.event_name == 'push' || inputs.verify_tag == ''
     runs-on: ubuntu-latest
     permissions:
       contents: read # read the code
@@ -106,3 +113,52 @@ jobs:
             echo ""
             echo "Pull it with: \`docker pull $(echo "${{ steps.meta.outputs.tags }}" | head -n 1)\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # ── Rollback support: prove an OLDER published tag still boots, BEFORE anyone rolls
+  # back to it. Runs only when a tag is typed into verify_tag on a manual run.
+  #
+  # Why this exists: "roll back and hope" is the usual approach. Re-verifying the
+  # candidate first means we never roll back to an image we have not just proven good.
+  # It is also the only honest way to use that input box: an input nothing reads is
+  # worse than no input at all, because the run appears to do something and does not.
+  verify-existing:
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read # only needs to READ the registry, never write
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Boot the rollback candidate
+        run: |
+          # The registry rejects uppercase, and the repository name has some.
+          IMAGE=$(echo "ghcr.io/${{ github.repository }}:${{ inputs.verify_tag }}" | tr '[:upper:]' '[:lower:]')
+          echo "Re-verifying $IMAGE"
+          docker pull "$IMAGE"
+
+          docker run -d --name rollback-check -p 3000:3000 \
+            -e AI_FAKE=1 \
+            -e JWT_SECRET=verify-only-not-a-real-secret \
+            "$IMAGE"
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/ > /dev/null 2>&1; then
+              echo "SAFE TO ROLL BACK: $IMAGE boots cleanly."
+              echo "### Rollback candidate verified" >> "$GITHUB_STEP_SUMMARY"
+              echo "\`$IMAGE\` boots cleanly. Safe to redeploy." >> "$GITHUB_STEP_SUMMARY"
+              docker rm -f rollback-check
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "DO NOT ROLL BACK to this tag: it never became ready. Logs follow:"
+          docker logs rollback-check
+          docker rm -f rollback-check
+          exit 1
