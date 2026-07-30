@@ -21,7 +21,7 @@ const PW = "Passw0rd!1";
 test.before(async () => {
   try {
     await ping();
-  } catch {
+  } catch (_) {
     dbUp = false;
   }
 
@@ -40,7 +40,10 @@ test.after(async () => {
     } catch (_) {}
   }
 
-  if (server) await new Promise((r) => server.close(r));
+  if (server) {
+    await new Promise((r) => server.close(r));
+  }
+
   await pool.end();
 });
 
@@ -49,48 +52,70 @@ const auth = () => makeClient(base);
 test("auth: password confirmation mismatch returns 400", async (t) => {
   if (!dbUp) return t.skip("database unavailable");
 
-  const { status, data } = await auth().call("POST", "/api/auth/register", {
-    username,
-    email,
-    password: PW,
-    confirmPassword: "WrongPassword123!"
-  });
+  const { status, data } = await auth().call(
+    "POST",
+    "/api/auth/register",
+    {
+      username,
+      email,
+      password: PW,
+      confirmPassword: "WrongPassword123!",
+    }
+  );
 
   assert.strictEqual(status, 400);
   assert.ok(data.errors);
 });
 
 test("auth: missing email returns 400", async () => {
-  const { status } = await auth().call("POST", "/api/auth/register", {
-    username,
-    password: PW,
-    confirmPassword: PW
-  });
+  const { status } = await auth().call(
+    "POST",
+    "/api/auth/register",
+    {
+      username,
+      password: PW,
+      confirmPassword: PW,
+    }
+  );
 
   assert.strictEqual(status, 400);
 });
 
 test("auth: missing username returns 400", async () => {
-  const { status } = await auth().call("POST", "/api/auth/register", {
-    email,
-    password: PW,
-    confirmPassword: PW
-  });
+  const { status } = await auth().call(
+    "POST",
+    "/api/auth/register",
+    {
+      email,
+      password: PW,
+      confirmPassword: PW,
+    }
+  );
 
   assert.strictEqual(status, 400);
 });
 
-test("auth: login with unknown account returns 401", async () => {
-  const { status } = await auth().call("POST", "/api/auth/login", {
-    email: "doesnotexist@example.com",
-    password: PW
-  });
+test("auth: login with unknown account returns 401", async (t) => {
+  if (!dbUp) return t.skip("database unavailable");
+
+  const { status } = await auth().call(
+    "POST",
+    "/api/auth/login",
+    {
+      email: "doesnotexist@example.com",
+      password: PW,
+    }
+  );
 
   assert.strictEqual(status, 401);
 });
 
 test("auth: /me without login returns 401", async () => {
-  const { status } = await auth().call("GET", "/api/auth/me");
+  const { status } = await auth().call(
+    "GET",
+    "/api/auth/me"
+  );
+
   assert.strictEqual(status, 401);
 });
 //CG End//
