@@ -46,6 +46,14 @@ jobs:
   # A rule that is written down is not a control. This job is the control: a pull
   # request containing a credential cannot be merged, whoever wrote it.
   #
+  # What it does and does not catch, measured rather than assumed. Run against a file
+  # holding five fake credentials, it flagged the API keys, the JWT secret and the
+  # GitHub token, and MISSED a short database password, because the generic rule keys
+  # off entropy and a memorable password does not have much. So this is not a complete
+  # defence on its own, and it is not the only one: .gitignore stops the file by name,
+  # this stops the contents by shape. The leak that prompted both would have been
+  # caught by either.
+  #
   # Why this blocks here rather than living in the security workflow: that workflow
   # runs alongside the gate and is deliberately non-blocking, so a slow scan can
   # never stall a merge. This one is the opposite. It has to block, so it lives

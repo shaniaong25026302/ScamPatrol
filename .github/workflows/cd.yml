@@ -109,7 +109,7 @@ jobs:
       # A pass means the image was built by this repository's workflow from that commit,
       # and not by someone who simply had permission to push to the registry.
       - name: Attest where this image came from
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ steps.img.outputs.name }}
           subject-digest: ${{ steps.build.outputs.digest }}
