@@ -1,15 +1,14 @@
 # Shawn Start
 services:
-  app:
-    # Temporary image for deployment testing
-    image: nginx:latest
+  scampatrol:
+    image: ghcr.io/shaniaong25026302/scampatrol:latest
+    container_name: scampatrol
 
-    # Replace with GHCR image when available
-    # image: ghcr.io/scamlah-devops/scamlah:latest
-
-    container_name: scamlah-app
     restart: unless-stopped
 
     ports:
-      - "80:80"
+      - "80:3000"
+
+    env_file:
+      - .env
 # Shawn End
