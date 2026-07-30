@@ -32,6 +32,8 @@ jobs:
     permissions:
       contents: read # read the code
       packages: write # write the image to GHCR
+      id-token: write # sign the provenance attestation below (OIDC, no stored key)
+      attestations: write # record that attestation against this repository
     steps:
       - name: Check out the code
         uses: actions/checkout@v4
@@ -62,15 +64,56 @@ jobs:
             type=sha,prefix=sha-,format=short
             type=raw,value=latest
 
+      # ── Supply chain: say what is in the image, and prove where it came from ──
+      #
+      # sbom: true attaches a Software Bill of Materials, a machine-readable list of
+      # every package inside the image. The reason to want one is the morning a
+      # vulnerability is announced in some library: the question is "are we affected?",
+      # and without an SBOM the honest answer is "we will read package-lock.json and
+      # guess". With one it is a query against an artifact we already published.
+      #
+      # provenance: mode=max records HOW the image was built: which commit, which
+      # workflow, which runner. It is the difference between "this image says it is
+      # our app" and "this image is provably the output of building that commit here".
+      #
+      # Boundary note: this is about whether the artifact is what it claims to be.
+      # Scanning it for known vulnerabilities is a separate concern and lives in the
+      # security workflow, which runs alongside this one.
       - name: Build and publish
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # The registry rejects uppercase, and this repository name has some in it.
+      - name: Work out the lowercase image name
+        id: img
+        run: |
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" \
+            >> "$GITHUB_OUTPUT"
+
+      # Sign the provenance with a short-lived OIDC token minted for this run. No signing
+      # key is stored anywhere, so there is no key to leak or rotate, which is the same
+      # reasoning that put us on GHCR rather than Docker Hub.
+      #
+      # This is checkable by anyone, and worth actually running once:
+      #   gh attestation verify oci://ghcr.io/shaniaong25026302/scampatrol:latest \
+      #     --owner shaniaong25026302
+      # A pass means the image was built by this repository's workflow from that commit,
+      # and not by someone who simply had permission to push to the registry.
+      - name: Attest where this image came from
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ${{ steps.img.outputs.name }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
 
       # Fetch back exactly what we published and prove it starts. As in CI we ask for
       # "/" and not "/api/health", because there is no database alongside this container.
@@ -104,6 +147,7 @@ jobs:
       - name: Publish summary
         if: success()
         run: |
+          PINNED=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
           {
             echo "### Image published and verified"
             echo ""
@@ -111,7 +155,17 @@ jobs:
             echo "${{ steps.meta.outputs.tags }}"
             echo '```'
             echo ""
-            echo "Pull it with: \`docker pull $(echo "${{ steps.meta.outputs.tags }}" | head -n 1)\`"
+            echo "Digest: \`${{ steps.build.outputs.digest }}\`"
+            echo ""
+            echo "Pull it with: \`docker pull $PINNED\`"
+            echo ""
+            echo "Deploy it with the **Deploy** workflow, image_tag \`$(echo "$PINNED" | sed 's/.*://')\`."
+            echo ""
+            echo "Anyone can check it was built here, from this commit:"
+            echo ""
+            echo '```'
+            echo "gh attestation verify oci://$PINNED --owner ${{ github.repository_owner }}"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
   # ── Rollback support: prove an OLDER published tag still boots, BEFORE anyone rolls
