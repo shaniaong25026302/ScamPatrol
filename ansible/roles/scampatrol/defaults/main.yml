@@ -1,0 +1,6 @@
+---
+scampatrol_apt_packages:
+  - ca-certificates
+  - curl
+  - docker.io
+  - docker-compose-v2

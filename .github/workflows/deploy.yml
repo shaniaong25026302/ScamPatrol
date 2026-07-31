@@ -1,0 +1,103 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Verified image tag (e.g. sha-abc1234)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload production Docker Compose
+        run: |
+          scp docker-compose.prod.yml \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/scampatrol/docker-compose.prod.yml"
+
+      - name: Deploy application
+        run: |
+          ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << EOF
+          set -e
+
+          cd /opt/scampatrol
+
+          echo "Logging into GHCR..."
+
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+            -u "${{ github.actor }}" \
+            --password-stdin
+
+          CURRENT_IMAGE=\$(docker inspect scampatrol \
+            --format='{{.Config.Image}}' 2>/dev/null || true)
+
+          echo "Current image: \$CURRENT_IMAGE"
+
+          IMAGE_NAME=\$(echo "ghcr.io/${{ github.repository }}:${{ github.event.inputs.image_tag }}" | tr '[:upper:]' '[:lower:]')
+
+          export IMAGE_NAME
+
+          echo "Deploying \$IMAGE_NAME"
+
+          docker compose -f docker-compose.prod.yml pull
+
+          docker compose -f docker-compose.prod.yml up -d
+
+          echo "Verifying deployment..."
+
+          sleep 15
+
+          if docker compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+              echo "Deployment verified successfully."
+              exit 0
+          fi
+
+          echo "Deployment verification failed."
+
+          if [ -n "\$CURRENT_IMAGE" ]; then
+              echo "Rolling back to \$CURRENT_IMAGE"
+
+              docker pull "\$CURRENT_IMAGE"
+
+              export IMAGE_NAME="\$CURRENT_IMAGE"
+
+              docker compose -f docker-compose.prod.yml up -d
+
+              echo "Rollback completed."
+          else
+              echo "No previous deployment found."
+          fi
+
+          exit 1
+          EOF
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          {
+            echo "## Deployment Summary"
+            echo ""
+            echo "- Image: ghcr.io/${{ github.repository }}:${{ github.event.inputs.image_tag }}"
+            echo "- Repository: ${{ github.repository }}"
+            echo "- Server: ${{ secrets.EC2_HOST }}"
+            echo "- Deployment workflow completed."
+          } >> "$GITHUB_STEP_SUMMARY"

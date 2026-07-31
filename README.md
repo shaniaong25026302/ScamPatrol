@@ -154,6 +154,18 @@ Only edit shared files (`db/schema.sql`, `views/layout.ejs`, `views/partials/gam
 
 ---
 
+## Infrastructure as Code (M2 — Rebecca)
+
+The production server can be prepared repeatably with the Ansible project in
+[`ansible/`](ansible/README.md). It installs Docker and Compose, creates swap,
+generates the protected runtime `.env`, starts Shawn's production Compose stack,
+checks the live endpoint, and includes a two-run `changed=0` idempotency test.
+
+The implementation and contribution notes are in
+[`M2_INFRASTRUCTURE_AS_CODE.md`](M2_INFRASTRUCTURE_AS_CODE.md).
+
+---
+
 ## Adding a feature with the unified styling
 
 Every page renders through `views/layout.ejs`, so it gets the theme, top nav, HUD, fonts, footer,
