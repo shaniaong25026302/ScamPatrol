@@ -1,7 +1,7 @@
 # Shawn Start
 services:
   scampatrol:
-    image: ghcr.io/shaniaong25026302/scampatrol:latest
+    image: ${IMAGE_NAME}
     container_name: scampatrol
 
     restart: unless-stopped
@@ -11,4 +11,8 @@ services:
 
     env_file:
       - .env
+
+    volumes:
+      - /opt/scampatrol/uploads:/app/uploads
+      - /opt/scampatrol/data:/app/data
 # Shawn End

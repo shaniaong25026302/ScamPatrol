@@ -36,4 +36,5 @@ src/data/scamWeatherArticles.json
 terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
 # <Shawn Member 6 End>
