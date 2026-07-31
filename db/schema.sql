@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- ---------- ai_analyses ----------
 CREATE TABLE IF NOT EXISTS ai_analyses (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id     INT DEFAULT NULL,
+  user_id     INT UNSIGNED DEFAULT NULL,
   input_text  TEXT NOT NULL,
   risk_level  ENUM('low', 'medium', 'high') NOT NULL,
   explanation TEXT NOT NULL,
@@ -81,13 +81,13 @@ INSERT IGNORE INTO categories (name) VALUES
 
 -- ---------- scam_cases ----------
 CREATE TABLE IF NOT EXISTS scam_cases (
-  id          INT NOT NULL AUTO_INCREMENT,
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
   title       VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
-  category_id INT DEFAULT NULL,
+  category_id INT UNSIGNED DEFAULT NULL,
   platform    VARCHAR(100) DEFAULT NULL,
   scam_date   DATE DEFAULT NULL,
-  user_id     INT DEFAULT NULL,
+  user_id     INT UNSIGNED DEFAULT NULL,
   status      ENUM('pending', 'verified', 'rejected') NOT NULL DEFAULT 'pending',
   created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -104,13 +104,13 @@ CREATE TABLE IF NOT EXISTS scam_cases (
 
 -- ---------- scam_case_drafts ----------
 CREATE TABLE IF NOT EXISTS scam_case_drafts (
-  id          INT NOT NULL AUTO_INCREMENT,
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
   title       VARCHAR(255) DEFAULT NULL,
   description TEXT DEFAULT NULL,
-  category_id INT DEFAULT NULL,
+  category_id INT UNSIGNED DEFAULT NULL,
   platform    VARCHAR(100) DEFAULT NULL,
   scam_date   DATE DEFAULT NULL,
-  user_id     INT DEFAULT NULL,
+  user_id     INT UNSIGNED DEFAULT NULL,
   created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -391,8 +391,8 @@ CREATE TABLE IF NOT EXISTS daily_quiz_answers (
 -- operations through the glossary management system.
 -- ============================================================
 
-CREATE TABLE glossary (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS glossary (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     term VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
     prevention TEXT,
@@ -412,7 +412,7 @@ CREATE TABLE glossary (
 -- CREATE TABLE chat_sessions ...
 -- CREATE TABLE chat_messages ...
 
-CREATE TABLE chat_sessions (
+CREATE TABLE IF NOT EXISTS chat_sessions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -426,7 +426,7 @@ CREATE TABLE chat_sessions (
         ON DELETE CASCADE
 );
 
-CREATE TABLE chat_messages (
+CREATE TABLE IF NOT EXISTS chat_messages (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     session_id INT UNSIGNED NOT NULL,
     role ENUM('user', 'assistant') NOT NULL,
