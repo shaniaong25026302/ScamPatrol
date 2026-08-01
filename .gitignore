@@ -32,6 +32,7 @@ public/uploads/*
 src/data/scamWeatherPosts.json
 src/data/scamWeatherArticles.json
 
+.env.local
 # <Shawn Member 6 Start>
 terraform/.terraform/
 terraform/*.tfstate
