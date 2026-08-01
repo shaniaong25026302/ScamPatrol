@@ -7,10 +7,15 @@ services:
     restart: unless-stopped
 
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      # Defaults so the stack starts with no setup at all. Compose interpolates these
+      # from the shell or from .env, NOT from the .env.local below, which is a genuine
+      # trap: without a default they silently become empty strings and MySQL refuses to
+      # start. These values only ever exist on a developer machine, so they are
+      # deliberately obvious rather than secret.
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-dev-only}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-scampatrol}
+      MYSQL_USER: ${MYSQL_USER:-scampatrol}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local-dev-only}
 
     ports:
       - "3307:3306"

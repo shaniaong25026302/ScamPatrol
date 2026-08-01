@@ -12,6 +12,7 @@ npm-debug.log*
 .env.*
 *.env
 !.env.example
+!.env.local.example
 
 # Private keys, in every extension we are likely to meet. The EC2 SSH key sits on disk
 # while anyone works on deployment, and a public repository is an unforgiving place to
