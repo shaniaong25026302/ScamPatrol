@@ -38,3 +38,11 @@ terraform/*.tfstate
 terraform/*.tfstate.*
 terraform/.terraform.lock.hcl
 # <Shawn Member 6 End>
+
+# <Rebecca Member 2 IaC Start>
+ansible/.venv/
+ansible/inventory/production.yml
+ansible/vars/production.yml
+ansible/.vault-password
+ansible/*.retry
+# <Rebecca Member 2 IaC End>

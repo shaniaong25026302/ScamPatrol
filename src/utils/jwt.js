@@ -22,18 +22,34 @@ function verify(token) {
 
 const isProd = () => process.env.NODE_ENV === "production";
 
+// Production normally means HTTPS, but the current EC2 demo is intentionally served
+// over plain HTTP until TLS is added. A Secure cookie is silently rejected over HTTP,
+// which makes a successful login redirect straight back to the guest page. Keep the
+// transport choice explicit instead of weakening NODE_ENV or guessing from a proxy.
+function useSecureCookies() {
+  const configured = process.env.COOKIE_SECURE;
+  if (configured === undefined || configured === "") return isProd();
+
+  const value = configured.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(value)) return true;
+  if (["0", "false", "no", "off"].includes(value)) return false;
+
+  throw new Error("COOKIE_SECURE must be true/false or 1/0");
+}
+
 // [DevOps: Security by default / DevSecOps] auth token is an httpOnly cookie (not readable by JS,
-// mitigates XSS token theft) and only sent over HTTPS in production (secure flag driven by env).
+// mitigates XSS token theft). COOKIE_SECURE must match the public URL: false for the
+// current HTTP-only EC2 demo, then true as soon as HTTPS is enabled.
 function accessCookieOpts() {
-  return { httpOnly: true, sameSite: "lax", secure: isProd(), maxAge: DAY };
+  return { httpOnly: true, sameSite: "lax", secure: useSecureCookies(), maxAge: DAY };
 }
 
 function refreshCookieOpts() {
-  return { httpOnly: true, sameSite: "lax", secure: isProd(), maxAge: 7 * DAY };
+  return { httpOnly: true, sameSite: "lax", secure: useSecureCookies(), maxAge: 7 * DAY };
 }
 
 function clearCookieOpts() {
-  return { httpOnly: true, sameSite: "lax", secure: isProd() };
+  return { httpOnly: true, sameSite: "lax", secure: useSecureCookies() };
 }
 
 module.exports = {

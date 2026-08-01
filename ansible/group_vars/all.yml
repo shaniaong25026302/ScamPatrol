@@ -1,0 +1,38 @@
+---
+# Safe, non-secret defaults shared by every ScamPatrol host.
+scampatrol_deploy_user: ubuntu
+scampatrol_deploy_home: "/home/{{ scampatrol_deploy_user }}"
+scampatrol_root: /opt/scampatrol
+
+scampatrol_swap_file: /swapfile
+scampatrol_swap_size_mb: 1024
+
+scampatrol_port: 3000
+scampatrol_node_env: production
+scampatrol_db_port: 3306
+scampatrol_db_connection_limit: 4
+scampatrol_jwt_expires_in: 24h
+scampatrol_jwt_refresh_expires_in: 7d
+# The current EC2 demo is HTTP-only. Change this to true at the same time that
+# scampatrol_app_base_url is changed to https:// after TLS is installed.
+scampatrol_cookie_secure: false
+scampatrol_gemini_model: gemini-2.5-flash
+scampatrol_ai_fake: false
+
+scampatrol_mail_from: ""
+scampatrol_mailjet_api_key: ""
+scampatrol_mailjet_secret_key: ""
+scampatrol_smtp_host: ""
+scampatrol_smtp_port: 587
+scampatrol_smtp_user: ""
+scampatrol_smtp_pass: ""
+
+scampatrol_weather_refresh_minutes: 30
+scampatrol_weather_source_timeout_ms: 7000
+
+scampatrol_registry_url: ghcr.io
+# Deployment readiness checks the database too. The Dockerfile separately uses
+# /api/health/live as its shallow container liveness probe.
+scampatrol_health_url: http://127.0.0.1/api/health
+scampatrol_health_retries: 30
+scampatrol_health_delay_seconds: 3
