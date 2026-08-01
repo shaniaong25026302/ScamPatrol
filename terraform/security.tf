@@ -1,3 +1,4 @@
+# <Shawn Start>
 resource "aws_security_group" "scampatrol_sg" {
   name        = "scampatrol-sg"
   description = "Security group for ScamPatrol"
@@ -38,3 +39,4 @@ resource "aws_security_group" "scampatrol_sg" {
     Name = "scampatrol-sg"
   }
 }
+# <Shawn End>

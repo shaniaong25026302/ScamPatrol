@@ -1,3 +1,4 @@
+# <Shania Start>
 # CI — the validation gate. Runs ONLY on pull requests, so every change is checked
 # BEFORE it can be merged. Branch protection requires the job names below, which is
 # what makes "only successful builds proceed" enforceable rather than a promise.
@@ -396,3 +397,4 @@ jobs:
           echo ""
           echo "All gates passed: no secrets, style clean, config contract intact,"
           echo "schema idempotent, tests green against a real database, image boots."
+# <Shania End>

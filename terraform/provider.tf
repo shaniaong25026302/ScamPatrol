@@ -1,3 +1,4 @@
+# <Shawn Start>
 terraform {
   required_version = ">= 1.6"
 
@@ -12,3 +13,4 @@ terraform {
 provider "aws" {
   region = var.aws_region
 }
+# <Shawn End>

@@ -1,3 +1,4 @@
+# <Rebecca Start>
 # Rebecca (M2) — Infrastructure as Code
 
 This Ansible project turns Shawn's blank Ubuntu EC2 instance into a ready
@@ -161,3 +162,4 @@ ssh -i /path/to/key.pem ubuntu@SERVER_IP \
 - **Existing swap has a different size:** the playbook stops rather than
   destroying active swap. Disable and remove it manually before changing the
   configured size.
+# <Rebecca End>
