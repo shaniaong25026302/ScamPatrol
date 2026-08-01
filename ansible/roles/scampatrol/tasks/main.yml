@@ -152,6 +152,13 @@
   ansible.builtin.template:
     src: scampatrol.env.j2
     dest: "{{ scampatrol_root }}/.env"
+    # Keep the file this replaces. It is the only copy of the working configuration
+    # that exists anywhere: it is generated from vault-encrypted variables held on
+    # whichever machine last ran this play, so a wrong value here silently overwrites
+    # a correct one with nothing left to compare against. On 1 August 2026 a single
+    # wrong DB_PORT took the live database down and there was no previous file to
+    # look at. With this, recovering is a copy rather than an investigation.
+    backup: true
     owner: "{{ scampatrol_deploy_user }}"
     group: "{{ scampatrol_deploy_user }}"
     mode: "0600"
