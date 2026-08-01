@@ -1,3 +1,4 @@
+# <Shawn Start>
 # Terraform and Ansible responsibility boundary
 
 Shawn's Terraform owns the AWS infrastructure: the EC2 instance, network placement,
@@ -19,3 +20,4 @@ This avoids two tools configuring the same server in different ways.
 
 Do not manually install Docker or create a second application directory on the EC2
 host. If the server configuration changes, update and rerun Ansible.
+# <Shawn End>

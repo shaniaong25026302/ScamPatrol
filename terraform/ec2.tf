@@ -1,3 +1,4 @@
+# <Shawn Start>
 resource "aws_instance" "scampatrol" {
 
   ami           = data.aws_ami.ubuntu.id
@@ -22,3 +23,4 @@ resource "aws_instance" "scampatrol" {
     ManagedBy   = "Terraform"
   }
 }
+# <Shawn End>

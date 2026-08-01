@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# <Rebecca Start>
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,3 +36,4 @@ fi
 ansible-galaxy collection install -r requirements.yml
 ansible-playbook -i inventory/production.example.yml playbook.yml --syntax-check
 ansible-lint playbook.yml roles/
+# <Rebecca End>

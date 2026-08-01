@@ -1,4 +1,5 @@
 ---
+# <Rebecca Start>
 # Safe, non-secret defaults shared by every ScamPatrol host.
 scampatrol_deploy_user: ubuntu
 scampatrol_deploy_home: "/home/{{ scampatrol_deploy_user }}"
@@ -36,3 +37,4 @@ scampatrol_registry_url: ghcr.io
 scampatrol_health_url: http://127.0.0.1/api/health
 scampatrol_health_retries: 30
 scampatrol_health_delay_seconds: 3
+# <Rebecca End>

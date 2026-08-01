@@ -1,3 +1,4 @@
+# <Nivi Start>
 # Files that must never enter the Docker build context.
 #
 # node_modules is here for correctness, not size: the locally installed bcrypt is a
@@ -26,3 +27,4 @@ tests
 .vscode
 *.md
 !README.md
+# <Nivi End>

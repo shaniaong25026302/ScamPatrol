@@ -1,4 +1,5 @@
 ---
+# <Rebecca Start>
 # Copy this file to vars/production.yml, replace every placeholder, then encrypt it:
 #   ansible-vault encrypt vars/production.yml
 #
@@ -31,3 +32,4 @@ scampatrol_mailjet_secret_key: ""
 scampatrol_smtp_host: ""
 scampatrol_smtp_user: ""
 scampatrol_smtp_pass: ""
+# <Rebecca End>

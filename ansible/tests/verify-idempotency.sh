@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# <Rebecca Start>
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,4 +39,4 @@ if ! grep -Eq 'changed=0 .*unreachable=0 .*failed=0' "${second_log}"; then
 fi
 
 echo "IDEMPOTENCY PASSED: the second run finished with changed=0 and failed=0."
-
+# <Rebecca End>

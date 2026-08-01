@@ -1,3 +1,4 @@
+# <Shawn Start>
 services:
   scampatrol:
     image: ${IMAGE_NAME}
@@ -14,3 +15,4 @@ services:
     volumes:
       - /opt/scampatrol/uploads:/app/uploads
       - /opt/scampatrol/data:/app/data
+# <Shawn End>

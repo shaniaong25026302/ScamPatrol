@@ -1,3 +1,4 @@
+# <Shawn Start>
 name: Deploy
 
 on:
@@ -101,3 +102,4 @@ jobs:
             echo "- Server: ${{ secrets.EC2_HOST }}"
             echo "- Deployment workflow completed."
           } >> "$GITHUB_STEP_SUMMARY"
+# <Shawn End>
