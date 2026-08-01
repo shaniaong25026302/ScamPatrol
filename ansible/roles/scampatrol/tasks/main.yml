@@ -168,14 +168,25 @@
   tags:
     - deploy
 
+# The GHCR package is PUBLIC, so pulling it needs no credential at all. Logging in is
+# only useful if the package is ever made private, so the whole step is skipped unless
+# a token has actually been supplied.
+#
+# Skipping it is not just tidiness. Without this guard the play fails outright on an
+# undefined variable when no token is configured, and worse, a login performed with a
+# placeholder or an expired token writes a BROKEN credential to config.json. Docker
+# then sends that credential instead of falling back to anonymous, and the registry
+# answers "denied" for an image anyone in the world can pull. That is precisely the
+# failure this host hit on 1 August 2026.
 - name: Registry | Log the deployment user in to GitHub Container Registry
   community.docker.docker_login:
     registry_url: "{{ scampatrol_registry_url }}"
-    username: "{{ scampatrol_registry_username }}"
-    password: "{{ scampatrol_registry_token }}"
+    username: "{{ scampatrol_registry_username | default('') }}"
+    password: "{{ scampatrol_registry_token | default('') }}"
     config_path: "{{ scampatrol_deploy_home }}/.docker/config.json"
     state: present
   no_log: true
+  when: scampatrol_registry_token | default('') | length > 0
   tags:
     - deploy
 
@@ -187,6 +198,18 @@
     group: "{{ scampatrol_deploy_user }}"
     mode: "0600"
   no_log: true
+  when: scampatrol_registry_token | default('') | length > 0
+  tags:
+    - deploy
+
+# With no token configured, clear any credential a previous run left behind. Otherwise
+# a stale entry keeps being offered to the registry forever and keeps being rejected,
+# and the symptom ("denied" on a public image) points nowhere near the cause.
+- name: Registry | Remove any stale credential when no token is configured
+  ansible.builtin.file:
+    path: "{{ scampatrol_deploy_home }}/.docker/config.json"
+    state: absent
+  when: scampatrol_registry_token | default('') | length == 0
   tags:
     - deploy
 
