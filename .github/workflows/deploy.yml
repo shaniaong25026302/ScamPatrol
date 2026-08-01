@@ -5,16 +5,39 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Verified image tag (e.g. sha-abc1234)"
+        description: "Verified image tag (e.g. sha-abc1234 or latest)"
         required: true
         type: string
+
+  workflow_run:
+    workflows:
+      - CD
+    types:
+      - completed
 
 permissions:
   contents: read
   packages: read
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    # Runs by hand always. Runs automatically after a SUCCESSFUL CD only when the
+    # repository variable AUTO_DEPLOY is set to true.
+    #
+    # The switch matters for two reasons. workflow_run fires when CD finishes, including
+    # when it finishes by failing, so the conclusion check is what stops a failed build
+    # deploying itself. And an automatic deploy that cannot be turned off means nobody
+    # chooses the moment: during a demonstration an unrelated merge would push to the live
+    # host mid-presentation. AUTO_DEPLOY is currently true, so behaviour is unchanged; it
+    # can be set to false to fall back to deploying by hand.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && vars.AUTO_DEPLOY == 'true')
+
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +48,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
 
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
           ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
@@ -35,7 +58,18 @@ jobs:
           scp docker-compose.prod.yml \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/scampatrol/docker-compose.prod.yml"
 
+      - name: Determine Image Tag
+        id: image
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy application
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
         run: |
           ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "bash -s" << EOF
           set -e
@@ -53,7 +87,7 @@ jobs:
 
           echo "Current image: \$CURRENT_IMAGE"
 
-          IMAGE_NAME=\$(echo "ghcr.io/${{ github.repository }}:${{ github.event.inputs.image_tag }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME=\$(echo "ghcr.io/${{ github.repository }}:${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
 
           export IMAGE_NAME
 
@@ -97,7 +131,7 @@ jobs:
           {
             echo "## Deployment Summary"
             echo ""
-            echo "- Image: ghcr.io/${{ github.repository }}:${{ github.event.inputs.image_tag }}"
+            echo "- Image: ghcr.io/${{ github.repository }}:${{ steps.image.outputs.tag }}"
             echo "- Repository: ${{ github.repository }}"
             echo "- Server: ${{ secrets.EC2_HOST }}"
             echo "- Deployment workflow completed."
