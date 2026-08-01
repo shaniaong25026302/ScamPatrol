@@ -5,16 +5,30 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Verified image tag (e.g. sha-abc1234)"
+        description: "Verified image tag (e.g. sha-abc1234 or latest)"
         required: true
         type: string
+
+  workflow_run:
+    workflows:
+      - CD
+    types:
+      - completed
 
 permissions:
   contents: read
   packages: read
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +39,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
 
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
           ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
@@ -35,7 +49,18 @@ jobs:
           scp docker-compose.prod.yml \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/scampatrol/docker-compose.prod.yml"
 
+      - name: Determine Image Tag
+        id: image
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy application
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
         run: |
           ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "bash -s" << EOF
           set -e
@@ -53,7 +78,7 @@ jobs:
 
           echo "Current image: \$CURRENT_IMAGE"
 
-          IMAGE_NAME=\$(echo "ghcr.io/${{ github.repository }}:${{ github.event.inputs.image_tag }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME=\$(echo "ghcr.io/${{ github.repository }}:${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
 
           export IMAGE_NAME
 
@@ -97,7 +122,7 @@ jobs:
           {
             echo "## Deployment Summary"
             echo ""
-            echo "- Image: ghcr.io/${{ github.repository }}:${{ github.event.inputs.image_tag }}"
+            echo "- Image: ghcr.io/${{ github.repository }}:${{ steps.image.outputs.tag }}"
             echo "- Repository: ${{ github.repository }}"
             echo "- Server: ${{ secrets.EC2_HOST }}"
             echo "- Deployment workflow completed."
