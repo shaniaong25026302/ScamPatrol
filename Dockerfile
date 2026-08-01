@@ -28,4 +28,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
 CMD node -e "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node","src/server.js"]
+
+RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
+
+USER appuser
 # <Nivi End>
