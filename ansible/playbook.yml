@@ -1,0 +1,91 @@
+---
+- name: Provision and deploy ScamPatrol
+  hosts: production
+  become: true
+  gather_facts: true
+  serial: 1
+  any_errors_fatal: true
+
+  pre_tasks:
+    - name: Preflight | Confirm the target is a supported Ubuntu server
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution == "Ubuntu"
+          - (ansible_facts.distribution_major_version | int) >= 22
+        fail_msg: >-
+          This playbook supports Ubuntu 22.04 or newer. Shawn's Terraform
+          currently provisions Ubuntu 24.04.
+
+    - name: Preflight | Confirm required deployment settings are present
+      ansible.builtin.assert:
+        that:
+          - (item.value | string | trim | length) > 0
+          - "'REPLACE_WITH' not in (item.value | string | upper)"
+        fail_msg: "Set {{ item.name }} in an encrypted production variables file."
+        quiet: true
+      loop:
+        - name: scampatrol_image
+          value: "{{ scampatrol_image | default('') }}"
+        - name: scampatrol_app_base_url
+          value: "{{ scampatrol_app_base_url | default('') }}"
+        - name: scampatrol_registry_username
+          value: "{{ scampatrol_registry_username | default('') }}"
+        - name: scampatrol_registry_token
+          value: "{{ scampatrol_registry_token | default('') }}"
+        - name: scampatrol_db_host
+          value: "{{ scampatrol_db_host | default('') }}"
+        - name: scampatrol_db_user
+          value: "{{ scampatrol_db_user | default('') }}"
+        - name: scampatrol_db_password
+          value: "{{ scampatrol_db_password | default('') }}"
+        - name: scampatrol_db_name
+          value: "{{ scampatrol_db_name | default('') }}"
+        - name: scampatrol_jwt_secret
+          value: "{{ scampatrol_jwt_secret | default('') }}"
+      loop_control:
+        label: "{{ item.name }}"
+      no_log: true
+
+    - name: Preflight | Require a verified immutable container image
+      ansible.builtin.assert:
+        that:
+          - "':latest' not in scampatrol_image"
+          - "':sha-' in scampatrol_image or '@sha256:' in scampatrol_image"
+        fail_msg: >-
+          scampatrol_image must use the verified sha-* tag printed by the CD
+          workflow, or an immutable sha256 digest.
+
+    - name: Preflight | Check the application URL and JWT secret
+      ansible.builtin.assert:
+        that:
+          - scampatrol_app_base_url is match("^https?://")
+          - (scampatrol_jwt_secret | length) >= 32
+        fail_msg: >-
+          APP_BASE_URL must start with http:// or https://, and JWT_SECRET must
+          contain at least 32 characters.
+      no_log: true
+
+    - name: Preflight | Match cookie security to the public URL
+      ansible.builtin.assert:
+        that:
+          - >-
+            (scampatrol_app_base_url is match('^https://')) ==
+            (scampatrol_cookie_secure | bool)
+        fail_msg: >-
+          Set scampatrol_cookie_secure to false for an http:// URL, or true for
+          an https:// URL. Secure cookies cannot be used over plain HTTP.
+
+    - name: Preflight | Require a Gemini key when fake AI is disabled
+      ansible.builtin.assert:
+        that:
+          - (scampatrol_gemini_api_key | default('') | trim | length) > 0
+          - >-
+            'REPLACE_WITH' not in
+            (scampatrol_gemini_api_key | default('') | upper)
+        fail_msg: >-
+          Set scampatrol_gemini_api_key or set scampatrol_ai_fake to true.
+      when: not (scampatrol_ai_fake | bool)
+      no_log: true
+
+  roles:
+    - role: scampatrol

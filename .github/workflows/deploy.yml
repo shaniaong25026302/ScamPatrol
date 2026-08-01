@@ -1,0 +1,199 @@
+# Deploy only images that Shania's CD workflow has already published and verified.
+#
+# Responsibility boundary:
+# - Terraform creates the EC2 instance and networking.
+# - Rebecca's Ansible prepares /opt/scampatrol, Docker, .env, registry access and Compose.
+# - Shawn's workflow changes only the running, immutable sha-* image and rolls it back
+#   if the public readiness check fails.
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Verified image tag, e.g. sha-abc1234"
+        required: true
+        type: string
+
+  workflow_run:
+    workflows: [CD]
+    types: [completed]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && vars.AUTO_DEPLOY == 'true')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    env:
+      # Accept Shawn's existing secret names as a fallback while the team moves
+      # non-sensitive host metadata to repository variables.
+      EC2_HOST: ${{ vars.EC2_HOST || secrets.EC2_HOST }}
+      EC2_USER: ${{ vars.EC2_USER || secrets.EC2_USER }}
+      PUBLIC_APP_URL: ${{ vars.APP_BASE_URL }}
+
+    steps:
+      - name: Select a verified immutable image
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.image_tag }}"
+          else
+            TAG="sha-$(echo '${{ github.event.workflow_run.head_sha }}' | cut -c1-7)"
+          fi
+
+          if ! [[ "$TAG" =~ ^sha-[0-9a-f]{7,40}$ ]]; then
+            echo "Refusing '$TAG'. Deploy the verified sha-* tag printed by CD."
+            exit 1
+          fi
+
+          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/$REPO:$TAG"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Deploying $IMAGE"
+
+      - name: Set up the SSH key and known host
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${EC2_HOST:?Set EC2_HOST as a repository variable or secret}"
+          : "${EC2_USER:?Set EC2_USER as a repository variable or secret}"
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy.pem
+          chmod 600 ~/.ssh/deploy.pem
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Require the Ansible-managed server configuration
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/deploy.pem -o BatchMode=yes -o ConnectTimeout=30 \
+            "$EC2_USER@$EC2_HOST" '
+              set -eu
+              test -d /opt/scampatrol
+              test -r /opt/scampatrol/.env
+              test -r /opt/scampatrol/docker-compose.prod.yml
+              docker compose version >/dev/null
+              echo "Ansible handoff verified: /opt/scampatrol is ready."
+            '
+
+      # Refresh the deployment user's registry login with this workflow's short-lived,
+      # read-only token. Ansible also performs the initial login during provisioning.
+      - name: Log the deployment user in to GHCR
+        shell: bash
+        run: |
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" | \
+            ssh -i ~/.ssh/deploy.pem -o BatchMode=yes -o ConnectTimeout=30 \
+              "$EC2_USER@$EC2_HOST" \
+              "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+
+      - name: Record the rollback image
+        id: previous
+        shell: bash
+        run: |
+          PREVIOUS=$(ssh -i ~/.ssh/deploy.pem -o BatchMode=yes -o ConnectTimeout=30 \
+            "$EC2_USER@$EC2_HOST" \
+            "docker inspect scampatrol --format '{{.Config.Image}}' 2>/dev/null || true")
+          echo "image=$PREVIOUS" >> "$GITHUB_OUTPUT"
+          echo "Currently running: ${PREVIOUS:-nothing}"
+
+      - name: Deploy through the Ansible-managed Compose project
+        id: release
+        shell: bash
+        run: |
+          IMAGE="${{ steps.target.outputs.image }}"
+          ssh -i ~/.ssh/deploy.pem -o BatchMode=yes -o ConnectTimeout=30 \
+            "$EC2_USER@$EC2_HOST" \
+            "bash -s -- '$IMAGE'" <<'REMOTE'
+          set -euo pipefail
+          NEW_IMAGE="$1"
+          cd /opt/scampatrol
+          export IMAGE_NAME="$NEW_IMAGE"
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          docker compose -f docker-compose.prod.yml ps
+          REMOTE
+
+      # This is a readiness gate, not just a process check: /api/health also verifies
+      # MySQL, which authentication and the rest of the application require.
+      - name: Public readiness gate
+        id: health
+        shell: bash
+        run: |
+          BASE_URL="$PUBLIC_APP_URL"
+          [ -n "$BASE_URL" ] || BASE_URL="http://$EC2_HOST"
+          BASE_URL="${BASE_URL%/}"
+
+          for i in $(seq 1 30); do
+            BODY=$(curl -fsS --max-time 5 "$BASE_URL/api/health" 2>/dev/null) && {
+              echo "Healthy: $BODY"
+              exit 0
+            }
+            sleep 3
+          done
+
+          echo "The release never became ready in 90 seconds."
+          curl -sS --max-time 5 -i "$BASE_URL/api/health" 2>&1 | head -20 || true
+          exit 1
+
+      - name: Roll back through the same Compose project
+        if: failure() && steps.previous.outputs.image != ''
+        shell: bash
+        run: |
+          PREVIOUS="${{ steps.previous.outputs.image }}"
+          ssh -i ~/.ssh/deploy.pem -o BatchMode=yes -o ConnectTimeout=30 \
+            "$EC2_USER@$EC2_HOST" \
+            "bash -s -- '$PREVIOUS'" <<'REMOTE'
+          set -euo pipefail
+          PREVIOUS_IMAGE="$1"
+          cd /opt/scampatrol
+          export IMAGE_NAME="$PREVIOUS_IMAGE"
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          echo "Rolled back to $PREVIOUS_IMAGE"
+          REMOTE
+
+          BASE_URL="$PUBLIC_APP_URL"
+          [ -n "$BASE_URL" ] || BASE_URL="http://$EC2_HOST"
+          BASE_URL="${BASE_URL%/}"
+          for i in $(seq 1 20); do
+            if curl -fsS --max-time 5 "$BASE_URL/api/health" >/dev/null 2>&1; then
+              echo "Rollback verified."
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Rollback did not become ready."
+          exit 1
+
+      - name: Write the deployment summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Deployment"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Image | \`${{ steps.target.outputs.image }}\` |"
+            echo "| Ansible directory | \`/opt/scampatrol\` |"
+            echo "| Host | $EC2_HOST |"
+            echo "| Readiness gate | ${{ steps.health.outcome }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the SSH key
+        if: always()
+        shell: bash
+        run: shred -u ~/.ssh/deploy.pem 2>/dev/null || rm -f ~/.ssh/deploy.pem
