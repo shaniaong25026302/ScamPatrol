@@ -134,9 +134,18 @@ jobs:
           echo "Currently running: ${PREV_IMAGE:-nothing}"
 
           # Find the directory holding the real configuration. The app is configured from
-          # a .env that lives only on this box and is never in the repository or the image.
+          # a .env that lives only on this box, never in the repository and never in the image.
+          #
+          # /opt/scampatrol comes FIRST because that is where Ansible puts it, and Ansible is
+          # what owns this box's configuration. The two home directories are only here for the
+          # transition, from when the box was set up by hand; once Ansible has run everywhere
+          # they can be deleted and this list becomes one entry.
+          #
+          # Picking the wrong one is not a harmless mistake. Each directory has its OWN .env,
+          # so deploying from a stale one would start the app with stale configuration and the
+          # health check would probably still pass.
           APP_DIR=""
-          for d in "$HOME/scampatrol" "$HOME/scamlah"; do
+          for d in /opt/scampatrol "$HOME/scampatrol" "$HOME/scamlah"; do
             if [ -f "$d/.env" ]; then APP_DIR="$d"; break; fi
           done
           if [ -z "$APP_DIR" ]; then
@@ -207,7 +216,7 @@ jobs:
           PREV_ID="$1"
           NAME=scampatrol
           APP_DIR=""
-          for d in "$HOME/scampatrol" "$HOME/scamlah"; do
+          for d in /opt/scampatrol "$HOME/scampatrol" "$HOME/scamlah"; do
             if [ -f "$d/.env" ]; then APP_DIR="$d"; break; fi
           done
           docker rm -f "$NAME" >/dev/null 2>&1 || true
