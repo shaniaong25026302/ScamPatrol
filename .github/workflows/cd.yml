@@ -1,3 +1,4 @@
+# <Shania Start>
 # CD — runs after a change is merged into main.
 #
 # It builds the image, publishes it to GHCR (GitHub's container registry), then
@@ -232,3 +233,4 @@ jobs:
           docker logs rollback-check
           docker rm -f rollback-check
           exit 1
+# <Shania End>

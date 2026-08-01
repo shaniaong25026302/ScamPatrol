@@ -1,0 +1,46 @@
+services:
+  db:
+    image: mysql:8
+
+    container_name: scampatrol-db
+
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  scampatrol:
+    build: .
+
+    container_name: scampatrol
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - .env.local
+
+    restart: unless-stopped
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

@@ -1,0 +1,260 @@
+---
+# <Rebecca Start>
+- name: Packages | Install Docker and supporting packages
+  ansible.builtin.apt:
+    name: "{{ scampatrol_apt_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  tags:
+    - packages
+    - docker
+
+- name: Docker | Enable and start the Docker service
+  ansible.builtin.service:
+    name: docker
+    enabled: true
+    state: started
+  tags:
+    - docker
+
+- name: Docker | Allow the deployment user to run Docker
+  ansible.builtin.user:
+    name: "{{ scampatrol_deploy_user }}"
+    groups:
+      - docker
+    append: true
+  tags:
+    - docker
+
+- name: Swap | Inspect the configured swap file
+  ansible.builtin.stat:
+    path: "{{ scampatrol_swap_file }}"
+  register: scampatrol_swap_stat
+  when: (scampatrol_swap_size_mb | int) > 0
+  tags:
+    - swap
+
+- name: Swap | Refuse to resize an existing swap file automatically
+  ansible.builtin.assert:
+    that:
+      - >-
+        scampatrol_swap_stat.stat.size ==
+        ((scampatrol_swap_size_mb | int) * 1024 * 1024)
+    fail_msg: >-
+      {{ scampatrol_swap_file }} already exists with a different size. Disable
+      it and remove it manually before changing scampatrol_swap_size_mb.
+  when:
+    - (scampatrol_swap_size_mb | int) > 0
+    - scampatrol_swap_stat.stat.exists
+  tags:
+    - swap
+
+- name: Swap | Allocate the swap file
+  ansible.builtin.command:
+    cmd: >-
+      fallocate --length {{ scampatrol_swap_size_mb }}M
+      {{ scampatrol_swap_file }}
+    creates: "{{ scampatrol_swap_file }}"
+  register: scampatrol_swap_created
+  when: (scampatrol_swap_size_mb | int) > 0
+  tags:
+    - swap
+
+- name: Swap | Protect the swap file
+  ansible.builtin.file:
+    path: "{{ scampatrol_swap_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  when: (scampatrol_swap_size_mb | int) > 0
+  tags:
+    - swap
+
+- name: Swap | Inspect the swap file format
+  ansible.builtin.command:
+    cmd: "blkid -s TYPE -o value {{ scampatrol_swap_file }}"
+  register: scampatrol_swap_type
+  changed_when: false
+  failed_when: scampatrol_swap_type.rc not in [0, 2]
+  when: (scampatrol_swap_size_mb | int) > 0
+  tags:
+    - swap
+
+- name: Swap | Format the swap file
+  ansible.builtin.command:
+    cmd: "mkswap {{ scampatrol_swap_file }}"
+  when:
+    - (scampatrol_swap_size_mb | int) > 0
+    - scampatrol_swap_type.stdout | trim != "swap"
+  changed_when: true
+  tags:
+    - swap
+
+- name: Swap | Read active swap devices
+  ansible.builtin.command:
+    cmd: swapon --show=NAME --noheadings
+  register: scampatrol_active_swap
+  changed_when: false
+  when: (scampatrol_swap_size_mb | int) > 0
+  tags:
+    - swap
+
+- name: Swap | Activate the swap file
+  ansible.builtin.command:
+    cmd: "swapon {{ scampatrol_swap_file }}"
+  when:
+    - (scampatrol_swap_size_mb | int) > 0
+    - scampatrol_swap_file not in scampatrol_active_swap.stdout_lines
+  changed_when: true
+  tags:
+    - swap
+
+- name: Swap | Persist the swap file in fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: "^{{ scampatrol_swap_file | regex_escape }}\\s"
+    line: "{{ scampatrol_swap_file }} none swap sw 0 0"
+    state: present
+    backup: true
+  when: (scampatrol_swap_size_mb | int) > 0
+  tags:
+    - swap
+
+- name: Application | Create persistent application directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ scampatrol_root }}"
+      mode: "0755"
+    - path: "{{ scampatrol_root }}/uploads"
+      mode: "0755"
+    - path: "{{ scampatrol_root }}/data"
+      mode: "0755"
+  tags:
+    - deploy
+
+- name: Application | Install the production Compose definition
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../docker-compose.prod.yml"
+    dest: "{{ scampatrol_root }}/docker-compose.prod.yml"
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
+    mode: "0644"
+  tags:
+    - deploy
+
+- name: Application | Render the protected runtime environment
+  ansible.builtin.template:
+    src: scampatrol.env.j2
+    dest: "{{ scampatrol_root }}/.env"
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
+    mode: "0600"
+  no_log: true
+  tags:
+    - deploy
+
+- name: Registry | Create the deployment user's Docker configuration directory
+  ansible.builtin.file:
+    path: "{{ scampatrol_deploy_home }}/.docker"
+    state: directory
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
+    mode: "0700"
+  tags:
+    - deploy
+
+# The GHCR package is PUBLIC, so pulling it needs no credential at all. Logging in is
+# only useful if the package is ever made private, so the whole step is skipped unless
+# a token has actually been supplied.
+#
+# Skipping it is not just tidiness. Without this guard the play fails outright on an
+# undefined variable when no token is configured, and worse, a login performed with a
+# placeholder or an expired token writes a BROKEN credential to config.json. Docker
+# then sends that credential instead of falling back to anonymous, and the registry
+# answers "denied" for an image anyone in the world can pull. That is precisely the
+# failure this host hit on 1 August 2026.
+- name: Registry | Log the deployment user in to GitHub Container Registry
+  community.docker.docker_login:
+    registry_url: "{{ scampatrol_registry_url }}"
+    username: "{{ scampatrol_registry_username | default('') }}"
+    password: "{{ scampatrol_registry_token | default('') }}"
+    config_path: "{{ scampatrol_deploy_home }}/.docker/config.json"
+    state: present
+  no_log: true
+  when: scampatrol_registry_token | default('') | length > 0
+  tags:
+    - deploy
+
+- name: Registry | Protect the deployment user's registry credentials
+  ansible.builtin.file:
+    path: "{{ scampatrol_deploy_home }}/.docker/config.json"
+    state: file
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
+    mode: "0600"
+  no_log: true
+  when: scampatrol_registry_token | default('') | length > 0
+  tags:
+    - deploy
+
+# With no token configured, clear any credential a previous run left behind. Otherwise
+# a stale entry keeps being offered to the registry forever and keeps being rejected,
+# and the symptom ("denied" on a public image) points nowhere near the cause.
+- name: Registry | Remove any stale credential when no token is configured
+  ansible.builtin.file:
+    path: "{{ scampatrol_deploy_home }}/.docker/config.json"
+    state: absent
+  when: scampatrol_registry_token | default('') | length == 0
+  tags:
+    - deploy
+
+- name: Application | Validate the resolved Compose configuration
+  ansible.builtin.command:
+    cmd: docker compose --env-file .env -f docker-compose.prod.yml config --quiet
+    chdir: "{{ scampatrol_root }}"
+  become_user: "{{ scampatrol_deploy_user }}"
+  environment:
+    HOME: "{{ scampatrol_deploy_home }}"
+  changed_when: false
+  tags:
+    - deploy
+
+- name: Application | Pull and start the verified image
+  community.docker.docker_compose_v2:
+    project_src: "{{ scampatrol_root }}"
+    files:
+      - docker-compose.prod.yml
+    state: present
+    pull: always
+    recreate: auto
+    remove_orphans: true
+    wait: true
+    wait_timeout: 180
+  become_user: "{{ scampatrol_deploy_user }}"
+  environment:
+    HOME: "{{ scampatrol_deploy_home }}"
+  register: scampatrol_compose
+  tags:
+    - deploy
+
+- name: Application | Verify the live health endpoint
+  ansible.builtin.uri:
+    url: "{{ scampatrol_health_url }}"
+    method: GET
+    status_code: 200
+    return_content: false
+  register: scampatrol_health
+  until: scampatrol_health.status == 200
+  retries: "{{ scampatrol_health_retries }}"
+  delay: "{{ scampatrol_health_delay_seconds }}"
+  when: not ansible_check_mode
+  tags:
+    - deploy
+    - verify
+# <Rebecca End>
