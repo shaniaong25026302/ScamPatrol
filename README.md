@@ -21,6 +21,16 @@ There is **no separate frontend build** — client interactivity is small `fetch
 
 ---
 
+> **Just want it running?** The fastest path needs no accounts and no database of your own:
+>
+> ```bash
+> cp .env.local.example .env.local
+> docker compose -f docker-compose.local.yml up
+> ```
+>
+> See **[Phase 2: DevOps](#phase-2-devops)** for the pipeline, deployment and infrastructure.
+> The section below is the manual Node setup, kept for working on the app itself.
+
 ## Quick start
 
 ### Prerequisites
@@ -376,24 +386,10 @@ app.use("/cases", require("./routes/cases.pages.routes")); // pages
 
 ---
 
-## Deployment (Render)
+## Deployment
 
-1. Connect the GitHub repo to a Render **Web Service**.
-2. **Build command:** `npm install` — **Start command:** `npm start`.
-3. Add every `.env` key in **Render → Environment** (`.env` is not deployed), with:
-   - `NODE_ENV=production`
-   - `APP_BASE_URL=https://<your-app>.onrender.com`
-   - Do **not** set `PORT` (Render injects it).
-4. Deploy. Check **Logs** — you should see `Scam Patrol running…` and
-   `Email: Mailjet HTTP API configured …`.
-
-**Important platform notes:**
-
-- Render's free tier **blocks outbound SMTP** (ports 25/465/587). Email must go through an
-  **HTTP API** (Mailjet) — that's why `MAILJET_API_KEY` is required on Render.
-- Render has **no outbound IPv6**; the app forces IPv4 DNS in `server.js` so email/DB connect.
-- Free tier **sleeps after ~15 min** of no traffic (slow first request). To keep it awake, point a
-  free uptime monitor (cron-job.org / UptimeRobot) at `/api/health` every ~10 minutes.
+The application is no longer deployed by hand. It is built, published and released by the
+pipeline onto AWS EC2. See **Phase 2: DevOps** further down for how that works.
 
 ---
 
@@ -421,22 +417,171 @@ app.use("/cases", require("./routes/cases.pages.routes")); // pages
 
 ---
 
-# Docker Containerisation
+# Phase 2: DevOps
 
-## Build Docker Image
+Everything below is the DevOps layer added in Phase 2. The application itself is unchanged.
 
-docker build -t scampatrol .
+## Run the whole stack locally
 
-## Run Using Docker Compose
+This is the fastest way to get a working copy, and the only one that needs no accounts, no
+shared credentials and no database of your own.
 
-docker compose up
+```bash
+cp .env.local.example .env.local
+docker compose -f docker-compose.local.yml up
+```
 
-## Stop Docker Compose
+Then open <http://localhost:3000>.
 
-docker compose down
+That one command starts two containers, MySQL and the application. On first run the database
+container loads `db/schema.sql` and creates all 25 tables by itself, and the application waits
+until MySQL reports healthy before starting, rather than racing it and crashing.
 
-## Docker Files
+Data lives in a **named volume**, so `docker compose down` and back up keeps everything. Use
+`down -v` when you actually want a clean database.
 
-Dockerfile
-.dockerignore
-docker-compose.yml
+`AI_FAKE=1` is set in the example file, so the AI features answer from built-in offline logic
+and no Gemini key is needed.
+
+### Why there are three compose files
+
+| File | Used by | Database |
+|---|---|---|
+| `docker-compose.local.yml` | developers, this machine | MySQL container + volume |
+| `docker-compose.prod.yml` | the EC2 host, via Ansible | managed database |
+| `docker-compose.yml` | the app container on its own | whatever `.env` points at |
+
+Production deliberately does **not** run its database in a container. A database in a
+container on a single instance dies with that instance; a managed one does not. The container
+and volume exist so that every developer and every pipeline run gets an identical environment
+with no shared credentials.
+
+## The pipeline
+
+Three workflows, each doing one job.
+
+| Workflow | Runs on | What it does |
+|---|---|---|
+| **CI** (`ci.yml`) | every pull request | The gate. Nothing merges without it. |
+| **CD** (`cd.yml`) | merge to `main` | Builds, publishes and verifies the image. |
+| **Deploy** (`deploy.yml`) | after a successful CD | Releases that image to EC2. |
+
+### CI, the gate
+
+Four jobs, ordered cheapest and most serious first.
+
+- **`secret-scan`** — gitleaks, pinned to a fixed version, scanning both the working tree and
+  the pull request's own commits, with output redacted so a build log can never print the
+  secret it just found. **This one blocks.**
+- **`lint-and-test`** — style, then the configuration contract, then the schema, then the full
+  suite against a **real MySQL service container**. 76 tests, none skipped.
+- **`docker-build`** — builds the image *and boots it*, because a built image is not a working
+  image. Also reports the image size change onto the pull request.
+- **`ci-summary`** — one check for branch protection to require, so adding a job later cannot
+  silently stop being enforced.
+
+Two steps are worth calling out, because both found real defects the moment they were switched
+on.
+
+**The schema idempotency gate** applies `db/schema.sql` to an empty database, then applies it
+*again* and requires success. Every deploy after the first runs the schema against a populated
+database, so a statement that is not idempotent fails at release time rather than in testing.
+It immediately found three tables using bare `CREATE TABLE`, and applying it to an empty
+database at all revealed eight foreign keys that could never have worked: the file produced 2
+of 25 tables, and nobody knew because it had only ever been run against a database that
+already existed.
+
+**The configuration contract gate** fails the build if `src/` reads a variable that
+`.env.example` does not document, or documents one that nothing reads. Drift in either
+direction is how one person's change silently breaks another person's component.
+
+### CD, publishing something you can trust
+
+Builds the image, attaches an **SBOM** and **signed build provenance**, pushes it to GHCR, then
+**pulls it back and boots it**. A build and a push can both succeed while the thing in the
+registry is not what you think; the only honest check is to fetch it and run it.
+
+Images are tagged `sha-<commit>`, which is immutable. `latest` moves, so rolling back to
+`latest` could fetch the broken image straight back.
+
+The package is public, so the artifact can be verified by anyone with no credentials:
+
+```bash
+docker pull ghcr.io/shaniaong25026302/scampatrol:latest
+```
+
+### Deploy, releasing it
+
+Builds nothing. It can only release an image that CD has already verified, which is what makes
+a rollback meaningful: if deploying could also build, "go back to the previous version" would
+mean rebuilding it and hoping.
+
+It health-checks `/api/health` from outside the host, so a pass proves the application, the
+port mapping and the firewall together, not just that a container started.
+
+Runs automatically after a successful CD when the repository variable `AUTO_DEPLOY` is `true`,
+and by hand from the Actions tab otherwise.
+
+## Infrastructure
+
+| Layer | Tool | Owns |
+|---|---|---|
+| The server | **Terraform** (`terraform/`) | EC2 instance, security group, bootstrap |
+| Its configuration | **Ansible** (`ansible/`) | Docker, swap, `.env`, pulling and starting the image |
+| Releases | **GitHub Actions** | everything after a merge |
+
+Ansible generates the runtime `.env` on the host from vault-encrypted variables, so no
+credential is ever committed, baked into an image, or hand-edited on the server. The playbook
+is idempotent, and `ansible/tests/verify-idempotency.sh` proves it by running the whole thing
+twice and requiring the second run to change nothing.
+
+## Health checks
+
+Two endpoints, deliberately different.
+
+| Endpoint | Checks | Used by |
+|---|---|---|
+| `/api/health/live` | the process is up. **No database.** | the container `HEALTHCHECK` |
+| `/api/health` | the process **and** the database | the deploy gate, monitoring |
+
+Using the deep one as a container probe would turn a brief database blip into a restart loop.
+Using the shallow one as a release gate would report a deploy successful when the application
+cannot reach its database.
+
+## Configuration
+
+`.env.example` is the contract. It lists **every** variable the application reads, not only the
+ones you happen to need, and CI enforces it in both directions.
+
+| File | Contains | Committed |
+|---|---|---|
+| `.env.example` | every setting, documented, no values | yes |
+| `.env.local.example` | working values for the local container stack | yes |
+| `.env` / `.env.local` | real values | **never** |
+
+## Security
+
+- A **blocking** secret scan on every pull request, added after a credentials file reached the
+  repository. `.gitignore` stops the file by name; the scanner stops the contents by shape.
+  Neither is sufficient alone.
+- The container runs as an **unprivileged user**, not root.
+- Images carry an SBOM and signed provenance, so what is inside them and where they came from
+  are both answerable questions.
+- Publishing uses a short-lived token that expires with the job, so no long-lived registry
+  credential is stored anywhere.
+
+## Branch protection
+
+`main` cannot be pushed to directly. Every change goes through a pull request and must pass
+`secret-scan`, `lint-and-test`, `docker-build` and `ci-summary`.
+
+---
+
+# Docker files
+
+| File | Purpose |
+|---|---|
+| `Dockerfile` | the application image: slim base, production dependencies only, non-root, health check |
+| `.dockerignore` | keeps `node_modules`, credentials and keys out of the build context |
+| `docker-compose.local.yml` | local stack: application, MySQL and a volume |
+| `docker-compose.prod.yml` | production: the published image against the managed database |
