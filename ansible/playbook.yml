@@ -65,6 +65,16 @@
           contain at least 32 characters.
       no_log: true
 
+    - name: Preflight | Match cookie security to the public URL
+      ansible.builtin.assert:
+        that:
+          - >-
+            (scampatrol_app_base_url is match('^https://')) ==
+            (scampatrol_cookie_secure | bool)
+        fail_msg: >-
+          Set scampatrol_cookie_secure to false for an http:// URL, or true for
+          an https:// URL. Secure cookies cannot be used over plain HTTP.
+
     - name: Preflight | Require a Gemini key when fake AI is disabled
       ansible.builtin.assert:
         that:

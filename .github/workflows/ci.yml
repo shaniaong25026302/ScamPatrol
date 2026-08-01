@@ -201,6 +201,26 @@ jobs:
           [ "$FAILED" = "1" ] && exit 1
           echo "Contract holds: $(wc -l < /tmp/used.txt) variables, all documented and all read."
 
+      # Rebecca's Ansible template is the production implementation of that contract.
+      # Check it separately so the app cannot add a setting that local development knows
+      # about but the EC2 deployment silently omits. IMAGE_NAME belongs to Compose rather
+      # than Node, so it is the one intentional template-only value.
+      - name: Check Ansible renders the same environment contract
+        run: |
+          grep -oE '^[A-Z0-9_]+=' ansible/roles/scampatrol/templates/scampatrol.env.j2 \
+            | sed 's/=$//' | grep -v '^IMAGE_NAME$' | sort -u > /tmp/ansible-env.txt
+          grep -oE '^[A-Z0-9_]+=' .env.example \
+            | sed 's/=$//' | sort -u > /tmp/documented.txt
+
+          MISSING=$(comm -23 /tmp/documented.txt /tmp/ansible-env.txt)
+          EXTRA=$(comm -13 /tmp/documented.txt /tmp/ansible-env.txt)
+          if [ -n "$MISSING$EXTRA" ]; then
+            [ -n "$MISSING" ] && echo "Missing from Ansible template: $MISSING"
+            [ -n "$EXTRA" ] && echo "Undocumented Ansible values: $EXTRA"
+            exit 1
+          fi
+          echo "Ansible and the application use the same environment contract."
+
       # ── The schema gate ────────────────────────────────────────────────────
       # Wait properly rather than trusting the container's own health check alone. A
       # suite that fails because the database was not up yet is the most expensive kind

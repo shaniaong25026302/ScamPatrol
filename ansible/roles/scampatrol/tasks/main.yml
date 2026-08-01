@@ -124,8 +124,8 @@
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
-    owner: root
-    group: root
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
     mode: "{{ item.mode }}"
   loop:
     - path: "{{ scampatrol_root }}"
@@ -141,8 +141,8 @@
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../docker-compose.prod.yml"
     dest: "{{ scampatrol_root }}/docker-compose.prod.yml"
-    owner: root
-    group: root
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
     mode: "0644"
   tags:
     - deploy
@@ -151,19 +151,41 @@
   ansible.builtin.template:
     src: scampatrol.env.j2
     dest: "{{ scampatrol_root }}/.env"
-    owner: root
-    group: root
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
     mode: "0600"
   no_log: true
   tags:
     - deploy
 
-- name: Registry | Log in to the private GitHub Container Registry
+- name: Registry | Create the deployment user's Docker configuration directory
+  ansible.builtin.file:
+    path: "{{ scampatrol_deploy_home }}/.docker"
+    state: directory
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
+    mode: "0700"
+  tags:
+    - deploy
+
+- name: Registry | Log the deployment user in to GitHub Container Registry
   community.docker.docker_login:
     registry_url: "{{ scampatrol_registry_url }}"
     username: "{{ scampatrol_registry_username }}"
     password: "{{ scampatrol_registry_token }}"
+    config_path: "{{ scampatrol_deploy_home }}/.docker/config.json"
     state: present
+  no_log: true
+  tags:
+    - deploy
+
+- name: Registry | Protect the deployment user's registry credentials
+  ansible.builtin.file:
+    path: "{{ scampatrol_deploy_home }}/.docker/config.json"
+    state: file
+    owner: "{{ scampatrol_deploy_user }}"
+    group: "{{ scampatrol_deploy_user }}"
+    mode: "0600"
   no_log: true
   tags:
     - deploy
@@ -172,6 +194,9 @@
   ansible.builtin.command:
     cmd: docker compose --env-file .env -f docker-compose.prod.yml config --quiet
     chdir: "{{ scampatrol_root }}"
+  become_user: "{{ scampatrol_deploy_user }}"
+  environment:
+    HOME: "{{ scampatrol_deploy_home }}"
   changed_when: false
   tags:
     - deploy
@@ -187,6 +212,9 @@
     remove_orphans: true
     wait: true
     wait_timeout: 180
+  become_user: "{{ scampatrol_deploy_user }}"
+  environment:
+    HOME: "{{ scampatrol_deploy_home }}"
   register: scampatrol_compose
   tags:
     - deploy

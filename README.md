@@ -24,11 +24,13 @@ There is **no separate frontend build** — client interactivity is small `fetch
 ## Quick start
 
 ### Prerequisites
+
 - Node.js 18 or newer (`node -v`)
 - A MySQL database (we use filess.io free tier)
 - Git
 
 ### 1. Clone & install
+
 ```bash
 git clone https://github.com/shaniaong25026302/ScamPatrol
 cd ScamPatrol
@@ -36,6 +38,7 @@ npm install
 ```
 
 ### 2. Create your `.env`
+
 Create a file named **`.env`** in the project root (same folder as `package.json`).
 `.env` is **gitignored** — it is never committed and does **not** travel through `git pull`.
 Each person/machine must create their own.
@@ -82,6 +85,7 @@ APP_BASE_URL=http://localhost:3000
 > The database schema is in `db/schema.sql`. Run it once against your DB to create the tables.
 
 ### 3. Run
+
 ```bash
 npm run dev     # development with auto-reload (nodemon) → http://localhost:3000
 npm start       # production (node src/server.js)
@@ -94,18 +98,18 @@ npm run lint    # ESLint
 
 ## Environment variables
 
-| Key | Required | Purpose |
-|---|---|---|
-| `PORT` | no | Local port (Render sets its own — don't set it there) |
-| `NODE_ENV` | yes | `development` locally, **`production`** on Render (enables secure cookies) |
-| `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` | yes | MySQL connection |
-| `DB_CONNECTION_LIMIT` | yes | Keep low (2–3) — filess.io caps at 5 total connections |
-| `JWT_SECRET` | yes | Signs auth tokens |
-| `GEMINI_API_KEY` | yes | AI scam checker |
-| `MAIL_FROM` | yes | Sender name + address (must be a verified sender) |
-| `MAILJET_API_KEY` + `MAILJET_SECRET_KEY` | on Render | HTTP email (port 443) — works where SMTP is blocked |
-| `SMTP_*` | optional | Local email fallback |
-| `APP_BASE_URL` | yes | Base URL for reset links (`https://…onrender.com` in prod) |
+| Key                                                   | Required  | Purpose                                                                    |
+| ----------------------------------------------------- | --------- | -------------------------------------------------------------------------- |
+| `PORT`                                                | no        | Local port (Render sets its own — don't set it there)                      |
+| `NODE_ENV`                                            | yes       | `development` locally, **`production`** on Render (enables secure cookies) |
+| `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` | yes       | MySQL connection                                                           |
+| `DB_CONNECTION_LIMIT`                                 | yes       | Keep low (2–3) — filess.io caps at 5 total connections                     |
+| `JWT_SECRET`                                          | yes       | Signs auth tokens                                                          |
+| `GEMINI_API_KEY`                                      | yes       | AI scam checker                                                            |
+| `MAIL_FROM`                                           | yes       | Sender name + address (must be a verified sender)                          |
+| `MAILJET_API_KEY` + `MAILJET_SECRET_KEY`              | on Render | HTTP email (port 443) — works where SMTP is blocked                        |
+| `SMTP_*`                                              | optional  | Local email fallback                                                       |
+| `APP_BASE_URL`                                        | yes       | Base URL for reset links (`https://…onrender.com` in prod)                 |
 
 ---
 
@@ -140,14 +144,14 @@ ScamPatrol/
 
 What each member built into the app:
 
-| Member | Contribution |
-|---|---|
-| M1 (Shania) | App skeleton + shared retro theme/layout, authentication (JWT in httpOnly cookies + bcrypt), AI Scam Checker, Ask Inspector Hoot chatbot, Long-Con detector, the whole Scam Patrol HQ gamification (XP / levels / coins / streaks, badges, energy, field missions, gold shop, story, points + world leaderboard), DB schema, deployment (Render) + email (Mailjet) |
-| M2 (Rebecca) | Scam case reporting — create / edit / delete cases, categories, image upload, saved drafts |
-| M3 (Nivi) | Community Watch — browse / search cases, case detail page, vote & flag |
-| M4 (CG) | Comments + user profile (files added; not yet wired into the app) |
-| M5 (Liam) | Scam Weather service (on feature branch; not yet merged) |
-| M6 (Shawn) | Scam glossary + admin pages (dashboard, moderation, user & report management) |
+| Member       | Contribution                                                                                                                                                                                                                                                                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| M1 (Shania)  | App skeleton + shared retro theme/layout, authentication (JWT in httpOnly cookies + bcrypt), AI Scam Checker, Ask Inspector Hoot chatbot, Long-Con detector, the whole Scam Patrol HQ gamification (XP / levels / coins / streaks, badges, energy, field missions, gold shop, story, points + world leaderboard), DB schema, deployment (Render) + email (Mailjet) |
+| M2 (Rebecca) | Scam case reporting — create / edit / delete cases, categories, image upload, saved drafts                                                                                                                                                                                                                                                                         |
+| M3 (Nivi)    | Community Watch — browse / search cases, case detail page, vote & flag                                                                                                                                                                                                                                                                                             |
+| M4 (CG)      | Comments + user profile (files added; not yet wired into the app)                                                                                                                                                                                                                                                                                                  |
+| M5 (Liam)    | Scam Weather service (on feature branch; not yet merged)                                                                                                                                                                                                                                                                                                           |
+| M6 (Shawn)   | Scam glossary + admin pages (dashboard, moderation, user & report management)                                                                                                                                                                                                                                                                                      |
 
 Only edit shared files (`db/schema.sql`, `views/layout.ejs`, `views/partials/game-nav.ejs`)
 **additively**, and flag the owner (M1).
@@ -156,13 +160,14 @@ Only edit shared files (`db/schema.sql`, `views/layout.ejs`, `views/partials/gam
 
 ## Infrastructure as Code (M2 — Rebecca)
 
-The production server can be prepared repeatably with the Ansible project in
+The production server is prepared repeatably with the Ansible project in
 [`ansible/`](ansible/README.md). It installs Docker and Compose, creates swap,
 generates the protected runtime `.env`, starts Shawn's production Compose stack,
-checks the live endpoint, and includes a two-run `changed=0` idempotency test.
+checks database readiness, and includes a two-run `changed=0` idempotency test.
 
-The implementation and contribution notes are in
-[`M2_INFRASTRUCTURE_AS_CODE.md`](M2_INFRASTRUCTURE_AS_CODE.md).
+The team responsibility boundary and deployment order are documented in
+[`DEPLOYMENT_INTEGRATION.md`](DEPLOYMENT_INTEGRATION.md). Rebecca's contribution
+notes are in [`M2_INFRASTRUCTURE_AS_CODE.md`](M2_INFRASTRUCTURE_AS_CODE.md).
 
 ---
 
@@ -172,9 +177,11 @@ Every page renders through `views/layout.ejs`, so it gets the theme, top nav, HU
 sound and SPA scripts **automatically**. Follow these rules:
 
 1. **Render an EJS view — don't build a full page.**
+
    ```js
    res.render("cases/list", { title: "Community · Scam Patrol", activePage: "cases" });
    ```
+
    Not `res.send("<html>…")`, and don't create your own layout.
 
 2. **Your `.ejs` contains only page content** — no `<html>`, `<head>`, or `<body>`.
@@ -184,15 +191,15 @@ sound and SPA scripts **automatically**. Follow these rules:
 
 4. **Reuse shared component classes** instead of writing new styles:
 
-   | Class | Use |
-   |---|---|
-   | `.panel` | card / section box |
-   | `.gw-hero` | page header with icon + heading |
-   | `.gw-btn` (`.gold` `.ghost` `.safe` `.danger`) | buttons |
-   | `.gw-grid` + `.col-7` / `.col-5` / `.col-12` | responsive columns |
-   | `.gw-risk` (`.low` / `.medium` / `.high`) | status badges |
-   | `.lb` | tables (leaderboard style) |
-   | `.gw-chip` `.muted` `.center` `.gw-muted-link` | chips / helper text |
+   | Class                                          | Use                             |
+   | ---------------------------------------------- | ------------------------------- |
+   | `.panel`                                       | card / section box              |
+   | `.gw-hero`                                     | page header with icon + heading |
+   | `.gw-btn` (`.gold` `.ghost` `.safe` `.danger`) | buttons                         |
+   | `.gw-grid` + `.col-7` / `.col-5` / `.col-12`   | responsive columns              |
+   | `.gw-risk` (`.low` / `.medium` / `.high`)      | status badges                   |
+   | `.lb`                                          | tables (leaderboard style)      |
+   | `.gw-chip` `.muted` `.center` `.gw-muted-link` | chips / helper text             |
 
 5. **Client JS goes in `public/js/yourfile.js`**, loaded at the end of the view:
    `<script src="/js/yourfile.js" defer></script>`.
@@ -202,18 +209,21 @@ sound and SPA scripts **automatically**. Follow these rules:
 ### File templates
 
 **Page route** — `src/routes/cases.pages.routes.js`
+
 ```js
 const express = require("express");
 const router = express.Router();
 const { requireAuthPage } = require("../middleware/auth.middleware");
 
 router.get("/", requireAuthPage, (req, res) =>
-  res.render("cases/list", { title: "Community · Scam Patrol", activePage: "cases" }));
+  res.render("cases/list", { title: "Community · Scam Patrol", activePage: "cases" }),
+);
 
 module.exports = router;
 ```
 
 **API route** — `src/routes/cases.api.routes.js`
+
 ```js
 const express = require("express");
 const c = require("../controllers/cases.controller");
@@ -229,6 +239,7 @@ module.exports = router;
 ```
 
 **Controller** — `src/controllers/cases.controller.js`
+
 ```js
 const Case = require("../models/case.model");
 
@@ -245,23 +256,28 @@ module.exports = { list, create };
 ```
 
 **Model** — `src/models/case.model.js`
+
 ```js
 const { pool } = require("../db");
 
 async function all(limit = 20) {
-  const [rows] = await pool.query("SELECT * FROM scam_cases ORDER BY created_at DESC LIMIT ?", [limit]);
+  const [rows] = await pool.query("SELECT * FROM scam_cases ORDER BY created_at DESC LIMIT ?", [
+    limit,
+  ]);
   return rows;
 }
 async function create({ title, description, userId }) {
   const [r] = await pool.query(
     "INSERT INTO scam_cases (title, description, user_id) VALUES (?, ?, ?)",
-    [title, description, userId]);
+    [title, description, userId],
+  );
   return r.insertId;
 }
 module.exports = { all, create };
 ```
 
 **View — list** — `views/cases/list.ejs`
+
 ```ejs
 <section class="gw-hero">
   <div><h1>📋 Community Cases</h1><p>Scams reported by the community.</p></div>
@@ -274,6 +290,7 @@ module.exports = { all, create };
 ```
 
 **View — form** — `views/cases/new.ejs`
+
 ```ejs
 <section class="gw-hero"><div><h1>🚩 Report a Scam</h1></div></section>
 <div class="panel">
@@ -291,6 +308,7 @@ module.exports = { all, create };
 ```
 
 **View — detail** — `views/cases/detail.ejs`
+
 ```ejs
 <section class="gw-hero"><div><h1 id="case-title">Case</h1></div></section>
 <div class="panel">
@@ -302,6 +320,7 @@ module.exports = { all, create };
 ```
 
 **View — table (admin)** — `views/admin/list.ejs`
+
 ```ejs
 <section class="gw-hero"><div><h1>🛡️ Admin</h1></div></section>
 <div class="panel">
@@ -314,6 +333,7 @@ module.exports = { all, create };
 ```
 
 **View — static content (glossary)** — `views/glossary.ejs`
+
 ```ejs
 <section class="gw-hero"><div><h1>📖 Scam Glossary</h1></div></section>
 <div class="panel">
@@ -323,27 +343,33 @@ module.exports = { all, create };
 ```
 
 **Client JS** — `public/js/case-list.js`
+
 ```js
 (function () {
   "use strict";
   const box = document.getElementById("case-list");
   if (!box) return;
-  const esc = (s) => String(s).replace(/[&<>"]/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+    );
   (async () => {
     const r = await fetch("/api/cases");
     const d = await r.json();
-    box.innerHTML = (d.cases || []).map((c) =>
-      '<div class="panel col-6"><h3>' + esc(c.title) + "</h3></div>").join("")
-      || '<p class="muted">No cases yet.</p>';
+    box.innerHTML =
+      (d.cases || [])
+        .map((c) => '<div class="panel col-6"><h3>' + esc(c.title) + "</h3></div>")
+        .join("") || '<p class="muted">No cases yet.</p>';
   })();
 })();
 ```
 
 **Mount your routers** in `src/server.js` at the marked mount points:
+
 ```js
-app.use("/api/cases", require("./routes/cases.api.routes"));   // API
-app.use("/cases", require("./routes/cases.pages.routes"));     // pages
+app.use("/api/cases", require("./routes/cases.api.routes")); // API
+app.use("/cases", require("./routes/cases.pages.routes")); // pages
 ```
 
 **Add new tables** additively at the bottom of `db/schema.sql` (flag M1).
@@ -362,6 +388,7 @@ app.use("/cases", require("./routes/cases.pages.routes"));     // pages
    `Email: Mailjet HTTP API configured …`.
 
 **Important platform notes:**
+
 - Render's free tier **blocks outbound SMTP** (ports 25/465/587). Email must go through an
   **HTTP API** (Mailjet) — that's why `MAILJET_API_KEY` is required on Render.
 - Render has **no outbound IPv6**; the app forces IPv4 DNS in `server.js` so email/DB connect.
@@ -372,25 +399,25 @@ app.use("/cases", require("./routes/cases.pages.routes"));     // pages
 
 ## Troubleshooting
 
-| Symptom | Cause & fix |
-|---|---|
-| `Plugin 'mysql_native_password' is not loaded` | `.env` isn't loading, so mysql2 connects to a local MySQL. On Windows, check the file isn't secretly `.env.txt` (turn on file extensions), and that it sits next to `package.json`. |
-| `Email not configured …` at startup | The `.env` has no `MAILJET_*` / `SMTP_*` — it's the wrong/old `.env`. Recreate it with the correct values. |
-| `ER_USER_LIMIT_REACHED (max_user_connections: 5)` | filess.io caps at 5 connections. Don't run local `npm run dev` **and** Render at the same time; keep `DB_CONNECTION_LIMIT` low. |
-| `SMTP verify FAILED (ETIMEDOUT)` on Render | Render blocks SMTP — set `MAILJET_API_KEY`/`MAILJET_SECRET_KEY` so email uses the HTTP API instead. |
-| Reset email not in inbox | Sending from a `@gmail.com` address via an ESP fails DMARC → often lands in **Spam**. Check spam / verify a real domain for inbox delivery. |
-| CSS/JS changes not showing | Browser cache — hard refresh (Ctrl+Shift+R). The stylesheet uses a `?v=N` cache-buster. |
+| Symptom                                           | Cause & fix                                                                                                                                                                         |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Plugin 'mysql_native_password' is not loaded`    | `.env` isn't loading, so mysql2 connects to a local MySQL. On Windows, check the file isn't secretly `.env.txt` (turn on file extensions), and that it sits next to `package.json`. |
+| `Email not configured …` at startup               | The `.env` has no `MAILJET_*` / `SMTP_*` — it's the wrong/old `.env`. Recreate it with the correct values.                                                                          |
+| `ER_USER_LIMIT_REACHED (max_user_connections: 5)` | filess.io caps at 5 connections. Don't run local `npm run dev` **and** Render at the same time; keep `DB_CONNECTION_LIMIT` low.                                                     |
+| `SMTP verify FAILED (ETIMEDOUT)` on Render        | Render blocks SMTP — set `MAILJET_API_KEY`/`MAILJET_SECRET_KEY` so email uses the HTTP API instead.                                                                                 |
+| Reset email not in inbox                          | Sending from a `@gmail.com` address via an ESP fails DMARC → often lands in **Spam**. Check spam / verify a real domain for inbox delivery.                                         |
+| CSS/JS changes not showing                        | Browser cache — hard refresh (Ctrl+Shift+R). The stylesheet uses a `?v=N` cache-buster.                                                                                             |
 
 ---
 
 ## Scripts
 
-| Command | Does |
-|---|---|
-| `npm run dev` | Run with nodemon (auto-reload) |
-| `npm start` | Run once (production) |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier |
+| Command          | Does                           |
+| ---------------- | ------------------------------ |
+| `npm run dev`    | Run with nodemon (auto-reload) |
+| `npm start`      | Run once (production)          |
+| `npm run lint`   | ESLint                         |
+| `npm run format` | Prettier                       |
 
 ---
 

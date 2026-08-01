@@ -1,6 +1,0 @@
-- name: Set up ScamPatrol server
-  hosts: scampatrol
-  become: true
-
-  roles:
-    - server_setup

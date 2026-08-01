@@ -28,7 +28,9 @@ run to finish with `changed=0`.
 ## Security controls
 
 - Secrets are stored in an ignored Ansible Vault file, not in Git.
-- The generated `/opt/scampatrol/.env` is readable only by root (`0600`).
+- The generated `/opt/scampatrol/.env` is readable only by the dedicated
+  `ubuntu` deployment user (`0600`). This lets Shawn's SSH deployment use it
+  without `sudo` while keeping it private from other users.
 - SSH host-key checking remains enabled.
 - The registry token needs only `read:packages`.
 - Deployment rejects `latest` and accepts only a verified `sha-*` tag or image
@@ -38,10 +40,10 @@ run to finish with `changed=0`.
 ## How it connects to the team
 
 Shania's CD workflow publishes and verifies an immutable image. Shawn's Terraform
-creates the Ubuntu EC2 instance and his production Compose file defines how that
-image runs. My Ansible playbook connects the two: it configures the EC2 host,
-installs the Compose file, injects the protected values, and starts the exact
-verified image.
+creates only the Ubuntu EC2 infrastructure. My Ansible playbook then configures
+that host and establishes `/opt/scampatrol` as the handoff. Shawn's Deploy
+workflow consumes that same Ansible-managed directory and Compose file for later
+image updates and rollback. No separate manual server setup is required.
 
 ## Demonstration
 
@@ -51,19 +53,18 @@ verified image.
 4. Run the idempotency test.
 5. Highlight the second recap: `changed=0`, `unreachable=0`, `failed=0`.
 
-## Validation completed
+## Validation
 
-- `ansible-playbook --syntax-check`: passed.
-- `ansible-lint`: passed with zero failures and zero warnings.
-- YAML parsing for all Ansible files: passed.
-- Runtime `.env` template render: passed with permission `0600`.
-- Shell syntax for both helper scripts: passed.
-- Existing application test suite: 35 passed, 31 skipped because no database
-  was supplied, and 0 failed.
-- Existing application lint: 0 errors and 5 pre-existing warnings outside the
-  IaC files.
+- All Ansible and workflow YAML files parse successfully.
+- Both Ansible helper scripts pass shell syntax checking.
+- The Ansible template and `.env.example` contain the same application settings.
+- Application tests: 38 passed, 31 skipped because no test database was supplied,
+  and 0 failed.
+- Application lint: 0 errors and 5 pre-existing warnings outside the IaC files.
+- New cookie tests prove both the current HTTP setting and the future HTTPS setting.
 
-The live two-run idempotency test requires the real EC2 address, SSH key, image
-tag, and encrypted production variables. The included
-`tests/verify-idempotency.sh` performs that final server-side check without
-storing those values in the repository.
+Run `./tests/validate.sh` from the Ansible virtual environment before opening the
+pull request. The live two-run idempotency test additionally requires the real EC2
+address, SSH key, image tag and encrypted production variables. The included
+`tests/verify-idempotency.sh` performs that final server-side check without storing
+those values in the repository.

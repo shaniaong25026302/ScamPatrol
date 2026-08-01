@@ -6,8 +6,8 @@ ScamPatrol production server. One command:
 1. installs Docker Engine and Docker Compose v2;
 2. creates and persists a 1 GiB swap file;
 3. creates `/opt/scampatrol` and its persistent data directories;
-4. writes the protected production `.env`;
-5. logs in to the private GitHub Container Registry;
+4. writes the protected production `.env` for the `ubuntu` deployment user;
+5. logs that deployment user in to the private GitHub Container Registry;
 6. pulls the verified `sha-*` image and starts `docker-compose.prod.yml`; and
 7. checks the application's live health endpoint.
 
@@ -71,6 +71,17 @@ Shania's CD workflow, for example:
 scampatrol_image: ghcr.io/shaniaong25026302/scampatrol:sha-a1b2c3d
 ```
 
+The current EC2 demo uses plain HTTP, so keep:
+
+```yaml
+scampatrol_app_base_url: http://YOUR_EC2_IP
+scampatrol_cookie_secure: false
+```
+
+When HTTPS is added, change the URL to `https://` and the cookie setting to
+`true` together. The playbook rejects a mismatch because a Secure login cookie
+cannot work over HTTP.
+
 Encrypt the completed file before keeping it:
 
 ```bash
@@ -121,18 +132,18 @@ ansible-playbook \
 
 # Inspect the live service
 ssh -i /path/to/key.pem ubuntu@SERVER_IP \
-  'cd /opt/scampatrol && sudo docker compose -f docker-compose.prod.yml ps'
+  'cd /opt/scampatrol && docker compose -f docker-compose.prod.yml ps'
 ```
 
 ## Expected files on the server
 
 | Path | Purpose | Permission |
 |---|---|---|
-| `/opt/scampatrol/docker-compose.prod.yml` | Production service definition | `0644` |
-| `/opt/scampatrol/.env` | Runtime configuration and secrets | `0600` |
-| `/opt/scampatrol/uploads` | Persistent user uploads | `0755` |
-| `/opt/scampatrol/data` | Persistent application data | `0755` |
-| `/swapfile` | 1 GiB swap for the small EC2 instance | `0600` |
+| `/opt/scampatrol/docker-compose.prod.yml` | Production service definition | `ubuntu:ubuntu`, `0644` |
+| `/opt/scampatrol/.env` | Runtime configuration and secrets | `ubuntu:ubuntu`, `0600` |
+| `/opt/scampatrol/uploads` | Persistent user uploads | `ubuntu:ubuntu`, `0755` |
+| `/opt/scampatrol/data` | Persistent application data | `ubuntu:ubuntu`, `0755` |
+| `/swapfile` | 1 GiB swap for the small EC2 instance | `root:root`, `0600` |
 
 ## Troubleshooting
 
@@ -145,7 +156,8 @@ ssh -i /path/to/key.pem ubuntu@SERVER_IP \
 - **Health check failed:** run
   `sudo docker logs scampatrol --tail 100` on the server. Database configuration
   is the most common cause.
+- **Login returns to the guest page:** confirm the server `.env` has
+  `COOKIE_SECURE=0` for an `http://` deployment, then recreate the container.
 - **Existing swap has a different size:** the playbook stops rather than
   destroying active swap. Disable and remove it manually before changing the
   configured size.
-
