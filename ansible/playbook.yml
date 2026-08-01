@@ -29,10 +29,6 @@
           value: "{{ scampatrol_image | default('') }}"
         - name: scampatrol_app_base_url
           value: "{{ scampatrol_app_base_url | default('') }}"
-        - name: scampatrol_registry_username
-          value: "{{ scampatrol_registry_username | default('') }}"
-        - name: scampatrol_registry_token
-          value: "{{ scampatrol_registry_token | default('') }}"
         - name: scampatrol_db_host
           value: "{{ scampatrol_db_host | default('') }}"
         - name: scampatrol_db_user
