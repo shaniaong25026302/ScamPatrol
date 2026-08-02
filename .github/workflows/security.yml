@@ -94,8 +94,20 @@ jobs:
         with:
           category: /language:javascript-typescript
 
-  gitleaks:
-    name: Gitleaks secret scan
+  # This is intentionally different from the blocking Gitleaks job in ci.yml.
+  #
+  # ci.yml scans the proposed working tree and only the commits introduced by a
+  # pull request. It blocks the merge if a new secret is detected.
+  #
+  # This job is a non-blocking audit of the COMPLETE history already stored in
+  # the repository. It runs after changes reach main, on the weekly schedule, or
+  # when started manually. It can reveal an older credential or a newly-added
+  # Gitleaks detection rule without making every pull request run the same scan
+  # twice. Findings here require investigation and secret rotation, but this
+  # advisory workflow does not act as the merge gate.
+  gitleaks-history-audit:
+    name: Gitleaks full-history audit (advisory)
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -104,7 +116,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Scan repository history for leaked secrets
+      - name: Audit all repository history for leaked secrets
         continue-on-error: true
         uses: gitleaks/gitleaks-action@v2
         env:

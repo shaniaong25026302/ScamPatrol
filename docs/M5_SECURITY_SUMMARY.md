@@ -8,6 +8,7 @@ This security layer runs beside the main CI merge gate. It reports known weaknes
 
 - `.github/workflows/security.yml`
 - `.github/dependabot.yml`
+- `.github/workflows/monitoring.yml`
 
 ## What is scanned
 
@@ -64,3 +65,37 @@ Every security job uses `continue-on-error: true`, and Trivy uses `exit-code: "0
 - Show the Trivy job and, when available, its result under **Security → Code scanning**.
 - Open one real Dependabot pull request and explain what changed.
 - Pick one finding and explain its severity, whether it is reachable, and the safest remediation.
+
+## Why there are two Gitleaks checks
+
+The two checks have different scopes and enforcement roles; they are not identical duplicate gates.
+
+| Location | When it runs | What it scans | Result |
+|---|---|---|---|
+| `.github/workflows/ci.yml` | Pull requests to `main` | The proposed working tree and only the commits introduced by that pull request | **Blocking:** a newly introduced secret prevents the pull request from merging |
+| `.github/workflows/security.yml` | Pushes to `main`, the weekly schedule, and manual runs | The repository's complete Git history | **Advisory:** detects older leaks or secrets recognised by newer Gitleaks rules without duplicating the PR scan |
+
+The CI scan answers, **“Is this pull request introducing a secret?”** The security audit answers, **“Does any history already stored in the repository now match a secret-detection rule?”** The full-history audit is skipped on pull-request events so the same PR is not scanned twice for the same purpose.
+
+## Production uptime monitoring
+
+`.github/workflows/monitoring.yml` checks Scam Patrol's public `/api/health` endpoint every 15 minutes and can also be launched manually. This is the deep health endpoint: it returns success only when both the Express application and MySQL database are available.
+
+The workflow:
+
+1. uses the repository variable `MONITOR_URL` when configured, otherwise it falls back to `http://<EC2_HOST>/api/health` using the existing `EC2_HOST` secret;
+2. retries brief network failures to reduce false alarms;
+3. verifies both `status: "ok"` and `db: "up"` in the JSON response;
+4. opens one GitHub issue when downtime is detected, adding comments to the same issue during continued failure rather than creating unlimited duplicates;
+5. closes that issue automatically after the health check recovers; and
+6. marks the workflow run as failed so downtime is visible in GitHub Actions and notifications.
+
+### Monitoring setup
+
+For the clearest configuration, create this repository variable under **Settings → Secrets and variables → Actions → Variables**:
+
+```text
+MONITOR_URL=https://your-production-domain.example/api/health
+```
+
+When no domain is available, the existing `EC2_HOST` Actions secret is used with HTTP on port 80. GitHub scheduled workflows may start a few minutes later than the exact cron time during periods of high Actions load, so this is periodic monitoring rather than a real-time service-level guarantee.

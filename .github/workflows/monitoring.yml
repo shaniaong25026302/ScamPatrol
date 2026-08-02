@@ -1,0 +1,178 @@
+name: Production Health Monitor
+
+# This is an external availability check, not a build or deployment test.
+# Every 15 minutes GitHub contacts the live application's DEEP health endpoint.
+# /api/health verifies both the Express server and its MySQL connection, so the
+# monitor detects either application downtime or database failure.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+# Prevent a delayed scheduled run from overlapping with the next one.
+concurrency:
+  group: production-health-monitor
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health-check:
+    name: Check application and database health
+    runs-on: ubuntu-latest
+
+    env:
+      # Preferred setup: create a repository variable named MONITOR_URL containing
+      # the complete endpoint, for example https://example.com/api/health.
+      # If it is absent, the workflow falls back to the existing EC2_HOST secret
+      # and checks http://<EC2_HOST>/api/health.
+      CONFIGURED_MONITOR_URL: ${{ vars.MONITOR_URL }}
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+
+    steps:
+      - name: Resolve health endpoint
+        id: endpoint
+        shell: bash
+        run: |
+          if [ -n "$CONFIGURED_MONITOR_URL" ]; then
+            URL="$CONFIGURED_MONITOR_URL"
+          elif [ -n "$EC2_HOST" ]; then
+            URL="http://${EC2_HOST}/api/health"
+          else
+            echo "Neither the MONITOR_URL repository variable nor EC2_HOST secret is configured."
+            exit 1
+          fi
+
+          case "$URL" in
+            http://*|https://*) ;;
+            *)
+              echo "The monitoring URL must begin with http:// or https://."
+              exit 1
+              ;;
+          esac
+
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Monitoring $URL"
+
+      - name: Request deep health check
+        id: probe
+        continue-on-error: true
+        shell: bash
+        run: |
+          URL="${{ steps.endpoint.outputs.url }}"
+
+          # --fail treats HTTP 4xx/5xx as failures. Retries reduce false alarms
+          # caused by a brief network interruption, while the 10-second timeout
+          # prevents one dead request from hanging the whole workflow.
+          if ! RESPONSE=$(curl --silent --show-error --fail \
+              --connect-timeout 10 --max-time 20 \
+              --retry 2 --retry-delay 5 --retry-all-errors \
+              "$URL"); then
+            echo "The health endpoint could not be reached successfully."
+            exit 1
+          fi
+
+          echo "Response: $RESPONSE"
+
+          # A 200 response alone is not enough. Confirm that the endpoint reports
+          # both the application and database as healthy.
+          STATUS=$(printf '%s' "$RESPONSE" | jq -r '.status // empty')
+          DB_STATUS=$(printf '%s' "$RESPONSE" | jq -r '.db // empty')
+
+          if [ "$STATUS" != "ok" ] || [ "$DB_STATUS" != "up" ]; then
+            echo "Unexpected health response: status=$STATUS db=$DB_STATUS"
+            exit 1
+          fi
+
+          echo "Scam Patrol and its database are healthy."
+
+      - name: Open or update downtime issue
+        if: steps.probe.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          HEALTH_URL: ${{ steps.endpoint.outputs.url }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const title = '[Monitoring] Scam Patrol health check failed';
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const now = new Date().toISOString();
+            const body = [
+              'The scheduled production health check failed.',
+              '',
+              `- Endpoint: \`${process.env.HEALTH_URL}\``,
+              `- Detected: ${now}`,
+              `- Workflow run: ${runUrl}`,
+              '',
+              'The endpoint checks both the Express application and its MySQL connection. Investigate the server, container, network path, and database.'
+            ].join('\n');
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
+            const existing = issues.find(issue => !issue.pull_request && issue.title === title);
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body
+              });
+              core.notice(`Updated existing downtime issue #${existing.number}.`);
+            } else {
+              const { data: issue } = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body
+              });
+              core.notice(`Opened downtime issue #${issue.number}.`);
+            }
+
+      - name: Close downtime issue after recovery
+        if: steps.probe.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const title = '[Monitoring] Scam Patrol health check failed';
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
+            const existing = issues.find(issue => !issue.pull_request && issue.title === title);
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body: `The production health check recovered at ${new Date().toISOString()}. Closing this incident automatically.`
+              });
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: existing.number,
+                state: 'closed'
+              });
+              core.notice(`Closed recovered downtime issue #${existing.number}.`);
+            } else {
+              core.notice('Health check passed; there is no open downtime issue.');
+            }
+
+      # The probe uses continue-on-error so the incident-management steps above can
+      # still run. This final step restores a failed workflow status for visibility
+      # in GitHub Actions and notifications.
+      - name: Mark workflow failed when service is unhealthy
+        if: steps.probe.outcome == 'failure'
+        run: exit 1
