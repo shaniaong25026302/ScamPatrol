@@ -2,15 +2,96 @@
 // src/services/gemini.service.js — Google Gemini scam analysis via @google/genai.
 // Returns { risk_level: 'low'|'medium'|'high', explanation, signals[] }.
 const { GoogleGenAI, Type } = require("@google/genai");
+const crypto = require("crypto");
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+// ── Surviving the free tier ───────────────────────────────────────────────────
+// The free Gemini quota ran out during a presentation once and the AI features could
+// not be shown at all. Quota is scoped per PROJECT and per MODEL, which gives exactly
+// two independent ways to get more of it: more keys, from different projects, and more
+// models. Both are lists here. Both fall back to the old single-value names, so an
+// existing .env keeps working untouched.
+const KEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const MODELS = (process.env.GEMINI_MODELS || process.env.GEMINI_MODEL || "gemini-2.5-flash")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const MODEL = MODELS[0];
 const RISK_LEVELS = ["low", "medium", "high"];
 
-let client;
-function getClient() {
-  if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not set");
-  if (!client) client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  return client;
+const clients = new Map(); // key -> one reused client
+// Parked combinations, keyed on MODEL + KEY together rather than on the key alone.
+// That pairing is the whole point: quota is scoped per project and per model, so a key
+// that is spent on one model may still have a full allowance on another. Cooling the
+// key by itself would park it everywhere at once and the model fallback below could
+// never run, which is exactly the bug this started out with.
+const cooling = new Map(); // "model::key" -> time until which we skip that combination
+const cache = new Map(); // hash(request) -> { value, until }
+
+// A 429 on the free tier usually means the DAILY allowance is gone rather than a short
+// burst limit, so retrying the same key seconds later only spends another request.
+// Park it for an hour instead.
+const COOLDOWN_MS = 60 * 60 * 1000;
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const CACHE_MAX = 200; // bounded, so a long-running process cannot grow without limit
+
+function clientFor(key) {
+  if (!clients.has(key)) clients.set(key, new GoogleGenAI({ apiKey: key }));
+  return clients.get(key);
+}
+
+// Gemini signals "out of quota" in several different shapes depending on where the
+// request failed, so match all of them rather than trusting one field.
+function isQuotaError(e) {
+  const s = `${(e && e.status) || ""} ${(e && e.code) || ""} ${(e && e.message) || ""}`;
+  return /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(s);
+}
+
+// Try every (model, key) pair before giving up. Returns { text }, the same shape the
+// callers already read, so none of them needed reshaping.
+async function generate(payload) {
+  // A MISSING key is a CONFIGURATION error, not a quota event, and it must never reach
+  // the degraded path. Without this line an unset key would leave the app looking
+  // perfectly healthy while silently never calling Gemini at all.
+  if (!KEYS.length) throw new Error("GEMINI_API_KEYS / GEMINI_API_KEY is not set");
+
+  // Keyed on the request and deliberately NOT on the model. Several people rehearsing
+  // the same few sample scams is precisely what exhausted the quota last time, and the
+  // answer to a prompt is the answer to that prompt whichever model produced it.
+  const ck = crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+  const hit = cache.get(ck);
+  if (hit && hit.until > Date.now()) return { text: hit.value, cached: true };
+
+  let lastErr;
+  for (const model of MODELS) {
+    for (const key of KEYS) {
+      const parked = `${model}::${key}`;
+      if ((cooling.get(parked) || 0) > Date.now()) continue; // spent on this model
+      try {
+        const res = await clientFor(key).models.generateContent({ ...payload, model });
+        if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value);
+        cache.set(ck, { value: res.text, until: Date.now() + CACHE_TTL_MS });
+        return { text: res.text };
+      } catch (e) {
+        lastErr = e;
+        if (isQuotaError(e)) {
+          cooling.set(parked, Date.now() + COOLDOWN_MS);
+          continue; // next key, then next model
+        }
+        throw e; // a genuine error (bad prompt, no network) must still surface loudly
+      }
+    }
+  }
+
+  // Only reached once every key on every model is spent. The flag is what tells the
+  // wrapper below that degrading is the correct response here, rather than failing.
+  throw Object.assign(lastErr || new Error("All Gemini keys and models are exhausted"), {
+    quotaExhausted: true,
+  });
 }
 
 const RESPONSE_SCHEMA = {
@@ -80,14 +161,12 @@ function fakeAnalyze(text) {
   if (urgency) signals.push("Creates false urgency");
   if (bait) signals.push("Too-good-to-be-true reward");
 
-  return { risk_level: risk, explanation: "[test mode] Heuristic assessment from keywords.", signals };
+  return { risk_level: risk, explanation: "[offline mode] Heuristic assessment from keywords.", signals };
 }
 
 async function analyzeText(text) {
   if (process.env.AI_FAKE === "1") return fakeAnalyze(text);
-  const ai = getClient();
-  const res = await ai.models.generateContent({
-    model: MODEL,
+  const res = await generate({
     contents: buildPrompt(text),
     config: {
       responseMimeType: "application/json",
@@ -114,14 +193,13 @@ async function analyzeText(text) {
 function fakeRoast(text) {
   return {
     score: Math.min(9, 3 + (text.length % 6)),
-    roast: "[test mode] A parcel scam? Groundbreaking. The typos alone deserve a refund.",
+    roast: "[offline mode] A parcel scam? Groundbreaking. The typos alone deserve a refund.",
     redFlags: ["Generic greeting", "Suspicious link", "Fake urgency"],
   };
 }
 
 async function roastScam(text) {
   if (process.env.AI_FAKE === "1") return fakeRoast(text);
-  const ai = getClient();
   const prompt = [
     "You are a witty comedian who ROASTS scam messages to teach people the red flags.",
     "Give a short, funny, PG-13 roast (2-3 sentences) mocking how lazy/obvious the scam is,",
@@ -129,8 +207,7 @@ async function roastScam(text) {
     "Roast the SCAMMER, never the victim.",
     "Message:", '"""', text, '"""',
   ].join("\n");
-  const res = await ai.models.generateContent({
-    model: MODEL,
+  const res = await generate({
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -160,7 +237,7 @@ async function roastScam(text) {
 function fakeRelationship(text) {
   return {
     risk_level: /money|invest|crypto|gift|emergency|loan/i.test(text) ? "high" : "medium",
-    summary: "[test mode] Classic long-con grooming building toward a money request.",
+    summary: "[offline mode] Classic long-con grooming building toward a money request.",
     timeline: [
       { stage: "Love-bombing", quote: "You're so special to me", tactic: "Builds fast intimacy" },
       { stage: "Isolation", quote: "Don't tell your family", tactic: "Cuts off outside advice" },
@@ -172,7 +249,6 @@ function fakeRelationship(text) {
 
 async function analyzeRelationship(text) {
   if (process.env.AI_FAKE === "1") return fakeRelationship(text);
-  const ai = getClient();
   const prompt = [
     "You are an expert in romance/long-con scams. Analyze the WHOLE conversation below",
     "(it may span weeks) and map the manipulation TIMELINE in order.",
@@ -181,8 +257,7 @@ async function analyzeRelationship(text) {
     "Then give overall risk_level (low/medium/high), a 2-3 sentence summary, and concrete advice.",
     "Conversation:", '"""', text, '"""',
   ].join("\n");
-  const res = await ai.models.generateContent({
-    model: MODEL,
+  const res = await generate({
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -262,16 +337,15 @@ const CHAT_LANGUAGES = {
 function fakeChat(messages) {
   const last = String((messages[messages.length - 1] || {}).text || "").toLowerCase();
   if (/helpline|number|hotline|call|contact/.test(last))
-    return "[test mode] Call the national Anti-Scam Helpline at 1799, or the Police at 999 in an emergency.";
+    return "[offline mode] Call the national Anti-Scam Helpline at 1799, or the Police at 999 in an emergency.";
   if (/lost money|transferred|sent money|scammed|paid/.test(last))
-    return "[test mode] Contact your bank immediately to freeze the transfer, make a police report, and call 1799.";
-  return "[test mode] I'm Inspector Hoot 🦉 — ask me about scams, what to do if scammed, or the anti-scam helpline.";
+    return "[offline mode] Contact your bank immediately to freeze the transfer, make a police report, and call 1799.";
+  return "[offline mode] I'm Inspector Hoot 🦉 — ask me about scams, what to do if scammed, or the anti-scam helpline.";
 }
 
 // messages: [{ role: 'user' | 'assistant', text }] — full conversation so far.
 async function chatReply(messages,language = "en") {
   if (process.env.AI_FAKE === "1") return fakeChat(messages);
-  const ai = getClient();
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: String(m.text || "") }],
@@ -280,8 +354,7 @@ async function chatReply(messages,language = "en") {
   const languageInstruction =
     CHAT_LANGUAGES[language] || CHAT_LANGUAGES.en;
 
-  const res = await ai.models.generateContent({
-    model: MODEL,
+  const res = await generate({
     contents,
     config: {
         systemInstruction: `
@@ -301,5 +374,37 @@ async function chatReply(messages,language = "en") {
   return String(res.text || "").trim() || "Sorry, I couldn't answer that — try rephrasing?";
 }
 
-module.exports = { analyzeText, roastScam, analyzeRelationship, chatReply, MODEL, RISK_LEVELS };
+// Degrade to the offline twin ONLY when the quota is genuinely exhausted.
+//
+// Doing this at the export boundary rather than inside each function keeps the four
+// implementations unchanged and makes the rule impossible to apply inconsistently:
+// there is one place that decides what a fallback is.
+//
+// The distinction being drawn is the whole point. `quotaExhausted` is set only after
+// every key on every model has been tried, and nothing else sets it. A missing key, a
+// malformed prompt or a network failure carries no flag, so it is re-thrown, the
+// controller returns its usual 502, and the real reason reaches the log. Out of quota
+// degrades quietly; misconfigured fails loudly.
+function withFallback(realFn, fakeFn) {
+  return async (...args) => {
+    try {
+      return await realFn(...args);
+    } catch (e) {
+      if (!e || !e.quotaExhausted) throw e;
+      const out = await fakeFn(...args);
+      // chatReply answers with a string; the other three answer with an object, and
+      // those get a flag so the interface can say the answer is a fallback.
+      return typeof out === "string" ? out : { ...out, degraded: true };
+    }
+  };
+}
+
+module.exports = {
+  analyzeText: withFallback(analyzeText, fakeAnalyze),
+  roastScam: withFallback(roastScam, fakeRoast),
+  analyzeRelationship: withFallback(analyzeRelationship, fakeRelationship),
+  chatReply: withFallback(chatReply, fakeChat),
+  MODEL,
+  RISK_LEVELS,
+};
 // <Shania End>

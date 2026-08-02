@@ -1,12 +1,20 @@
-name: Security Scans (Warn Only)
+name: Security Scans (Warn Only) ## -- Name of wokflow, as appears in Github Actions.
 
-on:
-  pull_request:
-  push:
+# the scans report security problems, 
+# but they are not intended to prevent the team from merging code.
+
+#Trigger Events#
+on: ## -- (think of this like a "When" or "if" clause)
+  pull_request: ## -- "Run this workflow whenever a pull request event happens using GitHub’s default pull-request settings."
+  push: ## -- Run the workflow when code is pushed to the main branch.
     branches: [main]
-  schedule:
+  schedule: ## -- Runs automatically on a weekly basis
     - cron: "17 2 * * 1"
-  workflow_dispatch:
+  workflow_dispatch: ## -- This adds a Run workflow button in GitHub Actions.
+
+# Our workflow runs in four situations: during pull requests, 
+# after code reaches main, automatically every Monday and manually 
+# through GitHub.
 
 # These scans report security findings, but they deliberately do not act as
 # the repository's merge gate. Shania's ci.yml remains the blocking pipeline.
@@ -14,6 +22,9 @@ permissions:
   contents: read
   security-events: write
   actions: read
+# GitHub Actions workflows operate using a temporary token called GITHUB_TOKEN.
+# This section follows the principle of least privilege by
+# giving the workflow only the permissions it needs.
 
 jobs:
   npm-audit:

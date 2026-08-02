@@ -1,0 +1,51 @@
+services:
+  db:
+    image: mysql:8
+
+    container_name: scampatrol-db
+
+    restart: unless-stopped
+
+    environment:
+      # Defaults so the stack starts with no setup at all. Compose interpolates these
+      # from the shell or from .env, NOT from the .env.local below, which is a genuine
+      # trap: without a default they silently become empty strings and MySQL refuses to
+      # start. These values only ever exist on a developer machine, so they are
+      # deliberately obvious rather than secret.
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-dev-only}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-scampatrol}
+      MYSQL_USER: ${MYSQL_USER:-scampatrol}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local-dev-only}
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  scampatrol:
+    build: .
+
+    container_name: scampatrol
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - .env.local
+
+    restart: unless-stopped
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

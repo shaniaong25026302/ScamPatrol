@@ -1,3 +1,4 @@
+# <Shania Start>
 # CD — runs after a change is merged into main.
 #
 # It builds the image, publishes it to GHCR (GitHub's container registry), then
@@ -13,18 +14,27 @@ name: CD
 on:
   push:
     branches: [main] # i.e. after a pull request is merged
-  workflow_dispatch: # lets us re-run it by hand from the Actions tab
+  workflow_dispatch: # lets us run it by hand from the Actions tab
+    inputs:
+      verify_tag:
+        description: "Existing tag to re-verify before rolling back to it, e.g. sha-abc1234. Leave blank to build main."
+        required: false
+        default: ""
 
 concurrency:
   group: cd-main
   cancel-in-progress: false # never abandon a half-finished publish
 
 jobs:
+  # ── Normal release: build main, publish it, prove what we published works.
   publish:
+    if: github.event_name == 'push' || inputs.verify_tag == ''
     runs-on: ubuntu-latest
     permissions:
       contents: read # read the code
       packages: write # write the image to GHCR
+      id-token: write # sign the provenance attestation below (OIDC, no stored key)
+      attestations: write # record that attestation against this repository
     steps:
       - name: Check out the code
         uses: actions/checkout@v4
@@ -55,15 +65,71 @@ jobs:
             type=sha,prefix=sha-,format=short
             type=raw,value=latest
 
+      # ── Supply chain: say what is in the image, and prove where it came from ──
+      #
+      # sbom: true attaches a Software Bill of Materials, a machine-readable list of
+      # every package inside the image. The reason to want one is the morning a
+      # vulnerability is announced in some library: the question is "are we affected?",
+      # and without an SBOM the honest answer is "we will read package-lock.json and
+      # guess". With one it is a query against an artifact we already published.
+      #
+      # provenance: mode=max records HOW the image was built: which commit, which
+      # workflow, which runner. It is the difference between "this image says it is
+      # our app" and "this image is provably the output of building that commit here".
+      #
+      # Boundary note: this is about whether the artifact is what it claims to be.
+      # Scanning it for known vulnerabilities is a separate concern and lives in the
+      # security workflow, which runs alongside this one.
       - name: Build and publish
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # The registry rejects uppercase, and this repository name has some in it.
+      - name: Work out the lowercase image name
+        id: img
+        run: |
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" \
+            >> "$GITHUB_OUTPUT"
+
+      # ALSO record the attestation with GitHub, on top of the one already inside the
+      # image. Signed with a short-lived OIDC token minted for this run, so no signing
+      # key is stored anywhere and there is nothing to leak or rotate. Once it works it
+      # is checkable by anyone:
+      #   gh attestation verify oci://ghcr.io/shaniaong25026302/scampatrol:latest \
+      #     --owner shaniaong25026302
+      # A pass means the image was built by this repository's workflow from that commit,
+      # and not by someone who simply had permission to push to the registry.
+      #
+      # continue-on-error, and the reason matters. GitHub's attestation API refuses
+      # user-owned PRIVATE repositories: "Feature not available for user-owned private
+      # repositories". This repository is currently private, so this step cannot succeed
+      # yet and it is not worth failing a release over.
+      #
+      # Losing this step does NOT lose the capability. The SBOM and the provenance are
+      # attached to the image itself by buildx above (--attest type=sbom and
+      # type=provenance,mode=max), which works regardless of visibility, and the image is
+      # where they actually need to live. This step only adds GitHub's own copy and the
+      # `gh attestation verify` convenience.
+      #
+      # It starts working the moment the repository is made public, with no change here.
+      # Do not make it public to switch this on until the leaked credentials from
+      # 30 July are rotated: publishing the repository also publishes that history.
+      - name: Attest where this image came from
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ${{ steps.img.outputs.name }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
 
       # Fetch back exactly what we published and prove it starts. As in CI we ask for
       # "/" and not "/api/health", because there is no database alongside this container.
@@ -97,6 +163,7 @@ jobs:
       - name: Publish summary
         if: success()
         run: |
+          PINNED=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
           {
             echo "### Image published and verified"
             echo ""
@@ -104,5 +171,66 @@ jobs:
             echo "${{ steps.meta.outputs.tags }}"
             echo '```'
             echo ""
-            echo "Pull it with: \`docker pull $(echo "${{ steps.meta.outputs.tags }}" | head -n 1)\`"
+            echo "Digest: \`${{ steps.build.outputs.digest }}\`"
+            echo ""
+            echo "Pull it with: \`docker pull $PINNED\`"
+            echo ""
+            echo "Deploy it with the **Deploy** workflow, image_tag \`$(echo "$PINNED" | sed 's/.*://')\`."
+            echo ""
+            echo "Check what is inside it and where it came from, straight from the registry:"
+            echo ""
+            echo '```'
+            echo "docker buildx imagetools inspect $PINNED --format '{{ json .Provenance }}'"
+            echo "docker buildx imagetools inspect $PINNED --format '{{ json .SBOM }}'"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # ── Rollback support: prove an OLDER published tag still boots, BEFORE anyone rolls
+  # back to it. Runs only when a tag is typed into verify_tag on a manual run.
+  #
+  # Why this exists: "roll back and hope" is the usual approach. Re-verifying the
+  # candidate first means we never roll back to an image we have not just proven good.
+  # It is also the only honest way to use that input box: an input nothing reads is
+  # worse than no input at all, because the run appears to do something and does not.
+  verify-existing:
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read # only needs to READ the registry, never write
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Boot the rollback candidate
+        run: |
+          # The registry rejects uppercase, and the repository name has some.
+          IMAGE=$(echo "ghcr.io/${{ github.repository }}:${{ inputs.verify_tag }}" | tr '[:upper:]' '[:lower:]')
+          echo "Re-verifying $IMAGE"
+          docker pull "$IMAGE"
+
+          docker run -d --name rollback-check -p 3000:3000 \
+            -e AI_FAKE=1 \
+            -e JWT_SECRET=verify-only-not-a-real-secret \
+            "$IMAGE"
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/ > /dev/null 2>&1; then
+              echo "SAFE TO ROLL BACK: $IMAGE boots cleanly."
+              echo "### Rollback candidate verified" >> "$GITHUB_STEP_SUMMARY"
+              echo "\`$IMAGE\` boots cleanly. Safe to redeploy." >> "$GITHUB_STEP_SUMMARY"
+              docker rm -f rollback-check
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "DO NOT ROLL BACK to this tag: it never became ready. Logs follow:"
+          docker logs rollback-check
+          docker rm -f rollback-check
+          exit 1
+# <Shania End>
