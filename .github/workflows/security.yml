@@ -1,0 +1,123 @@
+name: Security Scans (Warn Only) ## -- Name of wokflow, as appears in Github Actions.
+
+# the scans report security problems, 
+# but they are not intended to prevent the team from merging code.
+
+#Trigger Events#
+on: ## -- (think of this like a "When" or "if" clause)
+  pull_request: ## -- "Run this workflow whenever a pull request event happens using GitHub’s default pull-request settings."
+  push: ## -- Run the workflow when code is pushed to the main branch.
+    branches: [main]
+  schedule: ## -- Runs automatically on a weekly basis
+    - cron: "17 2 * * 1"
+  workflow_dispatch: ## -- This adds a Run workflow button in GitHub Actions.
+
+# Our workflow runs in four situations: during pull requests, 
+# after code reaches main, automatically every Monday and manually 
+# through GitHub.
+
+# These scans report security findings, but they deliberately do not act as
+# the repository's merge gate. Shania's ci.yml remains the blocking pipeline.
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+# GitHub Actions workflows operate using a temporary token called GITHUB_TOKEN.
+# This section follows the principle of least privilege by
+# giving the workflow only the permissions it needs.
+
+jobs:
+  npm-audit:
+    name: npm audit (high and critical)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Scan npm dependencies
+        run: npm audit --audit-level=high
+
+  trivy:
+    name: Trivy container vulnerability scan
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build ScamPatrol image
+        run: docker build --tag scampatrol-security:${{ github.sha }} .
+
+      - name: Scan image and create SARIF report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: scampatrol-security:${{ github.sha }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Upload Trivy findings to GitHub Security
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-container
+
+  codeql:
+    name: CodeQL JavaScript analysis
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+
+      - name: Analyse source code
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:javascript-typescript
+
+  # This is intentionally different from the blocking Gitleaks job in ci.yml.
+  #
+  # ci.yml scans the proposed working tree and only the commits introduced by a
+  # pull request. It blocks the merge if a new secret is detected.
+  #
+  # This job is a non-blocking audit of the COMPLETE history already stored in
+  # the repository. It runs after changes reach main, on the weekly schedule, or
+  # when started manually. It can reveal an older credential or a newly-added
+  # Gitleaks detection rule without making every pull request run the same scan
+  # twice. Findings here require investigation and secret rotation, but this
+  # advisory workflow does not act as the merge gate.
+  gitleaks-history-audit:
+    name: Gitleaks full-history audit (advisory)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out complete Git history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Audit all repository history for leaked secrets
+        continue-on-error: true
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
