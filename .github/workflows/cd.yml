@@ -46,7 +46,7 @@ jobs:
       # There is no long-lived password to store, rotate, or leak. That is the main
       # reason we chose GHCR over Docker Hub, which needs a stored access token.
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -200,7 +200,7 @@ jobs:
       packages: read # only needs to READ the registry, never write
     steps:
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
