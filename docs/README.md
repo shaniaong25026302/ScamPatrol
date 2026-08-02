@@ -468,7 +468,7 @@ Three workflows, each doing one job.
 
 ### CI, the gate
 
-Four jobs, ordered cheapest and most serious first.
+Five jobs, ordered cheapest and most serious first.
 
 - **`secret-scan`** — gitleaks, pinned to a fixed version, scanning both the working tree and
   the pull request's own commits, with output redacted so a build log can never print the
@@ -477,6 +477,8 @@ Four jobs, ordered cheapest and most serious first.
   suite against a **real MySQL service container**. 76 tests, none skipped.
 - **`docker-build`** — builds the image *and boots it*, because a built image is not a working
   image. Also reports the image size change onto the pull request.
+- **`ansible-validate`** — rejects duplicate legacy roles, checks the Ansible environment
+  template, performs a syntax check, and runs `ansible-lint`.
 - **`ci-summary`** — one check for branch protection to require, so adding a job later cannot
   silently stop being enforced.
 
@@ -507,7 +509,7 @@ Images are tagged `sha-<commit>`, which is immutable. `latest` moves, so rolling
 The package is public, so the artifact can be verified by anyone with no credentials:
 
 ```bash
-docker pull ghcr.io/shaniaong25026302/scampatrol:latest
+docker pull ghcr.io/shaniaong25026302/scampatrol:sha-REPLACE_WITH_VERIFIED_COMMIT
 ```
 
 ### Deploy, releasing it
@@ -526,7 +528,7 @@ and by hand from the Actions tab otherwise.
 
 | Layer | Tool | Owns |
 |---|---|---|
-| The server | **Terraform** (`terraform/`) | EC2 instance, security group, bootstrap |
+| The server | **Terraform** (`terraform/`) | EC2 instance, security group, network placement and SSH key association |
 | Its configuration | **Ansible** (`ansible/`) | Docker, swap, `.env`, pulling and starting the image |
 | Releases | **GitHub Actions** | everything after a merge |
 

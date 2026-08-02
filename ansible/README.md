@@ -8,7 +8,8 @@ ScamPatrol production server. One command:
 2. creates and persists a 1 GiB swap file;
 3. creates `/opt/scampatrol` and its persistent data directories;
 4. writes the protected production `.env` for the `ubuntu` deployment user;
-5. logs that deployment user in to the private GitHub Container Registry;
+5. pulls anonymously from the public GitHub Container Registry, with optional
+   `read:packages` authentication if the package becomes private;
 6. pulls the verified `sha-*` image and starts `docker-compose.prod.yml`; and
 7. checks the application's live health endpoint.
 
@@ -22,7 +23,7 @@ Run Ansible from Linux, macOS, or Windows Subsystem for Linux. You need:
 - Python 3.10 or newer;
 - SSH access to the EC2 instance;
 - the EC2 private key, stored outside this repository;
-- a GitHub token with `read:packages` only; and
+- an optional GitHub token with `read:packages` only if GHCR becomes private; and
 - the verified `sha-*` image tag printed by the CD workflow.
 
 Never commit the EC2 key, GitHub token, database password, API key, `.env`, or
@@ -79,6 +80,17 @@ scampatrol_app_base_url: http://YOUR_EC2_IP
 scampatrol_cookie_secure: false
 ```
 
+The GHCR package is public, so keep the registry settings empty:
+
+```yaml
+scampatrol_registry_username: ""
+scampatrol_registry_token: ""
+```
+
+If the package becomes private, fill both values and use a token limited to
+`read:packages`. The role skips registry login when the token is empty and
+removes stale credentials so an expired token cannot break an anonymous pull.
+
 When HTTPS is added, change the URL to `https://` and the cookie setting to
 `true` together. The playbook rejects a mismatch because a Secure login cookie
 cannot work over HTTP.
@@ -111,17 +123,22 @@ The test runs the exact playbook twice. The second run must report
 `changed=0`, `unreachable=0`, and `failed=0`.
 
 ```bash
-./tests/verify-idempotency.sh \
+bash ./tests/verify-idempotency.sh \
   inventory/production.yml \
   vars/production.yml \
   --ask-vault-pass
 ```
 
+The script retains `run-1.log`, `run-2.log`, and `summary.txt` under
+`ansible/evidence/<UTC timestamp>/`. That directory is gitignored because the
+logs contain production operational details. Use the clean second-run recap as
+the idempotency evidence in the demonstration or submission.
+
 ## Useful checks
 
 ```bash
 # Local syntax and lint checks
-./tests/validate.sh
+bash ./tests/validate.sh
 
 # Preview supported changes without applying them
 ansible-playbook \
@@ -146,14 +163,34 @@ ssh -i /path/to/key.pem ubuntu@SERVER_IP \
 | `/opt/scampatrol/data` | Persistent application data | `ubuntu:ubuntu`, `0755` |
 | `/swapfile` | 1 GiB swap for the small EC2 instance | `root:root`, `0600` |
 
+## Production hardening that needs external resources
+
+Two improvements must not be enabled with placeholder values:
+
+- **HTTPS:** first provide a DNS name, a TLS certificate, a reverse proxy or load
+  balancer, and an AWS security-group rule for port 443. Only then change
+  `scampatrol_app_base_url` to `https://...` and
+  `scampatrol_cookie_secure` to `true` together. Setting only the cookie flag on
+  the current HTTP server breaks login.
+- **Managed secret storage:** Ansible Vault is the current encrypted source of
+  production variables. Moving to AWS Secrets Manager or Parameter Store also
+  requires an agreed secret path, an IAM role with least-privilege access, a
+  rotation owner, and a recovery procedure. Do not add fake secret identifiers
+  or broad AWS credentials merely to claim the integration exists.
+
+The deployment workflow uses GitHub's protected `production` environment for
+the EC2 SSH secret and produces a readiness summary. Real application secrets
+remain in Vault until the AWS IAM and secret-store design is supplied.
+
 ## Troubleshooting
 
 - **Host key verification failed:** connect once with SSH and verify the
   fingerprint.
 - **Permission denied (publickey):** check the key path, key permissions, and
   `ansible_user: ubuntu`.
-- **GHCR denied:** use the correct GitHub username and a token with
-  `read:packages`.
+- **GHCR denied for a public image:** leave the registry token empty and rerun
+  Ansible so it removes stale Docker credentials. If the package is private,
+  use the correct username and a token limited to `read:packages`.
 - **Health check failed:** run
   `sudo docker logs scampatrol --tail 100` on the server. Database configuration
   is the most common cause.

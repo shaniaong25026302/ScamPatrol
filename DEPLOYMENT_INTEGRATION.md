@@ -19,8 +19,9 @@ different parts of the same EC2 host.
 2. Rebecca enters that IP in `ansible/inventory/production.yml` and uses the verified
    CD image in her encrypted `vars/production.yml`.
 3. Rebecca runs `ansible/playbook.yml`. It creates `/opt/scampatrol`, writes `.env`,
-   installs Compose, logs the deployment user in to GHCR, starts the image, and requires
-   the database readiness endpoint to return HTTP 200.
+   installs Compose, uses anonymous GHCR access for the public package (or an optional
+   read-only token if it becomes private), starts the image, and requires the database
+   readiness endpoint to return HTTP 200.
 4. Shawn's Deploy workflow verifies that exact Ansible handoff and then performs future
    image-only releases through the same Compose project.
 
@@ -49,6 +50,8 @@ and then rerun the playbook. Adding the environment value to an older image is n
   `scampatrol` role are the only supported Ansible entry point.
 - Do not deploy `latest`; use the verified `sha-*` tag printed by CD.
 - Never commit `.env`, Vault variables, SSH keys, tokens or Terraform state.
+- Do not store a GHCR token for the public package. An unnecessary expired token can
+  override anonymous access and cause a misleading registry denial.
 
 ## Verification
 

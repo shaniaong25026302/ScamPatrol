@@ -29,10 +29,6 @@
           value: "{{ scampatrol_image | default('') }}"
         - name: scampatrol_app_base_url
           value: "{{ scampatrol_app_base_url | default('') }}"
-        - name: scampatrol_registry_username
-          value: "{{ scampatrol_registry_username | default('') }}"
-        - name: scampatrol_registry_token
-          value: "{{ scampatrol_registry_token | default('') }}"
         - name: scampatrol_db_host
           value: "{{ scampatrol_db_host | default('') }}"
         - name: scampatrol_db_user
@@ -45,6 +41,20 @@
           value: "{{ scampatrol_jwt_secret | default('') }}"
       loop_control:
         label: "{{ item.name }}"
+      no_log: true
+
+    - name: Preflight | Keep optional registry credentials as a complete pair
+      ansible.builtin.assert:
+        that:
+          - >-
+            ((scampatrol_registry_username | default('') | trim | length) == 0 and
+             (scampatrol_registry_token | default('') | trim | length) == 0) or
+            ((scampatrol_registry_username | default('') | trim | length) > 0 and
+             (scampatrol_registry_token | default('') | trim | length) > 0)
+        fail_msg: >-
+          Leave both registry values empty for the public package, or set both
+          username and token if the package becomes private.
+        quiet: true
       no_log: true
 
     - name: Preflight | Require a verified immutable container image
