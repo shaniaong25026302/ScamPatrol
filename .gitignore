@@ -47,4 +47,5 @@ ansible/inventory/production.yml
 ansible/vars/production.yml
 ansible/.vault-password
 ansible/*.retry
+ansible/evidence/
 # <Rebecca Member 2 IaC End>

@@ -18,6 +18,17 @@ for obsolete in \
   fi
 done
 
+if [ -e ../terraform/user_data.sh ] \
+  || grep -Eq '^[[:space:]]*user_data[[:space:]]*=' ../terraform/ec2.tf; then
+  echo "Terraform still bootstraps the host. Docker and OS configuration belong to Ansible."
+  exit 1
+fi
+
+if grep -Eq 'name: scampatrol_registry_(username|token)' playbook.yml; then
+  echo "Public GHCR credentials must not be mandatory in the Ansible preflight checks."
+  exit 1
+fi
+
 documented="$(mktemp)"
 rendered="$(mktemp)"
 trap 'rm -f "${documented}" "${rendered}"' EXIT

@@ -10,9 +10,10 @@ scampatrol_app_base_url: http://REPLACE_WITH_IP
 # is added; the playbook deliberately rejects a mismatch.
 scampatrol_cookie_secure: false
 
-# The repository/package is private. Use a token with read:packages only.
-scampatrol_registry_username: REPLACE_WITH_GITHUB_USERNAME
-scampatrol_registry_token: REPLACE_WITH_READ_PACKAGES_TOKEN
+# The GHCR package is public, so these may remain empty. If the package becomes
+# private later, set a GitHub username and a token scoped to read:packages only.
+scampatrol_registry_username: ""
+scampatrol_registry_token: ""
 
 scampatrol_db_host: REPLACE_WITH_DATABASE_HOST
 scampatrol_db_user: REPLACE_WITH_DATABASE_USER
@@ -33,3 +34,5 @@ scampatrol_smtp_host: ""
 scampatrol_smtp_user: ""
 scampatrol_smtp_pass: ""
 # <Rebecca End>
+
+

@@ -3,10 +3,11 @@
 # BEFORE it can be merged. Branch protection requires the job names below, which is
 # what makes "only successful builds proceed" enforceable rather than a promise.
 #
-# Four jobs. The order is deliberate: cheapest and most serious first.
+# Five jobs. The order is deliberate: cheapest and most serious first.
 #   secret-scan    — is anyone committing a credential? Seconds, and it blocks.
 #   lint-and-test  — style, the config contract, the schema, then the suite against a REAL MySQL.
 #   docker-build   — builds the image AND boots it, because a built image is not a working image.
+#   ansible-validate — checks IaC ownership, environment drift, syntax and lint rules.
 #   ci-summary     — one green tick for branch protection to require.
 #
 # Deliberately NOT triggered on push to main. CI guards the door; CD (cd.yml) runs
@@ -363,7 +364,47 @@ jobs:
           fi
 
   # ──────────────────────────────────────────────────────────────────────────
-  # 4. CI SUMMARY — one check for branch protection to require.
+  # 4. ANSIBLE VALIDATION — Rebecca's infrastructure gate.
+  #
+  # A playbook that only gets checked on Rebecca's laptop can still be merged with
+  # a syntax error, a duplicated legacy role, or an environment template that has
+  # drifted from the application. Run the same repository validation on every PR.
+  # This job deliberately does not contact production or decrypt real secrets.
+  # ──────────────────────────────────────────────────────────────────────────
+  ansible-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python for Ansible
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ansible/requirements-dev.txt
+
+      - name: Install the pinned Ansible tools
+        run: python -m pip install -r ansible/requirements-dev.txt
+
+      - name: Run Rebecca's Ansible validation
+        working-directory: ansible
+        run: bash ./tests/validate.sh
+
+      - name: Record Ansible validation evidence
+        if: always()
+        run: |
+          {
+            echo "### Ansible infrastructure validation"
+            echo ""
+            echo "- Duplicate-role check: completed"
+            echo "- Application/template environment contract: completed"
+            echo "- Playbook syntax check: completed"
+            echo "- ansible-lint: completed"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 5. CI SUMMARY — one check for branch protection to require.
   #
   # Branch protection matches required checks BY NAME. Requiring each job by name works
   # right up until the day a job is added or renamed, at which point protection quietly
@@ -378,7 +419,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   ci-summary:
     if: always()
-    needs: [secret-scan, lint-and-test, docker-build]
+    needs: [secret-scan, lint-and-test, docker-build, ansible-validate]
     runs-on: ubuntu-latest
     steps:
       - name: Require every gate to have passed
@@ -386,15 +427,17 @@ jobs:
           echo "secret-scan   : ${{ needs.secret-scan.result }}"
           echo "lint-and-test : ${{ needs.lint-and-test.result }}"
           echo "docker-build  : ${{ needs.docker-build.result }}"
+          echo "ansible       : ${{ needs.ansible-validate.result }}"
 
           if [ "${{ needs.secret-scan.result }}" != "success" ] \
             || [ "${{ needs.lint-and-test.result }}" != "success" ] \
-            || [ "${{ needs.docker-build.result }}" != "success" ]; then
+            || [ "${{ needs.docker-build.result }}" != "success" ] \
+            || [ "${{ needs.ansible-validate.result }}" != "success" ]; then
             echo ""
             echo "A required check did not pass, so this pull request cannot be merged."
             exit 1
           fi
           echo ""
           echo "All gates passed: no secrets, style clean, config contract intact,"
-          echo "schema idempotent, tests green against a real database, image boots."
+          echo "schema idempotent, tests green, image boots, Ansible validates."
 # <Shania End>

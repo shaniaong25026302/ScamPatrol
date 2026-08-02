@@ -5,8 +5,8 @@
 I created the Ansible automation that prepares a blank Ubuntu EC2 server for
 ScamPatrol. The playbook installs Docker and Docker Compose, creates a persistent
 swap file, prepares the `/opt/scampatrol` folders, generates the protected
-runtime environment file, authenticates to GHCR, starts the verified production
-image, and checks that the application is live.
+runtime environment file, configures optional GHCR authentication, starts the
+verified production image, and checks that the application is live.
 
 ## Why Ansible was used
 
@@ -32,7 +32,8 @@ run to finish with `changed=0`.
   `ubuntu` deployment user (`0600`). This lets Shawn's SSH deployment use it
   without `sudo` while keeping it private from other users.
 - SSH host-key checking remains enabled.
-- The registry token needs only `read:packages`.
+- The public GHCR image requires no long-lived token. If the package becomes
+  private, the optional token needs only `read:packages`.
 - Deployment rejects `latest` and accepts only a verified `sha-*` tag or image
   digest.
 - Sensitive Ansible tasks use `no_log: true`.
@@ -55,16 +56,16 @@ image updates and rollback. No separate manual server setup is required.
 
 ## Validation
 
-- All Ansible and workflow YAML files parse successfully.
-- Both Ansible helper scripts pass shell syntax checking.
-- The Ansible template and `.env.example` contain the same application settings.
-- Application tests: 38 passed, 31 skipped because no test database was supplied,
-  and 0 failed.
-- Application lint: 0 errors and 5 pre-existing warnings outside the IaC files.
-- New cookie tests prove both the current HTTP setting and the future HTTPS setting.
+- CI installs the pinned Ansible tools and runs the Ansible validation script on
+  every pull request.
+- The validation script rejects obsolete duplicate roles, checks the environment
+  contract, performs a syntax check, and runs `ansible-lint`.
+- The live two-run test records `changed=0`, `unreachable=0`, and `failed=0` as
+  the required idempotency evidence and retains both run logs in a gitignored
+  timestamped evidence directory.
 
-Run `./tests/validate.sh` from the Ansible virtual environment before opening the
+Run `bash ./tests/validate.sh` from the Ansible virtual environment before opening the
 pull request. The live two-run idempotency test additionally requires the real EC2
 address, SSH key, image tag and encrypted production variables. The included
-`tests/verify-idempotency.sh` performs that final server-side check without storing
+`bash tests/verify-idempotency.sh` performs that final server-side check without storing
 those values in the repository.
