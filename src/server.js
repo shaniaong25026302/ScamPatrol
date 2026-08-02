@@ -60,6 +60,7 @@ app.use((req, res, next) => {
     p.startsWith("/auth") ||
     p.startsWith("/api/auth") ||
     p === "/api/health" ||
+    p === "/api/health/live" ||
     p.startsWith("/api/game/story");
   // Scam Weather is intentionally NOT in this guest allow-list.
   // Result: guests see only Story/Login/Signup, while logged-in users see Scam Weather in the navbar.
@@ -68,8 +69,18 @@ app.use((req, res, next) => {
   return res.redirect("/");
 });
 
-// [DevOps: Monitoring / health check] a liveness+readiness endpoint that also probes the DB,
-// so uptime monitors (and Render) can detect when the service or database is unhealthy.
+// [DevOps: Container liveness probe] SHALLOW check — is this process up and answering?
+// Deliberately does NOT touch the database. Docker's HEALTHCHECK calls this on a timer, and
+// if a liveness probe depended on MySQL then a brief database blip would make Docker kill and
+// restart a perfectly healthy app, turning a small fault into a restart loop.
+// Use this one for the container. Use the deep /api/health below AFTER deploying.
+app.get("/api/health/live", (req, res) => {
+  res.json({ status: "ok", uptime: process.uptime() });
+});
+
+// [DevOps: Monitoring / readiness check] DEEP check — it also probes the database, so uptime
+// monitors and the post-deploy gate can tell whether the app can actually serve real traffic.
+// Wrong as a container probe (see above), right as a deployment gate.
 app.get("/api/health", async (req, res) => {
   try {
     await ping();

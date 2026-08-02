@@ -1,8 +1,28 @@
 # <Shania Start>
 node_modules/
 npm-debug.log*
-# [DevOps: Secrets management] .env holds DB/JWT/API secrets and is NEVER committed
+# [DevOps: Secrets management] Real credentials are NEVER committed.
+#
+# A bare ".env" line was not enough. On 30 July 2026 a file named "..env" reached this
+# public repository, because "..env" does not match the pattern ".env" — git compares the
+# whole name, and the extra leading dot makes it a different one. The lines below cover
+# every shape that name can take, and the negation keeps the one file we do want tracked.
+# Prove any change here with: git check-ignore -v '..env'
 .env
+.env.*
+*.env
+!.env.example
+!.env.local.example
+
+# Private keys, in every extension we are likely to meet. The EC2 SSH key sits on disk
+# while anyone works on deployment, and a public repository is an unforgiving place to
+# discover that.
+*.pem
+*.key
+*.ppk
+id_rsa
+id_ed25519
+
 .DS_Store
 # <Shania End>
 
@@ -12,3 +32,20 @@ public/uploads/*
 # <Rebecca Member 2 End>
 src/data/scamWeatherPosts.json
 src/data/scamWeatherArticles.json
+
+.env.local
+# <Shawn Member 6 Start>
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+# <Shawn Member 6 End>
+
+# <Rebecca Member 2 IaC Start>
+ansible/.venv/
+ansible/inventory/production.yml
+ansible/vars/production.yml
+ansible/.vault-password
+ansible/*.retry
+ansible/evidence/
+# <Rebecca Member 2 IaC End>

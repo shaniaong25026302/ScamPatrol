@@ -1,0 +1,38 @@
+---
+# <Rebecca Start>
+# Copy this file to vars/production.yml, replace every placeholder, then encrypt it:
+#   ansible-vault encrypt vars/production.yml
+#
+# Use a verified immutable tag printed by the CD workflow, not :latest.
+scampatrol_image: ghcr.io/shaniaong25026302/scampatrol:sha-REPLACE_WITH_VERIFIED_TAG
+scampatrol_app_base_url: http://REPLACE_WITH_IP
+# Keep false while the demo uses http://. Change both this and the URL when TLS
+# is added; the playbook deliberately rejects a mismatch.
+scampatrol_cookie_secure: false
+
+# The GHCR package is public, so these may remain empty. If the package becomes
+# private later, set a GitHub username and a token scoped to read:packages only.
+scampatrol_registry_username: ""
+scampatrol_registry_token: ""
+
+scampatrol_db_host: REPLACE_WITH_DATABASE_HOST
+scampatrol_db_user: REPLACE_WITH_DATABASE_USER
+scampatrol_db_password: REPLACE_WITH_DATABASE_PASSWORD
+scampatrol_db_name: REPLACE_WITH_DATABASE_NAME
+
+# Generate with: openssl rand -hex 32
+scampatrol_jwt_secret: REPLACE_WITH_RANDOM_64_CHARACTER_SECRET
+
+# Required when scampatrol_ai_fake is false.
+scampatrol_gemini_api_key: REPLACE_WITH_GEMINI_API_KEY
+
+# Optional email settings. Leave these as empty strings if email is not required.
+scampatrol_mail_from: ""
+scampatrol_mailjet_api_key: ""
+scampatrol_mailjet_secret_key: ""
+scampatrol_smtp_host: ""
+scampatrol_smtp_user: ""
+scampatrol_smtp_pass: ""
+# <Rebecca End>
+
+

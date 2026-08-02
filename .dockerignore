@@ -1,4 +1,30 @@
+# <Nivi Start>
+# Files that must never enter the Docker build context.
+#
+# node_modules is here for correctness, not size: the locally installed bcrypt is a
+# native module compiled for Windows, and it will not load on the Linux base image.
 node_modules
 .git
 .gitignore
+
+# Credentials, in every shape the name can take. ".env" alone was not enough: a file
+# called "..env" is a different name, and one reached the public repository on
+# 30 July 2026 for exactly that reason. The Dockerfile copies named directories rather
+# than the whole context, so nothing here could reach the image today, but this is the
+# layer that keeps that true after someone adds a convenient `COPY . .`.
 .env
+.env.*
+*.env
+!.env.example
+*.pem
+*.key
+*.ppk
+
+# Test and tooling files. They are not needed at runtime and every extra file is
+# another thing shipped to production that nobody reviews.
+tests
+.github
+.vscode
+*.md
+!README.md
+# <Nivi End>

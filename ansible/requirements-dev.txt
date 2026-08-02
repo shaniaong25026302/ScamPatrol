@@ -1,0 +1,4 @@
+# <Rebecca Start>
+ansible-core>=2.20,<2.22
+ansible-lint>=25,<27
+# <Rebecca End>
