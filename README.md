@@ -9,6 +9,76 @@ There is **no separate frontend build** — client interactivity is small `fetch
 
 ---
 
+---
+
+# Phase 2 (Final Assessment) — start here
+
+Phase 1 built the application. **Everything in Phase 2 is DevOps**: how this app is built,
+tested, containerised, deployed and monitored. Nothing about the application itself changed.
+
+## Run it, in two commands
+
+No accounts, no shared credentials, no database of your own:
+
+```bash
+cp .env.local.example .env.local
+docker compose -f docker-compose.local.yml up
+```
+
+Then open <http://localhost:3000>. That starts MySQL and the app, loads all 25 tables into the
+database on first boot, and waits for the database to be genuinely ready before starting the app.
+
+Full detail in [Phase 2: DevOps](#phase-2-devops) further down.
+
+## Where everything lives
+
+| Concern | Files |
+|---|---|
+| **Container image** | `Dockerfile`, `.dockerignore` |
+| **Local stack** (app + MySQL + volume) | `docker-compose.local.yml`, `.env.local.example` |
+| **Production stack** | `docker-compose.prod.yml` |
+| **The gate** (runs on every pull request) | `.github/workflows/ci.yml` |
+| **Build and publish** (runs on merge) | `.github/workflows/cd.yml` |
+| **Release to AWS** | `.github/workflows/deploy.yml` |
+| **Security scanning** | `.github/workflows/security.yml`, `.github/dependabot.yml` |
+| **Uptime monitoring** | `.github/workflows/monitoring.yml` |
+| **Server provisioning** | `terraform/` |
+| **Server configuration** | `ansible/` |
+| **Automated tests** | `tests/` |
+| **Configuration contract** | `.env.example` |
+| **Database schema** | `db/schema.sql` |
+
+## The short version of how it works
+
+1. **You open a pull request.** `ci.yml` runs four jobs on the merged result: a blocking secret
+   scan, lint and the full test suite against a real MySQL container, a Docker build that also
+   boots the image, and a summary check. Branch protection keeps the merge button greyed out
+   until all four pass.
+2. **You merge.** `cd.yml` builds the image, publishes it to GitHub's container registry, then
+   downloads it again and runs it, to prove the copy in the registry really boots. It is tagged
+   with the commit that built it.
+3. **`deploy.yml` releases it** to the AWS EC2 host and checks the health endpoint from outside
+   the server. It builds nothing itself, which is what makes rolling back safe.
+
+A person does two things in that sequence: push the code, and click merge. Everything else runs
+without anyone watching.
+
+## Reading order for assessment
+
+| Read this | For |
+|---|---|
+| [Run the whole stack locally](#run-the-whole-stack-locally) | containerisation and reproducibility |
+| [The pipeline](#the-pipeline) | CI/CD, and the two gates that found real bugs |
+| [Infrastructure](#infrastructure) | Terraform, Ansible, and how they divide the work |
+| [Health checks](#health-checks) | why there are two, and what breaks if you swap them |
+| [Configuration](#configuration) | secrets handling and the contract CI enforces |
+| [Security](#security) | the blocking secret scan and non-root containers |
+
+**Everything below this section is the original Phase 1 application documentation**, kept for
+reference. Some of it still describes the Render deployment that Phase 2 replaced with AWS.
+
+---
+
 ## Tech stack
 
 - **Runtime:** Node.js (18+), Express 5
@@ -20,16 +90,6 @@ There is **no separate frontend build** — client interactivity is small `fetch
 - **Tooling:** ESLint + Prettier, nodemon
 
 ---
-
-> **Just want it running?** The fastest path needs no accounts and no database of your own:
->
-> ```bash
-> cp .env.local.example .env.local
-> docker compose -f docker-compose.local.yml up
-> ```
->
-> See **[Phase 2: DevOps](#phase-2-devops)** for the pipeline, deployment and infrastructure.
-> The section below is the manual Node setup, kept for working on the app itself.
 
 ## Quick start
 
