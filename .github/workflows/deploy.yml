@@ -1,23 +1,23 @@
-# <Shawn Start>
+# <Shawn and Rebecca Integration Start>
+# Release only images that Shania's CD workflow has already published and verified.
+# Terraform creates EC2; Ansible owns /opt/scampatrol, Docker, .env and Compose;
+# this workflow changes only the verified image and rolls it back if readiness fails.
 name: Deploy
 
 on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Verified image tag (e.g. sha-abc1234 or latest)"
+        description: "Verified image tag, for example sha-abc1234"
         required: true
         type: string
 
   workflow_run:
-    workflows:
-      - CD
-    types:
-      - completed
+    workflows: [CD]
+    types: [completed]
 
 permissions:
   contents: read
-  packages: read
 
 concurrency:
   group: production-deploy
@@ -25,115 +25,146 @@ concurrency:
 
 jobs:
   deploy:
-    # Runs by hand always. Runs automatically after a SUCCESSFUL CD only when the
-    # repository variable AUTO_DEPLOY is set to true.
-    #
-    # The switch matters for two reasons. workflow_run fires when CD finishes, including
-    # when it finishes by failing, so the conclusion check is what stops a failed build
-    # deploying itself. And an automatic deploy that cannot be turned off means nobody
-    # chooses the moment: during a demonstration an unrelated merge would push to the live
-    # host mid-presentation. AUTO_DEPLOY is currently true, so behaviour is unchanged; it
-    # can be set to false to fall back to deploying by hand.
-    if: |
+    # Manual releases are always allowed. Automatic releases only follow a
+    # successful CD run caused by a push to main and require AUTO_DEPLOY=true.
+    if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && vars.AUTO_DEPLOY == 'true')
-
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       vars.AUTO_DEPLOY == 'true')
     runs-on: ubuntu-latest
+    environment:
+      name: production
+    env:
+      EC2_HOST: ${{ vars.EC2_HOST || secrets.EC2_HOST }}
+      EC2_USER: ${{ vars.EC2_USER || secrets.EC2_USER || 'ubuntu' }}
+      PUBLIC_APP_URL: ${{ vars.APP_BASE_URL }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Select a verified immutable image
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.image_tag }}"
+          else
+            TAG="sha-$(echo '${{ github.event.workflow_run.head_sha }}' | cut -c1-7)"
+          fi
+
+          if ! [[ "$TAG" =~ ^sha-[0-9a-f]{7,40}$ ]]; then
+            echo "Refusing '$TAG'. Use the verified sha-* tag printed by CD."
+            exit 1
+          fi
+
+          REPOSITORY=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/$REPOSITORY:$TAG"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Configure SSH
+        shell: bash
         run: |
+          set -euo pipefail
+          : "${EC2_HOST:?Set EC2_HOST as a repository variable or secret}"
+          : "${EC2_USER:?Set EC2_USER as a repository variable or secret}"
           mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy.pem
+          chmod 600 ~/.ssh/deploy.pem
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
-          printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Upload production Docker Compose
+      - name: Require Rebecca's Ansible handoff
+        shell: bash
         run: |
-          scp docker-compose.prod.yml \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/scampatrol/docker-compose.prod.yml"
+          ssh -i ~/.ssh/deploy.pem -o BatchMode=yes -o ConnectTimeout=30 \
+            "$EC2_USER@$EC2_HOST" '
+              set -eu
+              test -d /opt/scampatrol
+              test -r /opt/scampatrol/.env
+              test -r /opt/scampatrol/docker-compose.prod.yml
+              docker compose version >/dev/null
+              echo "Ansible handoff verified: /opt/scampatrol is ready."
+            '
 
-      - name: Determine Image Tag
-        id: image
+      # The GHCR package is public. Pull anonymously instead of saving an
+      # unnecessary token that later expires and can override anonymous access.
+      - name: Record the rollback image
+        id: previous
+        shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=${{ github.event.inputs.image_tag }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
-          fi
+          PREVIOUS=$(ssh -i ~/.ssh/deploy.pem -o BatchMode=yes \
+            "$EC2_USER@$EC2_HOST" \
+            "docker inspect scampatrol --format '{{.Config.Image}}' 2>/dev/null || true")
+          echo "image=$PREVIOUS" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy application
-        env:
-          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+      - name: Deploy through the Ansible-managed Compose project
+        shell: bash
         run: |
-          ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "bash -s" << EOF
-          set -e
-
+          IMAGE="${{ steps.target.outputs.image }}"
+          ssh -i ~/.ssh/deploy.pem -o BatchMode=yes \
+            "$EC2_USER@$EC2_HOST" \
+            "bash -s -- '$IMAGE'" <<'REMOTE'
+          set -euo pipefail
+          export IMAGE_NAME="$1"
           cd /opt/scampatrol
-
-          echo "Logging into GHCR..."
-
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
-            -u "${{ github.actor }}" \
-            --password-stdin
-
-          CURRENT_IMAGE=\$(docker inspect scampatrol \
-            --format='{{.Config.Image}}' 2>/dev/null || true)
-
-          echo "Current image: \$CURRENT_IMAGE"
-
-          IMAGE_NAME=\$(echo "ghcr.io/${{ github.repository }}:${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
-
-          export IMAGE_NAME
-
-          echo "Deploying \$IMAGE_NAME"
-
           docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          docker compose -f docker-compose.prod.yml ps
+          REMOTE
 
-          docker compose -f docker-compose.prod.yml up -d
+      - name: Public database-readiness gate
+        id: health
+        shell: bash
+        run: |
+          BASE_URL="$PUBLIC_APP_URL"
+          [ -n "$BASE_URL" ] || BASE_URL="http://$EC2_HOST"
+          BASE_URL="${BASE_URL%/}"
 
-          echo "Verifying deployment..."
-
-          sleep 15
-
-          if docker compose -f docker-compose.prod.yml ps | grep -q "Up"; then
-              echo "Deployment verified successfully."
+          for attempt in $(seq 1 30); do
+            if curl -fsS --max-time 5 "$BASE_URL/api/health"; then
+              echo
+              echo "Deployment is ready."
               exit 0
-          fi
+            fi
+            sleep 3
+          done
 
-          echo "Deployment verification failed."
-
-          if [ -n "\$CURRENT_IMAGE" ]; then
-              echo "Rolling back to \$CURRENT_IMAGE"
-
-              docker pull "\$CURRENT_IMAGE"
-
-              export IMAGE_NAME="\$CURRENT_IMAGE"
-
-              docker compose -f docker-compose.prod.yml up -d
-
-              echo "Rollback completed."
-          else
-              echo "No previous deployment found."
-          fi
-
+          echo "The release did not become ready within 90 seconds."
           exit 1
-          EOF
 
-      - name: Deployment Summary
+      - name: Roll back through the same Compose project
+        if: failure() && steps.previous.outputs.image != ''
+        shell: bash
+        run: |
+          PREVIOUS="${{ steps.previous.outputs.image }}"
+          ssh -i ~/.ssh/deploy.pem -o BatchMode=yes \
+            "$EC2_USER@$EC2_HOST" \
+            "bash -s -- '$PREVIOUS'" <<'REMOTE'
+          set -euo pipefail
+          export IMAGE_NAME="$1"
+          cd /opt/scampatrol
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          echo "Rolled back to $IMAGE_NAME"
+          REMOTE
+
+      - name: Write deployment evidence
         if: always()
+        shell: bash
         run: |
           {
-            echo "## Deployment Summary"
+            echo "### Production deployment evidence"
             echo ""
-            echo "- Image: ghcr.io/${{ github.repository }}:${{ steps.image.outputs.tag }}"
-            echo "- Repository: ${{ github.repository }}"
-            echo "- Server: ${{ secrets.EC2_HOST }}"
-            echo "- Deployment workflow completed."
+            echo "| Check | Result |"
+            echo "|---|---|"
+            echo "| Immutable image | \`${{ steps.target.outputs.image }}\` |"
+            echo "| Ansible handoff | \`/opt/scampatrol\` required |"
+            echo "| Readiness endpoint | ${{ steps.health.outcome }} |"
           } >> "$GITHUB_STEP_SUMMARY"
-# <Shawn End>
+
+      - name: Remove the SSH key
+        if: always()
+        shell: bash
+        run: shred -u ~/.ssh/deploy.pem 2>/dev/null || rm -f ~/.ssh/deploy.pem
+# <Shawn and Rebecca Integration End>
