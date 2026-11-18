@@ -94,7 +94,7 @@ app.get("/api/health", async (req, res) => {
 // Homepage IS the game now — the origin story (renders in the retro game layout).
 app.get("/", (req, res) => {
   res.render("game/story", {
-    title: "Scam Patrol HQ — Second Chance",
+    title: "Mr Bernard HQ — Second Chance",
     activePage: "story",
   });
 });
