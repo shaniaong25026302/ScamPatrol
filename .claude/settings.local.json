@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git ls-tree *)",
+      "PowerShell(git diff *)",
+      "PowerShell(Get-Command *)"
+    ]
+  }
+}
